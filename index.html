@@ -2041,6 +2041,54 @@
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskCanvas);
     }
 
+    // --- KINEMATIC & PHYSICAL HARMONIC HELPERS ---
+    function getTurntableAngle(t, T, tb) {
+      // Trapezoidal velocity profile: smooth departure -> constant cruising turntable velocity -> velvet arrival
+      const w0 = (2 * Math.PI) / (T - tb);
+      if (t <= 0) return 0;
+      if (t >= T) return 2 * Math.PI;
+      if (t < tb) {
+        return 0.5 * (w0 / tb) * t * t;
+      } else if (t < T - tb) {
+        return 0.5 * w0 * tb + w0 * (t - tb);
+      } else {
+        const rem = T - t;
+        return 2 * Math.PI - 0.5 * (w0 / tb) * rem * rem;
+      }
+    }
+
+    function calculatePhysicalDrop(tau) {
+      // C^1-continuous physical model: zero-velocity gravitational free-fall -> viscoelastic catenary catch
+      const g = 380; // px/s^2 (downward gravity acceleration)
+      const tFree = 0.18; // duration of initial free gravitational dip
+      let y, v;
+      if (tau < tFree) {
+        // Pure gravitational free fall: starts with exactly ZERO initial velocity (silk smooth!)
+        y = -0.5 * g * tau * tau;
+        v = -g * tau;
+      } else {
+        // Viscoelastic chain tension catches and softly cushions the heavy gold pendant
+        const tCatch = tau - tFree;
+        const v0 = -g * tFree; // exactly -68.4 px/s (zero velocity jump!)
+        const y0 = -0.5 * g * tFree * tFree; // exactly -6.156 px (zero position jump!)
+        const yEq = -14.0; // settled suspension height
+        const z0 = y0 - yEq; // displacement from equilibrium (+7.844 px)
+        const gamma = 2.6; // viscous damping of heavy gold links
+        const omega = 5.6; // natural catenary suspension frequency
+        const A = z0;
+        const B = (v0 + gamma * A) / omega;
+        const decay = Math.exp(-gamma * tCatch);
+        const z = decay * (A * Math.cos(omega * tCatch) + B * Math.sin(omega * tCatch));
+        y = yEq + z;
+        v = -gamma * z + decay * (-A * omega * Math.sin(omega * tCatch) + B * omega * Math.cos(omega * tCatch));
+      }
+      const decayTilt = Math.exp(-2.5 * tau);
+      const rotZ = -0.045 * decayTilt * Math.sin(5.6 * tau);
+      const rotX = 0.025 * decayTilt * (Math.cos(5.6 * tau) - 1.0);
+      const rotY = 0.015 * decayTilt * Math.sin(4.2 * tau);
+      return { y, v, rotX, rotY, rotZ };
+    }
+
     // --- ANIMATION MASTER LOOP ---
     let startTime = performance.now();
     let lastFpsTime = startTime;
@@ -2064,10 +2112,10 @@
         // Handle Cinematic Transitions
         if (transitionMode === 'swoop_lift') {
           const elapsed = (now - transitionStartTime) * 0.001; // in seconds
-          const loopDuration = 7.8;
+          const loopDuration = 10.8;
           const loopTime = elapsed % loopDuration;
 
-          if (loopTime < 0.4) {
+          if (loopTime < 0.5) {
             // Stage 0: kirtsoy stands perfectly still, flat, level, facing 100% straight forward at us!
             updateChainThreading(0.0);
             if (threeCurrentMesh) {
@@ -2078,12 +2126,11 @@
               threeChainMesh.position.set(0, 0, 0);
               threeChainMesh.rotation.set(0, 0, 0);
             }
-          } else if (loopTime < 3.8) {
-            // Stage 1: Pure, unbroken, velvet 360° Turntable (0.4s to 3.8s = 3.4s duration)
-            // Majestic continuous rotation showing full 3D chrome facets with zero cuts or jumps
-            const spinT = (loopTime - 0.4) / 3.4; // 0.0 to 1.0
-            const spinEase = 0.5 - 0.5 * Math.cos(spinT * Math.PI); // Smooth cosine acceleration & deceleration
-            const spinAngle = spinEase * Math.PI * 2; // Exactly 0 to 360 degrees
+          } else if (loopTime < 7.5) {
+            // Stage 1: Velvet 360° Cinematic Turntable Rotation (0.5s to 7.5s = 7.0s duration)
+            // Majestic continuous rotation showing full 3D chrome facets with constant turntable cruising velocity
+            const spinT = loopTime - 0.5; // 0.0 to 7.0s
+            const spinAngle = getTurntableAngle(spinT, 7.0, 0.6); // Exactly 0 to 360 degrees
 
             if (threeCurrentMesh) {
               threeCurrentMesh.position.set(0, 0, 0);
@@ -2094,50 +2141,42 @@
               threeChainMesh.rotation.set(0, 0, 0);
             }
 
-            // Chain launches at t = 1.4s and glides continuously through letter "t", fully locked by t = 3.8s
-            if (loopTime < 1.4) {
+            // Chain launches at t = 2.6s (after 90° profile) and glides smoothly through letter "t", fully locked by t = 7.4s
+            if (loopTime < 2.6) {
               updateChainThreading(0.0);
             } else {
-              const chainFlightT = Math.min(1.0, (loopTime - 1.4) / 2.4); // 1.4s to 3.8s
-              const p = 1.0 - Math.pow(1.0 - chainFlightT, 1.55);
+              const chainFlightT = Math.min(1.0, (loopTime - 2.6) / 4.8); // 2.6s to 7.4s
+              const p = 1.0 - Math.pow(1.0 - chainFlightT, 1.45);
               updateChainThreading(p);
 
-              // Subtle tactile tick when chain enters hole
+              // Subtle tactile contact tick when chain enters hole
               if (p > 0.55 && p < 0.85 && threeCurrentMesh) {
                 threeCurrentMesh.position.x = (Math.random() - 0.5) * 0.25;
               }
             }
-          } else if (loopTime < 5.2) {
-            // Stage 2: REALISTIC PHYSICAL FREE-FALL & CHAIN-CATCH JIGGLE (3.8s to 5.2s = 1.4s duration)
-            // Classical mechanics: 2nd-order underdamped harmonic system with zero initial velocity jump!
-            // Natural gravitational descent -> smooth elastic chain catch -> heavy gold damped oscillation
+          } else if (loopTime < 9.2) {
+            // Stage 2: REALISTIC PHYSICAL FREE-FALL & CHAIN-CATCH JIGGLE (7.5s to 9.2s = 1.7s duration)
+            // C^1 continuous mechanics: starts with zero initial velocity jump (silk smooth free fall)
+            // Soft gravitational descent -> smooth elastic chain catch -> heavy gold damped oscillation
             updateChainThreading(1.0);
-            const tau = loopTime - 3.8; // 0.0 to 1.4s
-            const decay = Math.exp(-2.2 * tau); // Heavy viscous damping
-            const omega = 7.2; // Natural frequency of heavy Cuban chain suspension
-
-            // Analytical step response (v(0) = 0, no sudden jerk, smooth downward gravitational dip):
-            const jiggleY = -18.0 * (1.0 - decay * (Math.cos(omega * tau) + 0.3 * Math.sin(omega * tau)));
-            // Coupled roll tilt on Z due to off-center bail hole in letter "t":
-            const jiggleRotZ = -0.09 * decay * Math.sin(omega * tau);
-            // Coupled pitch wobble on X:
-            const jiggleRotX = 0.05 * decay * Math.sin(omega * tau);
+            const tau = loopTime - 7.5; // 0.0 to 1.7s
+            const phys = calculatePhysicalDrop(tau);
 
             if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, jiggleY, 0);
-              threeCurrentMesh.rotation.set(jiggleRotX, 0, jiggleRotZ);
+              threeCurrentMesh.position.set(0, phys.y, 0);
+              threeCurrentMesh.rotation.set(phys.rotX, phys.rotY, phys.rotZ);
             }
             if (threeChainMesh) {
-              threeChainMesh.position.set(0, jiggleY, 0);
-              threeChainMesh.rotation.set(jiggleRotX * 0.5, 0, jiggleRotZ * 0.7);
+              threeChainMesh.position.set(0, phys.y, 0);
+              threeChainMesh.rotation.set(phys.rotX * 0.5, 0, phys.rotZ * 0.7);
             }
-          } else if (loopTime < 6.6) {
-            // Stage 3: POWERFUL CINEMATIC SWOOP UPWARD (УНОС ВВЕРХ)!
-            // Rebounds from settled position (-18px) and launches skyward into the stratosphere!
+          } else if (loopTime < 10.5) {
+            // Stage 3: POWERFUL CINEMATIC SWOOP UPWARD (УНОС ВВЕРХ)! (9.2s to 10.5s = 1.3s duration)
+            // Rebounds from settled position (-14px) and launches skyward into the stratosphere!
             updateChainThreading(1.0);
-            const liftT = (loopTime - 5.2) / 1.4; // 0.0 to 1.0
-            const liftProgress = liftT * liftT * (1.25 + 0.75 * liftT); // Rocket curve
-            const liftY = -18.0 + liftProgress * 850; // Launches from -18 to +832
+            const liftT = (loopTime - 9.2) / 1.3; // 0.0 to 1.0
+            const liftProgress = liftT * liftT * (1.2 + 0.8 * liftT); // Rocket curve
+            const liftY = -14.0 + liftProgress * 920; // Launches from -14 to +906
             const tiltX = -Math.min(liftT * 0.45, 0.45); // Tilts upward under chain pull
 
             if (threeCurrentMesh) {
@@ -2161,10 +2200,10 @@
             }
           }
         } else if (transitionMode === 'thread_snake') {
-          // Dedicated threading inspection: starts front-facing, spins 360°, threads through hole, physical drop & jiggle
+          // Dedicated threading inspection: starts front-facing, spins 360° turntable, threads through hole, physical drop & jiggle
           const elapsed = (now - transitionStartTime) * 0.001;
 
-          if (elapsed < 0.4) {
+          if (elapsed < 0.5) {
             updateChainThreading(0.0);
             if (threeCurrentMesh) {
               threeCurrentMesh.position.set(0, 0, 0);
@@ -2174,10 +2213,9 @@
               threeChainMesh.position.set(0, 0, 0);
               threeChainMesh.rotation.set(0, 0, 0);
             }
-          } else if (elapsed < 3.8) {
-            const spinT = (elapsed - 0.4) / 3.4;
-            const spinEase = 0.5 - 0.5 * Math.cos(spinT * Math.PI);
-            const spinAngle = spinEase * Math.PI * 2;
+          } else if (elapsed < 7.5) {
+            const spinT = elapsed - 0.5;
+            const spinAngle = getTurntableAngle(spinT, 7.0, 0.6);
             if (threeCurrentMesh) {
               threeCurrentMesh.position.set(0, 0, 0);
               threeCurrentMesh.rotation.set(0, spinAngle, 0);
@@ -2187,31 +2225,26 @@
               threeChainMesh.rotation.set(0, 0, 0);
             }
 
-            if (elapsed < 1.4) {
+            if (elapsed < 2.6) {
               updateChainThreading(0.0);
             } else {
-              const chainFlightT = Math.min(1.0, (elapsed - 1.4) / 2.4);
-              const p = 1.0 - Math.pow(1.0 - chainFlightT, 1.55);
+              const chainFlightT = Math.min(1.0, (elapsed - 2.6) / 4.8);
+              const p = 1.0 - Math.pow(1.0 - chainFlightT, 1.45);
               updateChainThreading(p);
             }
           } else {
-            // Settled front-facing with realistic physical free-fall & damped jiggle
+            // Settled front-facing with realistic physical free-fall & damped catenary jiggle
             updateChainThreading(1.0);
-            const tau = elapsed - 3.8;
-            const decay = Math.exp(-2.2 * tau);
-            const omega = 7.2;
-
-            const jiggleY = -18.0 * (1.0 - decay * (Math.cos(omega * tau) + 0.3 * Math.sin(omega * tau)));
-            const jiggleRotZ = -0.09 * decay * Math.sin(omega * tau);
-            const jiggleRotX = 0.05 * decay * Math.sin(omega * tau);
+            const tau = Math.min(1.7, elapsed - 7.5);
+            const phys = calculatePhysicalDrop(tau);
 
             if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, jiggleY, 0);
-              threeCurrentMesh.rotation.set(jiggleRotX, 0, jiggleRotZ);
+              threeCurrentMesh.position.set(0, phys.y, 0);
+              threeCurrentMesh.rotation.set(phys.rotX, phys.rotY, phys.rotZ);
             }
             if (threeChainMesh) {
-              threeChainMesh.position.set(0, jiggleY, 0);
-              threeChainMesh.rotation.set(jiggleRotX * 0.5, 0, jiggleRotZ * 0.7);
+              threeChainMesh.position.set(0, phys.y, 0);
+              threeChainMesh.rotation.set(phys.rotX * 0.5, 0, phys.rotZ * 0.7);
             }
           }
         } else if (transitionMode === 'hanging_swing') {
