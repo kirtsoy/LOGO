@@ -2144,29 +2144,45 @@
           const tEndLift = tEndDrop + liftDuration;
 
           if (loopTime < tStartSpin) {
-            // Stage 0: kirtsoy stands perfectly still, flat, level, facing 100% straight forward at us!
+            // Stage 0: kirtsoy stands facing forward, gently bobbing and swaying organically
             updateChainThreading(0.0);
+            const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
+            const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
+            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
+            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
+            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple);
+
             if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, 0, 0);
-              threeCurrentMesh.rotation.set(0, 0, 0);
+              threeCurrentMesh.position.set(0, bobY, 0);
+              threeCurrentMesh.rotation.set(tiltX, 0, tiltZ);
             }
             if (threeChainMesh) {
-              threeChainMesh.position.set(0, 0, 0);
-              threeChainMesh.rotation.set(0, 0, 0);
+              threeChainMesh.position.set(0, bobY, 0);
+              threeChainMesh.rotation.set(tiltX, 0, tiltZ);
             }
           } else if (loopTime < tEndSpin) {
             // Stage 1: 100% IDENTICAL Turntable 360° Rotation to "Кинематографичное 3D вращение"
-            // Constant angular velocity matching Three.js OrbitControls autoRotate down to the microsecond!
+            // Constant angular velocity matching Three.js OrbitControls autoRotate + organic liquid floating bob & sway!
             const spinT = loopTime - tStartSpin; // 0.0 to spinDuration
-            const spinAngle = (spinT / spinDuration) * (Math.PI * 2); // Exactly matches (2*PI/60 * autoRotateSpeed) * spinT
+            const spinAngle = (spinT / spinDuration) * (Math.PI * 2);
+
+            const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
+            const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
+
+            // Organic bobbing up & down on Y + liquid swaying on Z/X (IDENTICAL to normal mode!):
+            const remTime = tEndSpin - loopTime;
+            const blend = (remTime < 1.0) ? (remTime / 1.0) : 1.0; // Smoothly settles before free-fall
+            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple) * blend;
+            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple) * blend;
+            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple) * blend;
 
             if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, 0, 0);
-              threeCurrentMesh.rotation.set(0, spinAngle, 0);
+              threeCurrentMesh.position.set(0, bobY, 0);
+              threeCurrentMesh.rotation.set(tiltX, spinAngle, tiltZ);
             }
             if (threeChainMesh) {
-              threeChainMesh.position.set(0, 0, 0);
-              threeChainMesh.rotation.set(0, 0, 0);
+              threeChainMesh.position.set(0, bobY, 0);
+              threeChainMesh.rotation.set(tiltX, 0, tiltZ);
             }
 
             // Chain launches at 35% of the spin (after 90° profile has showcased the hole) and finishes threading at 98%
@@ -2241,25 +2257,39 @@
 
           if (elapsed < tStartSpin) {
             updateChainThreading(0.0);
+            const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
+            const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
+            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
+            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
+            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple);
+
             if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, 0, 0);
-              threeCurrentMesh.rotation.set(0, 0, 0);
+              threeCurrentMesh.position.set(0, bobY, 0);
+              threeCurrentMesh.rotation.set(tiltX, 0, tiltZ);
             }
             if (threeChainMesh) {
-              threeChainMesh.position.set(0, 0, 0);
-              threeChainMesh.rotation.set(0, 0, 0);
+              threeChainMesh.position.set(0, bobY, 0);
+              threeChainMesh.rotation.set(tiltX, 0, tiltZ);
             }
           } else if (elapsed < tEndSpin) {
             const spinT = elapsed - tStartSpin;
             const spinAngle = (spinT / spinDuration) * (Math.PI * 2);
 
+            const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
+            const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
+            const remTime = tEndSpin - elapsed;
+            const blend = (remTime < 1.0) ? (remTime / 1.0) : 1.0;
+            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple) * blend;
+            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple) * blend;
+            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple) * blend;
+
             if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, 0, 0);
-              threeCurrentMesh.rotation.set(0, spinAngle, 0);
+              threeCurrentMesh.position.set(0, bobY, 0);
+              threeCurrentMesh.rotation.set(tiltX, spinAngle, tiltZ);
             }
             if (threeChainMesh) {
-              threeChainMesh.position.set(0, 0, 0);
-              threeChainMesh.rotation.set(0, 0, 0);
+              threeChainMesh.position.set(0, bobY, 0);
+              threeChainMesh.rotation.set(tiltX, 0, tiltZ);
             }
 
             const tChainStart = tStartSpin + spinDuration * 0.35;
