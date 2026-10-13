@@ -1,0 +1,5 @@
+temp_upright_interlocking.obj
+test_cut_out.obj
+__pycache__/
+*.pyc
+.DS_Store

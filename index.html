@@ -1,0 +1,3134 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KIRTSOY — Real 3D Chrome & Liquid Metal Studio</title>
+  
+  <!-- Premium Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=JetBrains+Mono:wght@400;600;700&family=Orbitron:wght@700;900&family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Russo+One&family=Syne:wght@700;800&family=Unbounded:wght@700;900&display=swap" rel="stylesheet">
+
+  <!-- Three.js & Loaders -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+  <script src="./assets/vendor/GLTFLoader.js"></script>
+  <script src="./assets/vendor/OBJLoader.js"></script>
+  <script src="./assets/vendor/BufferGeometryUtils.js"></script>
+  <script src="./assets/cuban_link_geo.js"></script>
+
+  <style>
+    :root {
+      --bg: #06070a;
+      --card-bg: rgba(14, 16, 25, 0.94);
+      --card-border: rgba(255, 255, 255, 0.09);
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.45);
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      display: flex;
+    }
+
+    /* Left Control Sidebar */
+    .sidebar {
+      width: 440px;
+      min-width: 400px;
+      height: 100vh;
+      background: rgba(10, 12, 19, 0.97);
+      backdrop-filter: blur(28px);
+      border-right: 1px solid var(--card-border);
+      padding: 24px;
+      overflow-y: auto;
+      z-index: 20;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .sidebar::-webkit-scrollbar { width: 6px; }
+    .sidebar::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.15); border-radius: 3px; }
+
+    .logo-header {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .logo-badge {
+      width: 46px;
+      height: 46px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #e2e8f0 0%, #6366f1 50%, #ec4899 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 900;
+      font-size: 24px;
+      color: #fff;
+      box-shadow: 0 0 24px var(--accent-glow);
+    }
+
+    .logo-title h1 {
+      font-size: 18px;
+      font-weight: 800;
+      background: linear-gradient(180deg, #ffffff 0%, #94a3b8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-title p {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .control-section {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: #818cf8;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .form-group { margin-bottom: 12px; }
+    .form-group:last-child { margin-bottom: 0; }
+
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .input-text, select {
+      width: 100%;
+      padding: 10px 12px;
+      background: rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 13px;
+      font-family: inherit;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-text:focus, select:focus { border-color: var(--accent); }
+
+    .slider-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    input[type=range] {
+      flex: 1;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 3px;
+      outline: none;
+      -webkit-appearance: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: #818cf8;
+      cursor: pointer;
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .slider-val {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      width: 44px;
+      text-align: right;
+      color: var(--text-muted);
+    }
+
+    .presets-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 6px;
+    }
+
+    .preset-btn {
+      padding: 8px 4px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      color: #cbd5e1;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .preset-btn:hover, .preset-btn.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: all 0.2s;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
+      color: white;
+      box-shadow: 0 4px 16px var(--accent-glow);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px var(--accent-glow);
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      border: 1px solid var(--card-border);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn-upload {
+      border: 1px dashed #818cf8;
+      background: rgba(99, 102, 241, 0.08);
+      color: #c7d2fe;
+    }
+    .btn-upload:hover {
+      background: rgba(99, 102, 241, 0.18);
+      color: #fff;
+    }
+
+    /* Presets Manager Section Styles */
+    .preset-manager-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 12px;
+    }
+    .preset-save-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 6px;
+    }
+    .preset-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid transparent;
+      margin-bottom: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .preset-item:hover {
+      background: rgba(99, 102, 241, 0.12);
+      border-color: rgba(99, 102, 241, 0.35);
+    }
+    .preset-item.active {
+      background: rgba(99, 102, 241, 0.22);
+      border-color: var(--accent);
+      box-shadow: 0 0 12px rgba(99, 102, 241, 0.25);
+    }
+    .preset-item-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      overflow: hidden;
+      flex: 1;
+    }
+    .preset-item-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #f1f5f9;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .preset-item-sub {
+      font-size: 10px;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .preset-item-badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #94a3b8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .preset-delete-btn {
+      background: transparent;
+      border: none;
+      color: #64748b;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    .preset-delete-btn:hover {
+      color: #ef4444;
+      background: rgba(239, 68, 68, 0.15);
+    }
+    .preset-actions-bar {
+      display: flex;
+      gap: 6px;
+      margin-top: 8px;
+    }
+    .toast-msg {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid #6366f1;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.8), 0 0 20px rgba(99, 102, 241, 0.4);
+      backdrop-filter: blur(12px);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 10px;
+      font-size: 12px;
+      font-weight: 600;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      pointer-events: none;
+    }
+    .toast-msg.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Main Viewport Area */
+    .viewport-area {
+      flex: 1;
+      height: 100vh;
+      position: relative;
+      background: #000;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #three-3d-canvas, #gl-liquid-canvas, #video-loop-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    #gl-liquid-canvas, #video-loop-container { display: none; }
+
+    #video-loop-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    #video-loop-container video {
+      max-width: 80%;
+      max-height: 80%;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px var(--accent-glow);
+      border: 1px solid var(--card-border);
+    }
+
+    .top-mode-nav {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+      background: rgba(14, 16, 25, 0.90);
+      backdrop-filter: blur(20px);
+      border: 1px solid var(--card-border);
+      padding: 6px;
+      border-radius: 30px;
+      z-index: 10;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+
+    .top-mode-btn {
+      padding: 8px 18px;
+      border-radius: 20px;
+      border: none;
+      background: transparent;
+      color: #94a3b8;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .top-mode-btn.active {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 12px var(--accent-glow);
+    }
+
+    .viewport-hud {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+      z-index: 10;
+    }
+
+    .hud-badge {
+      background: rgba(14, 16, 25, 0.85);
+      border: 1px solid var(--card-border);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #94a3b8;
+      backdrop-filter: blur(10px);
+    }
+
+    .viewport-instructions {
+      position: absolute;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(14, 16, 25, 0.8);
+      border: 1px solid var(--card-border);
+      padding: 8px 18px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #cbd5e1;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .drop-overlay {
+      position: absolute;
+      inset: 20px;
+      border: 3px dashed #818cf8;
+      border-radius: 20px;
+      background: rgba(99, 102, 241, 0.15);
+      backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 14px;
+      z-index: 50;
+      pointer-events: none;
+    }
+    .drop-overlay.active { display: flex; }
+    .drop-overlay h2 { font-size: 24px; color: #fff; }
+    .drop-overlay p { color: #cbd5e1; font-family: 'JetBrains Mono', monospace; }
+  </style>
+</head>
+<body>
+
+  <!-- SIDEBAR CONTROLS -->
+  <aside class="sidebar">
+    
+    <div class="logo-header">
+      <div class="logo-badge">K</div>
+      <div class="logo-title">
+        <h1>KIRTSOY 3D Liquid Studio</h1>
+        <p>Volumetric 3D + Liquid Metal Chrome</p>
+      </div>
+    </div>
+
+    <!-- 3D Object Source -->
+    <div class="control-section">
+      <div class="section-title">
+        <span>1. ИСТОЧНИК 3D ОБЪЕКТА</span>
+      </div>
+
+      <div class="form-group">
+        <label>Режим объекта</label>
+        <select id="objectSourceSelect" onchange="switchObjectSource()">
+          <option value="pendant_real_hole" selected>💎 100% Физический 3D-Кулон (Сквозная 3D дырка Blender в "t")</option>
+          <option value="text">🔤 3D Текст (Параметрический генератор шрифтов)</option>
+          <option value="cuban_chain">⛓️ Массивная 3D Трэп-Цепь (Cuban Link Chain)</option>
+          <option value="sample_emblem">⚡ 3D Кибер-Эмблема (Сэмпл OBJ)</option>
+          <option value="custom_model">📂 Своя 3D Модель (.glb / .gltf / .obj)</option>
+        </select>
+      </div>
+
+      <div class="form-group" id="fileUploadGroup" style="display: none;">
+        <input type="file" id="modelFileInput" accept=".glb,.gltf,.obj" style="display: none;" onchange="handleModelFileSelect(event)">
+        <button class="btn btn-upload" onclick="document.getElementById('modelFileInput').click()">
+          📂 Выбрать 3D файл (.glb, .gltf, .obj)
+        </button>
+        <div id="loadedModelName" style="margin-top: 6px; font-size: 11px; font-family: 'JetBrains Mono'; color: #4ade80; text-align: center;"></div>
+      </div>
+    </div>
+
+    <!-- Typography Controls (Only in Text mode) -->
+    <div class="control-section" id="typographySection">
+      <div class="section-title">
+        <span>2. 3D ТЕКСТ И ТИПОГРАФИКА</span>
+      </div>
+      
+      <div class="form-group">
+        <label>Текст логотипа</label>
+        <input type="text" id="logoText" class="input-text" value="kirtsoy" oninput="trigger3DRebuild()">
+      </div>
+
+      <div class="form-group">
+        <label>3D Шрифт</label>
+        <select id="font3DSelect" onchange="switch3DFont()">
+          <option value="UnifrakturCook_PrintedK" selected>📿 UnifrakturCook (Кулон с ушком под цепь в "t")</option>
+          <option value="UnifrakturCook_PrintedK_Solid">⚡ UnifrakturCook (Сплошной / Без ушка)</option>
+          <option value="UnifrakturCook_HeavyPrintedK">🔨 UnifrakturCook (Тяжелая монолитная "k" НАВЕРХ)</option>
+          <option value="UnifrakturCook_MiniCapK">👑 UnifrakturCook (Пропорциональная готическая "k")</option>
+          <option value="UnifrakturCook_GothicK">⚔️ UnifrakturCook (Немецкая "k")</option>
+          <option value="UnifrakturCook_SharpK">🩸 UnifrakturCook (Острая "k")</option>
+          <option value="UnifrakturCook">📜 UnifrakturCook (Оригинал: старая немецкая петля)</option>
+          <option value="PirataOne">🗡️ Pirata One (Dark Metal Trap / Пиратские шипы)</option>
+          <option value="GermaniaOne">🛡️ Germania One (Монолитный немецкий трэп-блэклеттер)</option>
+          <option value="MedievalSharp">🏰 MedievalSharp (Классическая средневековая готика)</option>
+          <option value="RubikGlitch">👾 Rubik Glitch (Rage Cyber-Trap / Yeat / Glitchcore)</option>
+          <option value="Syne">🦅 Syne UltraBold (Brutalist Trap / Travis Scott / Utopia)</option>
+          <option value="Unbounded">🏎️ Unbounded Extended (Wide Cyber Drill / Don Toliver)</option>
+          <option value="optimer">⚡ Optimer (Futuristic Cyber 3D)</option>
+          <option value="helvetiker">🏛️ Helvetiker Bold (Classic European Block)</option>
+          <option value="gentilis_bold">💎 Gentilis Bold (Sharp Geometric Trap)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 90px;">3D Размер</label>
+          <input type="range" id="fontSize3D" min="20" max="60" value="38" oninput="trigger3DRebuild()">
+          <span class="slider-val" id="fontSize3DVal">38</span>
+        </div>
+      </div>
+
+      <!-- Overlap & Interlocking for Solid Monolithic Pendant -->
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 125px;">Сцепка букв (Overlap)</label>
+          <input type="range" id="letterOverlap" min="0" max="30" step="1" value="15" oninput="updateLetterOverlapVal()">
+          <span class="slider-val" id="valLetterOverlap">15%</span>
+        </div>
+        <div style="font-size: 11px; color: #a5b4fc; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+          <span>🔗</span> <span>Буквы соприкасаются и спаяны в монолитный кулон (Baked in)</span>
+        </div>
+      </div>
+
+      <!-- Solid Jewelry Backplate / Undercarriage Toggle -->
+      <div class="form-group" style="padding-top: 8px; border-top: 1px dashed rgba(255,255,255,0.08);">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff;">
+          <input type="checkbox" id="backplateToggle" onchange="toggleBackplateUI()">
+          <span style="font-weight: 700;">🛡️ Литая подложка кулона (Backplate)</span>
+        </label>
+        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+          Цельнолитая золотая пластина сзади букв, как у настоящих подвесок
+        </div>
+      </div>
+
+      <div class="form-group" id="backplateDepthGroup" style="display: none;">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 125px;">Толщина подложки</label>
+          <input type="range" id="backplateDepth" min="2" max="12" step="1" value="4" oninput="trigger3DRebuild()">
+          <span class="slider-val" id="valBackplateDepth">4px</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; gap: 6px;">
+          <button class="preset-btn" style="flex: 1;" onclick="setTextCase('lower')">lowercase</button>
+          <button class="preset-btn" style="flex: 1;" onclick="setTextCase('upper')">UPPERCASE</button>
+          <button class="preset-btn" style="flex: 1;" onclick="setTextCase('title')">Capitalize</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Pendant Bail & Cuban Chain Section -->
+    <div class="control-section" id="chainAttachmentSection">
+      <div class="section-title">
+        <span>3. ⛓️ КУБИНСКАЯ ЦЕПЬ И КУЛОН</span>
+        <span class="preset-item-badge" style="color: #818cf8;">VVS TRAP BAIL</span>
+      </div>
+
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff;">
+          <input type="checkbox" id="chainToggle" checked onchange="toggleThreadedChain()">
+          <span style="font-weight: 700;">⛓️ Продеть кубинскую цепь сквозь букву "t"</span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #94a3b8; font-size: 12px;">
+          <input type="checkbox" id="bezelRimToggle" onchange="buildSideBailEyelets()">
+          <span>💍 Добавить ювелирный ободок люверса (Bezel Rim)</span>
+        </label>
+      </div>
+
+      <div class="form-group">
+        <label>Материал кубинской цепи</label>
+        <select id="chainMaterialSelect" onchange="rebuildThreadedChain()">
+          <option value="same" selected>💎 В тон кулону (Выбранный стиль)</option>
+          <option value="cuban_gold">🟡 18K Heavy Cuban Yellow Gold</option>
+          <option value="white_gold">⚪ 18K White Gold (Белое золото)</option>
+          <option value="chrome">✨ Liquid Mirror Chrome (Жидкое зеркало)</option>
+          <option value="cyber">🟣 Cyber Neon Opium</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 110px;">Толщина цепи</label>
+          <input type="range" id="chainScaleSlider" min="0.5" max="2.0" step="0.1" value="1.0" oninput="updateChainSettings()">
+          <span class="slider-val" id="valChainScale">1.0x</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 110px;">Провисание цепи</label>
+          <input type="range" id="chainSagSlider" min="0.4" max="2.0" step="0.1" value="1.0" oninput="updateChainSettings()">
+          <span class="slider-val" id="valChainSag">1.0x</span>
+        </div>
+      </div>
+
+      <!-- Cinematic Transitions Controls -->
+      <div class="form-group" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--card-border);">
+        <label style="color: #cbd5e1; font-weight: 700; margin-bottom: 8px;">🎬 Кинематографичные транзишены (Интро):</label>
+        <div style="display: flex; flex-direction: column; gap: 6px;">
+          <button class="btn btn-primary" style="font-size: 11px; padding: 10px;" onclick="startTransition('swoop_lift')">
+            🚀 1. Круг 360° + синхронный влёт цепи -> унос ВВЕРХ
+          </button>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn btn-secondary" style="font-size: 11px; padding: 8px; flex: 1.2;" onclick="startTransition('thread_snake')">
+              🧵 2. Вдеть сквозь "t"
+            </button>
+            <button class="btn btn-secondary" style="font-size: 11px; padding: 8px; flex: 1;" onclick="startTransition('hanging_swing')">
+              🕺 3. На шее
+            </button>
+            <button class="btn btn-secondary" style="font-size: 11px; padding: 8px; flex: 0.8;" onclick="stopTransition()">
+              ⏹️ Стоп
+            </button>
+          </div>
+
+          <!-- Interactive Threading Scrubber -->
+          <div style="margin-top: 8px; background: rgba(15,23,42,0.65); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; padding: 8px 10px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <span style="font-size: 11px; color: #38bdf8; font-weight: 600;">🧵 Ручное продёргивание цепи:</span>
+              <span style="font-size: 11px; color: #f1f5f9; font-family: monospace; font-weight: 700;" id="valThreadProgress">100% (Вдето)</span>
+            </div>
+            <div class="slider-row" style="margin: 4px 0 6px 0;">
+              <input type="range" id="threadScrubSlider" min="0" max="100" step="1" value="100" oninput="onScrubThreading(this.value)">
+            </div>
+            <div style="display: flex; gap: 4px;">
+              <button class="btn btn-secondary" style="font-size: 10px; padding: 5px 8px; flex: 1.2;" onclick="playThreadingOnce()">
+                ▶ Пуск интро (360° + Унос)
+              </button>
+              <button class="btn btn-secondary" style="font-size: 10px; padding: 5px 8px; flex: 1.3;" onclick="toggleThreadingDirection()">
+                🔁 <span id="lblThreadDir">Слева направо</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3D Volumetric Parameters (Extrusion & Bevel) -->
+    <div class="control-section" id="meshControlsGroup">
+      <div class="section-title">
+        <span>4. ОБЪЕМ И ФАСКИ (EXTRUSION)</span>
+      </div>
+
+      <div class="form-group" id="depthControlRow">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 125px;">3D Толщина кулона</label>
+          <input type="range" id="meshExtrudeDepth" min="6" max="50" value="18" oninput="trigger3DRebuild()">
+          <span class="slider-val" id="valExtrudeDepth">18px</span>
+        </div>
+      </div>
+
+      <div class="form-group" id="bevelControlRow">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 125px;">3D Литая фаска</label>
+          <input type="range" id="meshBevelThickness" min="0" max="8" step="0.2" value="3.2" oninput="trigger3DRebuild()">
+          <span class="slider-val" id="valBevelThickness">3.2</span>
+        </div>
+      </div>
+
+      <div class="form-group" id="bevelSegmentsRow">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 125px;">Скругление фаски</label>
+          <input type="range" id="meshBevelSegments" min="3" max="14" step="1" value="8" oninput="trigger3DRebuild()">
+          <span class="slider-val" id="valBevelSegments">8</span>
+        </div>
+        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+          ✨ Мягкий радиус (Pillowed Fillet) для реалистичных бликов жидкого золота
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 110px;">Скорость 3D</label>
+          <input type="range" id="rotateSpeed" min="0" max="5" step="0.2" value="1.5" oninput="updateTurntableSpeed()">
+          <span class="slider-val" id="valRotateSpeed">1.5x</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+          <input type="checkbox" id="autoRotate" onchange="toggleAutoRotate()">
+          <span>Кинематографичное 3D вращение</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- 5. Chrome & Liquid Material Controls -->
+    <div class="control-section">
+      <div class="section-title">
+        <span>5. ЖИДКИЙ МЕТАЛЛ И ОТРАЖЕНИЯ</span>
+      </div>
+
+      <div class="form-group">
+        <label>Тип материала</label>
+        <select id="matTypeSelect" onchange="switchMaterialType()">
+          <option value="liquid_matcap" selected>✨ Ультра-глянцевый Liquid Chrome (MatCap)</option>
+          <option value="pbr_metal">🧊 PBR Mirror Chrome (HDRI Environment)</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label>💎 Стили бриллиантового перелива (Iced Out):</label>
+        <div class="presets-grid" style="grid-template-columns: repeat(2, 1fr); gap: 6px;">
+          <button class="preset-btn active" onclick="applyMatcap('iced_starburst')">✨ VVS Starburst (Алмазные лучи)</button>
+          <button class="preset-btn" onclick="applyMatcap('iced_caustics')">🌊 Liquid Caustics (Каустики ртути)</button>
+          <button class="preset-btn" onclick="applyMatcap('iced_pave')">❄️ Pavé Dust (Микро-камни)</button>
+          <button class="preset-btn" onclick="applyMatcap('iced_aniso')">🌈 Prismatic Sheen (Лезвия света)</button>
+          <button class="preset-btn" style="grid-column: span 2;" onclick="applyMatcap('iced_diamond')">⚪ Classic Rings (Исходный с кольцами)</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Ювелирные металлы и хром:</label>
+        <div class="presets-grid" style="grid-template-columns: repeat(3, 1fr); gap: 6px;">
+          <button class="preset-btn" onclick="applyMatcap('chrome')">✨ Зеркало</button>
+          <button class="preset-btn" onclick="applyMatcap('white_gold')">⚪ Белое золото</button>
+          <button class="preset-btn" onclick="applyMatcap('cuban_gold')">🟡 18K Цепь</button>
+          <button class="preset-btn" onclick="applyMatcap('cyber')">🟣 Cyber Opium</button>
+          <button class="preset-btn" onclick="applyMatcap('gold')">⚡ 24K Золото</button>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 110px;">Скольжение света</label>
+          <input type="range" id="sparkleGlideSpeed" min="0" max="3" step="0.2" value="0.8" oninput="updateSparkleGlide()">
+          <span class="slider-val" id="valSparkleGlide">0.8x</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 110px;">Жидкая рябь (Ripple)</label>
+          <input type="range" id="rippleIntensity" min="0" max="1" step="0.05" value="0.35" oninput="updateRipple()">
+          <span class="slider-val" id="valRipple">0.35</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 110px;">Частота волн</label>
+          <input type="range" id="rippleSpeed" min="0" max="3" step="0.1" value="1.2" oninput="updateRipple()">
+          <span class="slider-val" id="valSpeed">1.2x</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. PRESETS & STYLES MANAGER -->
+    <div class="control-section" id="presetsSection">
+      <div class="section-title">
+        <span>6. ПРЕСЕТЫ И СОХРАНЕНИЕ</span>
+        <span class="preset-item-badge" id="presetCountBadge">6 пресетов</span>
+      </div>
+
+      <!-- Quick Save Preset -->
+      <div class="preset-manager-card">
+        <label style="margin-bottom: 4px; font-size: 11px;">Сохранить текущий стиль как пресет:</label>
+        <div class="preset-save-row">
+          <input type="text" id="customPresetName" class="input-text" placeholder="Имя пресета..." value="💎 Iced Out (Мой VVS)">
+          <button class="btn btn-primary" style="width: auto; padding: 0 14px; white-space: nowrap; font-size: 12px;" onclick="saveCurrentAsPreset()" title="Сохранить текущие параметры">
+            💾 Сохранить
+          </button>
+        </div>
+      </div>
+
+      <!-- Preset List -->
+      <div class="form-group">
+        <label>Библиотека пресетов (1 клик для загрузки):</label>
+        <div id="presetItemsList" style="max-height: 220px; overflow-y: auto; padding-right: 4px;">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Backup / Export Presets -->
+      <div class="preset-actions-bar">
+        <button class="btn btn-secondary" style="font-size: 11px; padding: 8px;" onclick="exportPresetsJSON()" title="Скачать все пресеты в файл .json">
+          📥 Экспорт в JSON
+        </button>
+        <input type="file" id="importPresetFile" accept=".json" style="display: none;" onchange="importPresetsJSON(event)">
+        <button class="btn btn-secondary" style="font-size: 11px; padding: 8px;" onclick="document.getElementById('importPresetFile').click()" title="Загрузить пресеты из .json">
+          📤 Импорт из JSON
+        </button>
+      </div>
+    </div>
+
+    <!-- 7. Export Action Buttons -->
+    <div class="control-section">
+      <div class="section-title">
+        <span>7. ЭКСПОРТ</span>
+      </div>
+
+      <div style="display: flex; flex-direction: column; gap: 8px;">
+        <button class="btn btn-primary" onclick="exportCurrentPNG()">
+          📸 Скачать 3D Кадр PNG (High-Res)
+        </button>
+        <button class="btn btn-secondary" style="border-color: #818cf8; color: #c7d2fe;" onclick="exportPendantOBJ()">
+          📦 Скачать 3D Модель Кулона с Цепью (.OBJ для Blender)
+        </button>
+        <button class="btn btn-secondary" onclick="openRendersFolder()">
+          📁 Открыть Папку с MP4 / GIF Рендерами
+        </button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="viewport-area" id="viewportArea">
+    
+    <!-- Drag & Drop Overlay -->
+    <div class="drop-overlay" id="dropOverlay">
+      <h2>💧 Отпустите 3D файл здесь</h2>
+      <p>Поддерживаются .glb, .gltf и .obj</p>
+    </div>
+
+    <!-- Top Mode Switcher Bar -->
+    <div class="top-mode-nav">
+      <button class="top-mode-btn active" id="modeBtn3D" onclick="setMode('3d')">
+        🧊 1. 100% Real 3D Chrome Geometry
+      </button>
+      <button class="top-mode-btn" id="modeBtnLiquid" onclick="setMode('liquid')">
+        💧 2. Paper Design 2D Liquid Shader
+      </button>
+      <button class="top-mode-btn" id="modeBtnVideo" onclick="setMode('video')">
+        🎬 3. Video Loop (60 FPS)
+      </button>
+    </div>
+
+    <!-- Mode 1: Real 3D Three.js Volumetric Text Mesh -->
+    <div id="three-3d-canvas"></div>
+
+    <!-- Mode 2: Liquid Metal WebGL Shader -->
+    <canvas id="gl-liquid-canvas"></canvas>
+
+    <!-- Mode 3: Video / Animated GIF Loop Container -->
+    <div id="video-loop-container">
+      <video id="loopVideo" src="./renders/kirtsoy-liquid-metal.mp4" autoplay loop muted playsinline></video>
+    </div>
+
+    <!-- HUD Overlay -->
+    <div class="viewport-hud">
+      <button class="hud-badge" style="cursor: pointer; color: #38bdf8; border-color: rgba(56,189,248,0.4); display: flex; align-items: center; gap: 4px;" onclick="resetCameraFront()" title="Выровнять камеру строго по центру лица кулона">
+        🎥 Фронт
+      </button>
+      <button class="hud-badge" style="cursor: pointer; color: #a855f7; border-color: rgba(168,85,247,0.5); font-weight: 700; display: flex; align-items: center; gap: 4px;" onclick="startTransition('swoop_lift')" title="Запустить полное интро: 360° + непрерывный влёт цепи в 't' -> унос ВВЕРХ">
+        🚀 360° + Унос ВВЕРХ
+      </button>
+      <button class="hud-badge" style="cursor: pointer; color: #94a3b8; border-color: rgba(255,255,255,0.15); display: flex; align-items: center; gap: 4px;" onclick="stopTransition()" title="Остановить и вернуть кулон в центр">
+        ⏹️ Сброс
+      </button>
+      <div class="hud-badge" id="hudEngineBadge">
+        ENGINE: THREE.JS REAL 3D + LIQUID CHROME MATCAP
+      </div>
+      <div class="hud-badge" style="color: #4ade80;">
+        FPS: <span id="fpsCounter">60</span>
+      </div>
+    </div>
+
+    <!-- Bottom Hint -->
+    <div class="viewport-instructions">
+      💡 Зажмите левую кнопку мыши для вращения 360°, колесико — зум, правая кнопка — перемещение
+    </div>
+
+  </main>
+
+  <script>
+    // --- STATE MANAGEMENT ---
+    let activeMode = '3d';
+    let currentCase = 'lower';
+    let loadedFonts = {};
+    let threeFont = null;
+    let activeSource = 'pendant_real_hole'; // 'pendant_real_hole', 'text', 'cuban_chain', 'sample_emblem', 'custom_model'
+    let custom3DObject = null;
+
+    // MatCap Textures
+    const texLoader = new THREE.TextureLoader();
+    const matcaps = {
+      iced_starburst: texLoader.load('./assets/matcaps/chain_iced_starburst.png?v=' + Date.now()),
+      iced_caustics: texLoader.load('./assets/matcaps/chain_iced_caustics.png?v=' + Date.now()),
+      iced_pave: texLoader.load('./assets/matcaps/chain_iced_pave.png?v=' + Date.now()),
+      iced_aniso: texLoader.load('./assets/matcaps/chain_iced_aniso.png?v=' + Date.now()),
+      iced_diamond: texLoader.load('./assets/matcaps/chain_iced_diamond.png?v=' + Date.now()),
+      cuban_gold: texLoader.load('./assets/matcaps/chain_cuban_gold.png'),
+      white_gold: texLoader.load('./assets/matcaps/chain_white_gold.png'),
+      chrome: texLoader.load('./assets/matcaps/chrome_liquid.png'),
+      gold: texLoader.load('./assets/matcaps/chrome_gold.png'),
+      cyber: texLoader.load('./assets/matcaps/chrome_cyber.png')
+    };
+    let activeMatcapName = 'iced_starburst';
+    let activeMaterialType = 'liquid_matcap';
+
+    // --- THREE.JS REAL 3D SCENE SETUP ---
+    const threeContainer = document.getElementById('three-3d-canvas');
+    let threeScene, threeCamera, threeRenderer, threeCurrentMesh, threeControls;
+    let envTexture = null;
+
+    function initThree3D() {
+      threeScene = new THREE.Scene();
+      const w = threeContainer.clientWidth || window.innerWidth;
+      const h = threeContainer.clientHeight || window.innerHeight;
+
+      threeCamera = new THREE.PerspectiveCamera(40, w / h, 0.1, 2000);
+      threeCamera.position.set(0, 0, 240); // 100% pure frontal level eye-line
+      threeCamera.lookAt(0, 0, 0);
+
+      threeRenderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
+      threeRenderer.setSize(w, h);
+      threeRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+      threeRenderer.toneMapping = THREE.ACESFilmicToneMapping;
+      threeRenderer.toneMappingExposure = 1.4;
+      threeContainer.appendChild(threeRenderer.domElement);
+
+      threeControls = new THREE.OrbitControls(threeCamera, threeRenderer.domElement);
+      threeControls.enableDamping = true;
+      threeControls.dampingFactor = 0.05;
+      threeControls.autoRotate = false; // Never drift or rotate camera automatically
+      threeControls.autoRotateSpeed = 1.5;
+
+      // Studio Lighting
+      const ambLight = new THREE.AmbientLight(0xffffff, 1.2);
+      threeScene.add(ambLight);
+
+      const mainLight = new THREE.DirectionalLight(0xffffff, 3.5);
+      mainLight.position.set(120, 160, 150);
+      threeScene.add(mainLight);
+
+      const blueRim = new THREE.DirectionalLight(0x6366f1, 3.0);
+      blueRim.position.set(-160, -100, 80);
+      threeScene.add(blueRim);
+
+      const pinkRim = new THREE.DirectionalLight(0xec4899, 3.0);
+      pinkRim.position.set(160, -120, -100);
+      threeScene.add(pinkRim);
+
+      createProceduralEnvMap();
+      load3DFonts();
+      setupDragAndDrop();
+    }
+
+    function createProceduralEnvMap() {
+      const pmremGenerator = new THREE.PMREMGenerator(threeRenderer);
+      pmremGenerator.compileEquirectangularShader();
+
+      const envScene = new THREE.Scene();
+      const geo = new THREE.SphereGeometry(100, 32, 16);
+      
+      const canvas = document.createElement('canvas');
+      canvas.width = 512; canvas.height = 256;
+      const ctx = canvas.getContext('2d');
+      const grad = ctx.createLinearGradient(0, 0, 0, 256);
+      grad.addColorStop(0, '#ffffff');
+      grad.addColorStop(0.2, '#99b0d0');
+      grad.addColorStop(0.5, '#0f172a');
+      grad.addColorStop(0.8, '#1e293b');
+      grad.addColorStop(1, '#05070a');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 512, 256);
+
+      const envTex = new THREE.CanvasTexture(canvas);
+      const envMat = new THREE.MeshBasicMaterial({ map: envTex, side: THREE.BackSide });
+      envScene.add(new THREE.Mesh(geo, envMat));
+
+      envTexture = pmremGenerator.fromScene(envScene).texture;
+      threeScene.environment = envTexture;
+    }
+
+    function getActiveChromeMaterial() {
+      if (activeMaterialType === 'liquid_matcap') {
+        return new THREE.MeshMatcapMaterial({
+          matcap: matcaps[activeMatcapName],
+          side: THREE.DoubleSide
+        });
+      } else {
+        const colors = { chrome: 0xf0f5ff, gold: 0xf59e0b, cyber: 0x6366f1 };
+        return new THREE.MeshStandardMaterial({
+          color: colors[activeMatcapName] || 0xffffff,
+          metalness: 1.0,
+          roughness: 0.02,
+          envMap: envTexture,
+          envMapIntensity: 3.5,
+          side: THREE.DoubleSide
+        });
+      }
+    }
+
+    const fontFileMap = {
+      'UnifrakturCook_PrintedK': './assets/UnifrakturCook_PrintedK.json?v=' + Date.now(),
+      'UnifrakturCook_PrintedK_Solid': './assets/UnifrakturCook_PrintedK_Solid.json',
+      'UnifrakturCook_HeavyPrintedK': './assets/UnifrakturCook_HeavyPrintedK.json',
+      'UnifrakturCook_SharpK': './assets/UnifrakturCook_SharpK.json',
+      'UnifrakturCook_MiniCapK': './assets/UnifrakturCook_MiniCapK.json',
+      'UnifrakturCook_GothicK': './assets/UnifrakturCook_GothicK.json',
+      'UnifrakturCook': './assets/UnifrakturCook.json',
+      'PirataOne': './assets/PirataOne.json',
+      'GermaniaOne': './assets/GermaniaOne.json',
+      'MedievalSharp': './assets/MedievalSharp.json',
+      'RubikGlitch': './assets/RubikGlitch.json',
+      'Syne': './assets/Syne.json',
+      'Unbounded': './assets/Unbounded.json',
+      'optimer': './assets/font_optimer.json',
+      'helvetiker': './assets/font_3d.json',
+      'gentilis_bold': './assets/gentilis_bold.json'
+    };
+
+    function load3DFonts() {
+      // Default to UnifrakturCook with Printed K
+      fetch(fontFileMap['UnifrakturCook_PrintedK'])
+        .then(r => r.json())
+        .then(data => {
+          loadedFonts['UnifrakturCook_PrintedK'] = new THREE.Font(data);
+          threeFont = loadedFonts['UnifrakturCook_PrintedK'];
+          rebuildCurrent3DObject();
+        })
+        .catch(e => {
+          fetch('./assets/font_optimer.json')
+            .then(r => r.json())
+            .then(data => {
+              loadedFonts['optimer'] = new THREE.Font(data);
+              threeFont = loadedFonts['optimer'];
+              rebuildCurrent3DObject();
+            });
+        });
+    }
+
+    function switch3DFont() {
+      const fName = document.getElementById('font3DSelect').value;
+      if (loadedFonts[fName]) {
+        threeFont = loadedFonts[fName];
+        rebuildCurrent3DObject();
+      } else {
+        const file = fontFileMap[fName] || './assets/font_optimer.json';
+        fetch(file)
+          .then(r => r.json())
+          .then(data => {
+            loadedFonts[fName] = new THREE.Font(data);
+            threeFont = loadedFonts[fName];
+            rebuildCurrent3DObject();
+          })
+          .catch(err => {
+            console.error('Error loading font', fName, err);
+          });
+      }
+    }
+
+    // --- THREADED CUBAN CHAIN & PENDANT SYSTEM ---
+    let threeChainMesh = null;
+    let chainEnabled = true;
+    let transitionMode = 'none'; // 'none', 'swoop_lift', 'thread_snake', 'hanging_swing'
+    let transitionStartTime = 0;
+    let activeChainCurve = null;
+    let activeChainLinkCount = 0;
+    let activeChainLinkLen = 3.6;
+    let chainThreadingProgress = 1.0; // 0.0 to 1.0 (1.0 = fully threaded settled necklace)
+    let chainThreadingDirection = 'ltr'; // 'ltr' (left to right) or 'rtl' (right to left)
+
+    function toggleThreadedChain() {
+      const chk = document.getElementById('chainToggle');
+      chainEnabled = chk ? chk.checked : true;
+      rebuildThreadedChain();
+    }
+
+    function updateChainSettings() {
+      const scaleEl = document.getElementById('chainScaleSlider');
+      const sagEl = document.getElementById('chainSagSlider');
+      if (scaleEl) document.getElementById('valChainScale').innerText = scaleEl.value + 'x';
+      if (sagEl) document.getElementById('valChainSag').innerText = sagEl.value + 'x';
+      rebuildThreadedChain();
+    }
+
+    let threeBailMesh = null;
+
+    function getPendantHole3DCoords() {
+      if (activeSource === 'pendant_real_hole') {
+        // Exact lateral through-hole in crossbar of letter "t" (upright baked Blender mesh):
+        return {
+          xCenter: -5.74,
+          xLeft: -11.29,
+          xRight: -0.19,
+          yBail: 18.51,
+          z: 0
+        };
+      }
+      if (window.dynamicHoleCoords) {
+        return window.dynamicHoleCoords;
+      }
+      const size = parseFloat(document.getElementById('fontSize3D')?.value || 38);
+      return {
+        xCenter: size * -0.1637,
+        xLeft: size * -0.2755,
+        xRight: size * -0.0518,
+        yBail: size * 0.5103,
+        z: 0
+      };
+    }
+
+    function buildSideBailEyelets() {
+      if (threeBailMesh) {
+        if (threeCurrentMesh) threeCurrentMesh.remove(threeBailMesh);
+        if (threeScene) threeScene.remove(threeBailMesh);
+        threeBailMesh = null;
+      }
+
+      const showBezel = document.getElementById('bezelRimToggle')?.checked;
+      if (!chainEnabled || !showBezel || (activeSource !== 'text' && activeSource !== 'pendant_real_hole') || !threeCurrentMesh) return;
+
+      const coords = getPendantHole3DCoords();
+      const linkScale = parseFloat(document.getElementById('chainScaleSlider')?.value || 1.0);
+
+      const bailGroup = new THREE.Group();
+      const bailMat = getActiveChromeMaterial();
+
+      // Eyelet Bezel Geometry (beveled grommet rim on lateral side walls)
+      // 100% HOLLOW THROUGH-HOLE — ZERO BLACK DISCS / ZERO PLUG
+      const eyeletRadius = 1.85 * linkScale;
+      const eyeletTube = 0.35 * linkScale;
+      const ringGeo = new THREE.TorusGeometry(eyeletRadius, eyeletTube, 16, 32);
+
+      // 1. Left Side Eyelet (bezel rim around left hole entrance)
+      const leftEyelet = new THREE.Mesh(ringGeo, bailMat);
+      leftEyelet.position.set(coords.xLeft, coords.yBail, 0);
+      leftEyelet.rotation.y = Math.PI / 2; // Flat on the left side wall
+      bailGroup.add(leftEyelet);
+
+      // 2. Right Side Eyelet (bezel rim around right hole exit)
+      const rightEyelet = new THREE.Mesh(ringGeo, bailMat);
+      rightEyelet.position.set(coords.xRight, coords.yBail, 0);
+      rightEyelet.rotation.y = -Math.PI / 2; // Flat on the right side wall
+      bailGroup.add(rightEyelet);
+
+      threeBailMesh = bailGroup;
+      threeCurrentMesh.add(threeBailMesh);
+    }
+
+    function rebuildThreadedChain() {
+      if (threeChainMesh) {
+        threeScene.remove(threeChainMesh);
+        if (threeChainMesh.geometry) threeChainMesh.geometry.dispose();
+        threeChainMesh = null;
+      }
+
+      buildSideBailEyelets();
+
+      if (!chainEnabled || (activeSource !== 'text' && activeSource !== 'pendant_real_hole')) return;
+
+      const coords = getPendantHole3DCoords();
+      const sag = parseFloat(document.getElementById('chainSagSlider')?.value || 1.0);
+      const linkScale = parseFloat(document.getElementById('chainScaleSlider')?.value || 1.0);
+
+      // 11-point extended catenary trajectory:
+      // Offscreen top-left -> descent -> align to crossbar -> through hole in 't' -> exit -> ascent -> offscreen top-right
+      const p_start = new THREE.Vector3(coords.xCenter - 140, coords.yBail + 110 * sag, -50);
+      const p0 = new THREE.Vector3(coords.xCenter - 75, coords.yBail + 55 * sag, -26);
+      const p1 = new THREE.Vector3(coords.xCenter - 38, coords.yBail + 22 * sag, -12);
+      const p2 = new THREE.Vector3(coords.xLeft - 10, coords.yBail + 2.5 * sag, -2);
+      const p3 = new THREE.Vector3(coords.xLeft, coords.yBail, 0); // EXACT LEFT SIDE HOLE ENTRANCE
+      const p4 = new THREE.Vector3(coords.xCenter, coords.yBail, 0); // INSIDE LATERAL TUNNEL
+      const p5 = new THREE.Vector3(coords.xRight, coords.yBail, 0); // EXACT RIGHT SIDE HOLE EXIT
+      const p6 = new THREE.Vector3(coords.xRight + 10, coords.yBail + 2.5 * sag, -2);
+      const p7 = new THREE.Vector3(coords.xCenter + 38, coords.yBail + 22 * sag, -12);
+      const p8 = new THREE.Vector3(coords.xCenter + 75, coords.yBail + 55 * sag, -26);
+      const p_end = new THREE.Vector3(coords.xCenter + 140, coords.yBail + 110 * sag, -50);
+
+      const curve = new THREE.CatmullRomCurve3([p_start, p0, p1, p2, p3, p4, p5, p6, p7, p8, p_end]);
+      const curveLength = curve.getLength();
+
+      // Authentic Miami Cuban curb link sizing & tight interlocking pitch
+      const linkLen = 3.6 * linkScale;
+      const pitch = linkLen * 0.486; // Overlapping curb pitch
+      // Settled span covers 0.528 of the full extended curve
+      const settledLength = curveLength * 0.528;
+      const linkCount = Math.max(30, Math.floor(settledLength / pitch));
+
+      let baseLinkGeo;
+      if (window.CUBAN_LINK_DATA && window.CUBAN_LINK_DATA.createGeometry) {
+        baseLinkGeo = window.CUBAN_LINK_DATA.createGeometry();
+      } else {
+        baseLinkGeo = new THREE.TorusGeometry(1.6 * linkScale, 0.55 * linkScale, 12, 24);
+        baseLinkGeo.scale(1.4, 0.9, 0.45);
+      }
+
+      // Material for chain
+      const matKey = document.getElementById('chainMaterialSelect')?.value || 'same';
+      let chainMat;
+      if (matKey === 'same') {
+        chainMat = getActiveChromeMaterial();
+      } else {
+        chainMat = new THREE.MeshMatcapMaterial({
+          matcap: matcaps[matKey] || matcaps['cuban_gold']
+        });
+      }
+
+      threeChainMesh = new THREE.InstancedMesh(baseLinkGeo, chainMat, linkCount);
+
+      activeChainCurve = curve;
+      activeChainLinkCount = linkCount;
+      activeChainLinkLen = linkLen;
+
+      // Position links based on current threading progress (default 1.0 = fully settled)
+      updateChainThreading(chainThreadingProgress);
+      threeScene.add(threeChainMesh);
+    }
+
+    function updateChainThreading(progress) {
+      if (!threeChainMesh || !activeChainCurve || activeChainLinkCount <= 0) return;
+      chainThreadingProgress = Math.max(0, Math.min(1.0, progress));
+
+      const dummy = new THREE.Object3D();
+      const defaultDir = new THREE.Vector3(1, 0, 0);
+
+      // On our 11-point curve:
+      // t = 0.00: Far top-left offscreen
+      // t = 0.236: Settled left anchor (p0)
+      // t = 0.485: Hole entrance in letter 't'
+      // t = 0.500: Hole center inside 't'
+      // t = 0.515: Hole exit in letter 't'
+      // t = 0.764: Settled right anchor (p8)
+      // t = 1.00: Far top-right offscreen
+
+      const tSettledStart = 0.236;
+      const tSettledEnd = 0.764;
+      const span = tSettledEnd - tSettledStart; // 0.528
+      const deltaT = span / (activeChainLinkCount - 1);
+
+      // In 'ltr': head enters at t=0.03 (offscreen top-left) and travels to tSettledEnd (0.764)
+      const headT = 0.03 + chainThreadingProgress * (tSettledEnd - 0.03);
+
+      for (let i = 0; i < activeChainLinkCount; i++) {
+        // Link index i: i = activeChainLinkCount - 1 is HEAD (the leading tip that threads first!)
+        // i = 0 is TAIL (last link trailing behind)
+        let t_link = headT - (activeChainLinkCount - 1 - i) * deltaT;
+
+        if (chainThreadingDirection === 'rtl') {
+          t_link = 1.0 - t_link;
+        }
+
+        // Hide links that haven't entered the scene yet or passed offscreen
+        const isVisible = (chainThreadingDirection === 'ltr') 
+          ? (t_link >= 0.03 && t_link <= 0.98)
+          : (t_link >= 0.02 && t_link <= 0.97);
+
+        if (!isVisible) {
+          dummy.position.set(0, -9999, 0);
+          dummy.scale.set(0, 0, 0);
+          dummy.updateMatrix();
+          threeChainMesh.setMatrixAt(i, dummy.matrix);
+          continue;
+        }
+
+        const clampedT = Math.max(0, Math.min(1, t_link));
+        const pos = activeChainCurve.getPointAt(clampedT);
+        const tangent = activeChainCurve.getTangentAt(clampedT).normalize();
+
+        dummy.position.copy(pos);
+        dummy.quaternion.setFromUnitVectors(defaultDir, tangent);
+        const rollAngle = (i % 2 === 0) ? (Math.PI / 4) : (-Math.PI / 4);
+        dummy.rotateX(rollAngle);
+        dummy.scale.set(activeChainLinkLen, activeChainLinkLen, activeChainLinkLen);
+        dummy.updateMatrix();
+
+        threeChainMesh.setMatrixAt(i, dummy.matrix);
+      }
+
+      threeChainMesh.instanceMatrix.needsUpdate = true;
+
+      // Update scrub slider UI if present
+      const scrubEl = document.getElementById('threadScrubSlider');
+      const valEl = document.getElementById('valThreadProgress');
+      const pct = Math.round(chainThreadingProgress * 100);
+      if (scrubEl && document.activeElement !== scrubEl) scrubEl.value = pct;
+      if (valEl) {
+        if (pct === 0) valEl.innerText = '0% (Готов к влёту)';
+        else if (pct < 20) valEl.innerText = pct + '% (Спуск слева)';
+        else if (pct < 58) valEl.innerText = pct + '% (Подлёт к "t")';
+        else if (pct <= 72) valEl.innerText = pct + '% 🧵 (ПРОХОДИТ СКВОЗЬ "t"!)';
+        else if (pct < 100) valEl.innerText = pct + '% (Выход наверх)';
+        else valEl.innerText = '100% (Вдето & Зафиксировано)';
+      }
+    }
+
+    function onScrubThreading(val) {
+      transitionMode = 'none';
+      if (threeCurrentMesh) {
+        threeCurrentMesh.position.set(0, 0, 0);
+        threeCurrentMesh.rotation.set(0, 0, 0);
+      }
+      if (threeChainMesh) {
+        threeChainMesh.position.set(0, 0, 0);
+        threeChainMesh.rotation.set(0, 0, 0);
+      }
+      updateChainThreading(parseFloat(val) / 100);
+    }
+
+    function toggleThreadingDirection() {
+      chainThreadingDirection = (chainThreadingDirection === 'ltr') ? 'rtl' : 'ltr';
+      const lbl = document.getElementById('lblThreadDir');
+      if (lbl) lbl.innerText = (chainThreadingDirection === 'ltr') ? 'Слева направо' : 'Справа налево';
+      showToast('🔁 Направление влёта: ' + ((chainThreadingDirection === 'ltr') ? 'Слева направо' : 'Справа налево'));
+      updateChainThreading(chainThreadingProgress);
+    }
+
+    function playThreadingOnce() {
+      startTransition('swoop_lift');
+      showToast('🚀 Запущен влёт цепи сквозь "t" и унос ВВЕРХ!');
+    }
+
+    // --- CINEMATIC TRANSITIONS ---
+    function resetCameraFront() {
+      if (threeCamera && threeControls) {
+        threeCamera.position.set(0, 0, 240);
+        threeControls.target.set(0, 0, 0);
+        threeCamera.lookAt(0, 0, 0);
+        threeControls.update();
+      }
+    }
+
+    function startTransition(mode) {
+      // 1. Instantly disable autoRotate so camera never drifts or moves during choreography
+      if (threeControls) threeControls.autoRotate = false;
+      const autoRotEl = document.getElementById('autoRotate');
+      if (autoRotEl) autoRotEl.checked = false;
+
+      // 2. Lock camera to pure front level view looking directly at kirtsoy
+      resetCameraFront();
+
+      // 3. Reset mesh and chain to clean origin (0, 0, 0)
+      if (threeCurrentMesh) {
+        threeCurrentMesh.position.set(0, 0, 0);
+        threeCurrentMesh.rotation.set(0, 0, 0);
+      }
+      if (threeChainMesh) {
+        threeChainMesh.position.set(0, 0, 0);
+        threeChainMesh.rotation.set(0, 0, 0);
+      }
+
+      transitionMode = mode;
+      transitionStartTime = performance.now();
+
+      if (mode === 'swoop_lift') {
+        updateChainThreading(0.0);
+        showToast('🚀 Запущен транзишн: Ровный старт -> 360° -> Влёт цепи в "t" -> Унос ВВЕРХ!');
+      } else if (mode === 'thread_snake') {
+        updateChainThreading(0.0);
+        showToast('🧵 Режим: Влёт одного конца цепи и продёргивание сквозь букву "t"');
+      } else if (mode === 'hanging_swing') {
+        updateChainThreading(1.0);
+        showToast('🕺 Режим: Физическое покачивание кулона на шее');
+      }
+    }
+
+    function stopTransition() {
+      transitionMode = 'none';
+      resetCameraFront();
+      if (threeCurrentMesh) {
+        threeCurrentMesh.position.set(0, 0, 0);
+        threeCurrentMesh.rotation.set(0, 0, 0);
+      }
+      if (threeChainMesh) {
+        threeChainMesh.position.set(0, 0, 0);
+        threeChainMesh.rotation.set(0, 0, 0);
+      }
+      updateChainThreading(1.0);
+      showToast('⏹️ Позиция сброшена на исходную (фронтальный вид)');
+    }
+
+    // --- 3D OBJ EXPORTER ---
+    function exportPendantOBJ() {
+      if (!threeCurrentMesh || !threeCurrentMesh.geometry) {
+        showToast('❌ Нет 3D геометрии для экспорта');
+        return;
+      }
+      let objText = "# KIRTSOY Custom 3D Trap Pendant with Chain Bail Hole\n";
+      objText += "# Generated by KIRTSOY 3D Liquid Studio\n\n";
+
+      let vOffset = 1;
+      const geo = threeCurrentMesh.geometry;
+      const pos = geo.attributes.position;
+      if (!pos) return;
+
+      objText += "o Pendant_kirtsoy\n";
+      for (let i = 0; i < pos.count; i++) {
+        objText += `v ${pos.getX(i).toFixed(4)} ${pos.getY(i).toFixed(4)} ${pos.getZ(i).toFixed(4)}\n`;
+      }
+
+      if (geo.index) {
+        const idx = geo.index;
+        for (let i = 0; i < idx.count; i += 3) {
+          objText += `f ${idx.getX(i) + vOffset} ${idx.getX(i+1) + vOffset} ${idx.getX(i+2) + vOffset}\n`;
+        }
+      } else {
+        for (let i = 0; i < pos.count; i += 3) {
+          objText += `f ${i + vOffset} ${i + 1 + vOffset} ${i + 2 + vOffset}\n`;
+        }
+      }
+
+      // Also append threaded Cuban chain links if active
+      if (threeChainMesh && chainEnabled) {
+        objText += "\no Cuban_Chain\n";
+        const cGeo = threeChainMesh.geometry;
+        const cPos = cGeo.attributes.position;
+        const cIdx = cGeo.index;
+        const linkCount = threeChainMesh.count;
+        const dummyMat = new THREE.Matrix4();
+        const vTmp = new THREE.Vector3();
+
+        for (let l = 0; l < linkCount; l++) {
+          threeChainMesh.getMatrixAt(l, dummyMat);
+          const baseV = vOffset;
+          for (let p = 0; p < cPos.count; p++) {
+            vTmp.set(cPos.getX(p), cPos.getY(p), cPos.getZ(p)).applyMatrix4(dummyMat);
+            objText += `v ${vTmp.x.toFixed(4)} ${vTmp.y.toFixed(4)} ${vTmp.z.toFixed(4)}\n`;
+            vOffset++;
+          }
+          if (cIdx) {
+            for (let f = 0; f < cIdx.count; f += 3) {
+              objText += `f ${baseV + cIdx.getX(f)} ${baseV + cIdx.getX(f+1)} ${baseV + cIdx.getX(f+2)}\n`;
+            }
+          }
+        }
+      }
+
+      const blob = new Blob([objText], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `kirtsoy_pendant_trap_bail_${Date.now()}.obj`;
+      a.click();
+      showToast('📦 3D Модель (.OBJ) успешно скачана! Готова для Blender');
+    }
+
+    function updateLetterOverlapVal() {
+      const el = document.getElementById('letterOverlap');
+      const val = el ? el.value : 15;
+      if (document.getElementById('valLetterOverlap')) document.getElementById('valLetterOverlap').innerText = val + '%';
+      trigger3DRebuild();
+    }
+
+    function toggleBackplateUI() {
+      const chk = document.getElementById('backplateToggle')?.checked;
+      const grp = document.getElementById('backplateDepthGroup');
+      if (grp) grp.style.display = chk ? 'block' : 'none';
+      trigger3DRebuild();
+    }
+
+    function buildInterlockingPendantMesh(textVal, font, size, depth, bevel, bevelSegs, overlapRatio, backplateOn, bpDepth) {
+      const chars = Array.from(textVal);
+      const scale = size / font.data.resolution;
+      const geometries = [];
+      let currentX = 0;
+      let tLetterBounds = null;
+
+      const extrudeSettings = {
+        steps: 1,
+        depth: depth,
+        bevelEnabled: (bevel > 0),
+        bevelThickness: bevel,
+        bevelSize: bevel * 0.75,
+        bevelOffset: 0,
+        bevelSegments: bevelSegs
+      };
+
+      for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        const glyph = font.data.glyphs[char] || font.data.glyphs['?'];
+        if (!glyph) continue;
+
+        const shapes = font.generateShapes(char, size);
+        if (shapes && shapes.length > 0) {
+          const charGeo = new THREE.ExtrudeGeometry(shapes, extrudeSettings);
+          charGeo.translate(currentX, 0, 0);
+          charGeo.computeBoundingBox();
+
+          // Capture letter 't' for precise chain catenary curve threading
+          if (char.toLowerCase() === 't' && !tLetterBounds) {
+            const b = charGeo.boundingBox;
+            tLetterBounds = {
+              minX: b.min.x,
+              maxX: b.max.x,
+              xCenter: (b.min.x + b.max.x) / 2,
+              yBail: b.min.y + (b.max.y - b.min.y) * 0.84
+            };
+          }
+
+          geometries.push(charGeo);
+        }
+
+        // Advance cursor with overlap so every letter touches and merges!
+        const advance = (glyph.ha !== undefined ? glyph.ha : 500) * scale;
+        currentX += advance * (1.0 - overlapRatio);
+      }
+
+      // Optional: Solid Jewelry Backplate (Литая золотая подложка)
+      if (backplateOn && geometries.length > 0) {
+        let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+        geometries.forEach(g => {
+          minX = Math.min(minX, g.boundingBox.min.x);
+          maxX = Math.max(maxX, g.boundingBox.max.x);
+          minY = Math.min(minY, g.boundingBox.min.y);
+          maxY = Math.max(maxY, g.boundingBox.max.y);
+        });
+        const pad = 3.0;
+        const w = (maxX - minX) + pad * 2;
+        const h = (maxY - minY) + pad * 2;
+        const cx = (minX + maxX) / 2;
+        const cy = (minY + maxY) / 2;
+
+        const bpShape = new THREE.Shape();
+        const rad = Math.min(w, h) * 0.12;
+        const x = -w / 2, y = -h / 2;
+        bpShape.moveTo(x + rad, y);
+        bpShape.lineTo(x + w - rad, y);
+        bpShape.quadraticCurveTo(x + w, y, x + w, y + rad);
+        bpShape.lineTo(x + w, y + h - rad);
+        bpShape.quadraticCurveTo(x + w, y + h, x + w - rad, y + h);
+        bpShape.lineTo(x + rad, y + h);
+        bpShape.quadraticCurveTo(x, y + h, x, y + h - rad);
+        bpShape.lineTo(x, y + rad);
+        bpShape.quadraticCurveTo(x, y, x + rad, y);
+
+        const bpGeo = new THREE.ExtrudeGeometry(bpShape, {
+          depth: bpDepth,
+          bevelEnabled: true,
+          bevelThickness: 1.0,
+          bevelSize: 0.8,
+          bevelSegments: 4
+        });
+        // Position directly behind the letters (overlap 0.5px for watertight fusion)
+        bpGeo.translate(cx, cy, -bpDepth + 0.5);
+        geometries.push(bpGeo);
+      }
+
+      let merged;
+      if (window.THREE && THREE.BufferGeometryUtils && THREE.BufferGeometryUtils.mergeBufferGeometries) {
+        merged = THREE.BufferGeometryUtils.mergeBufferGeometries(geometries);
+      } else {
+        merged = geometries[0];
+      }
+
+      merged.computeBoundingBox();
+      const meshCenter = merged.boundingBox.getCenter(new THREE.Vector3());
+      merged.center();
+      merged.computeVertexNormals();
+
+      if (tLetterBounds) {
+        window.dynamicHoleCoords = {
+          xCenter: tLetterBounds.xCenter - meshCenter.x,
+          xLeft: tLetterBounds.minX - meshCenter.x,
+          xRight: tLetterBounds.maxX - meshCenter.x,
+          yBail: tLetterBounds.yBail - meshCenter.y,
+          z: 0
+        };
+      }
+
+      return merged;
+    }
+
+    function rebuildCurrent3DObject() {
+      if (!threeScene) return;
+
+      if (threeCurrentMesh) {
+        threeScene.remove(threeCurrentMesh);
+        threeCurrentMesh = null;
+      }
+
+      if (activeSource === 'text') {
+        if (!threeFont) return;
+        const textVal = getFormattedText();
+        const size = parseFloat(document.getElementById('fontSize3D').value);
+        const depth = parseFloat(document.getElementById('meshExtrudeDepth').value);
+        const bevel = parseFloat(document.getElementById('meshBevelThickness').value);
+        const bevelSegs = parseInt(document.getElementById('meshBevelSegments')?.value || 8);
+        const overlapRatio = parseFloat(document.getElementById('letterOverlap')?.value || 15) / 100.0;
+        const backplateOn = document.getElementById('backplateToggle')?.checked || false;
+        const bpDepth = parseFloat(document.getElementById('backplateDepth')?.value || 4);
+
+        const meshGeo = buildInterlockingPendantMesh(textVal, threeFont, size, depth, bevel, bevelSegs, overlapRatio, backplateOn, bpDepth);
+        const mat = getActiveChromeMaterial();
+        threeCurrentMesh = new THREE.Mesh(meshGeo, mat);
+        threeScene.add(threeCurrentMesh);
+
+        // Build threaded chain through the pendant hole
+        rebuildThreadedChain();
+
+      } else if (activeSource === 'pendant_real_hole') {
+        loadOBJModel('./assets/kirtsoy_pendant_real_hole.obj?v=' + Date.now(), 1.0, () => {
+          rebuildThreadedChain();
+        });
+      } else if (activeSource === 'cuban_chain') {
+        if (threeChainMesh) {
+          threeScene.remove(threeChainMesh);
+          threeChainMesh = null;
+        }
+        loadOBJModel('./assets/cuban_chain.obj', 1.0);
+      } else if (activeSource === 'sample_emblem') {
+        loadOBJModel('./assets/sample_emblem.obj', 1.8);
+      } else if (activeSource === 'custom_model' && custom3DObject) {
+        applyMaterialToCustomModel(custom3DObject);
+        threeCurrentMesh = custom3DObject;
+        threeScene.add(threeCurrentMesh);
+      }
+    }
+
+    function switchObjectSource() {
+      activeSource = document.getElementById('objectSourceSelect').value;
+      const typoSec = document.getElementById('typographySection');
+      const uploadGrp = document.getElementById('fileUploadGroup');
+      const depthRow = document.getElementById('depthControlRow');
+      const bevelRow = document.getElementById('bevelControlRow');
+
+      if (activeSource === 'text') {
+        typoSec.style.display = 'block';
+        uploadGrp.style.display = 'none';
+        depthRow.style.display = 'block';
+        bevelRow.style.display = 'block';
+        rebuildCurrent3DObject();
+      } else if (activeSource === 'pendant_real_hole') {
+        typoSec.style.display = 'none';
+        uploadGrp.style.display = 'none';
+        depthRow.style.display = 'none';
+        bevelRow.style.display = 'none';
+        rebuildCurrent3DObject();
+      } else if (activeSource === 'cuban_chain') {
+        typoSec.style.display = 'none';
+        uploadGrp.style.display = 'none';
+        depthRow.style.display = 'none';
+        bevelRow.style.display = 'none';
+        rebuildCurrent3DObject();
+      } else if (activeSource === 'sample_emblem') {
+        typoSec.style.display = 'none';
+        uploadGrp.style.display = 'none';
+        depthRow.style.display = 'none';
+        bevelRow.style.display = 'none';
+        rebuildCurrent3DObject();
+      } else if (activeSource === 'custom_model') {
+        typoSec.style.display = 'none';
+        uploadGrp.style.display = 'block';
+        depthRow.style.display = 'none';
+        bevelRow.style.display = 'none';
+        if (custom3DObject) {
+          rebuildCurrent3DObject();
+        } else {
+          document.getElementById('modelFileInput').click();
+        }
+      }
+    }
+
+    function applyMaterialToCustomModel(rootObj) {
+      const mat = getActiveChromeMaterial();
+      rootObj.traverse((child) => {
+        if (child.isMesh) {
+          child.material = mat;
+        }
+      });
+    }
+
+    function loadOBJModel(url, scale = 1.0, callback = null) {
+      const objLoader = new THREE.OBJLoader();
+      objLoader.load(url, (obj) => {
+        const box = new THREE.Box3().setFromObject(obj);
+        const center = box.getCenter(new THREE.Vector3());
+        obj.position.sub(center);
+        obj.scale.setScalar(scale);
+        obj.traverse((child) => {
+          if (child.isMesh && child.geometry) {
+            child.geometry.computeVertexNormals();
+          }
+        });
+
+        applyMaterialToCustomModel(obj);
+        if (threeCurrentMesh) threeScene.remove(threeCurrentMesh);
+        threeCurrentMesh = obj;
+        threeScene.add(threeCurrentMesh);
+        if (callback) callback(obj);
+      });
+    }
+
+    function handleModelFileSelect(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      loadModelFromFile(file);
+    }
+
+    function loadModelFromFile(file) {
+      const fname = file.name.toLowerCase();
+      document.getElementById('loadedModelName').innerText = `Загружено: ${file.name}`;
+      const reader = new FileReader();
+
+      if (fname.endsWith('.obj')) {
+        reader.onload = function(e) {
+          const contents = e.target.result;
+          const objLoader = new THREE.OBJLoader();
+          const obj = objLoader.parse(contents);
+          
+          const box = new THREE.Box3().setFromObject(obj);
+          const size = box.getSize(new THREE.Vector3()).length();
+          const center = box.getCenter(new THREE.Vector3());
+          obj.position.sub(center);
+          
+          if (size > 0) {
+            const scale = 100 / size;
+            obj.scale.setScalar(scale);
+          }
+
+          custom3DObject = obj;
+          activeSource = 'custom_model';
+          document.getElementById('objectSourceSelect').value = 'custom_model';
+          rebuildCurrent3DObject();
+        };
+        reader.readAsText(file);
+      } else if (fname.endsWith('.glb') || fname.endsWith('.gltf')) {
+        reader.onload = function(e) {
+          const contents = e.target.result;
+          const gltfLoader = new THREE.GLTFLoader();
+          gltfLoader.parse(contents, '', (gltf) => {
+            const obj = gltf.scene || gltf.scenes[0];
+            const box = new THREE.Box3().setFromObject(obj);
+            const size = box.getSize(new THREE.Vector3()).length();
+            const center = box.getCenter(new THREE.Vector3());
+            obj.position.sub(center);
+
+            if (size > 0) {
+              const scale = 100 / size;
+              obj.scale.setScalar(scale);
+            }
+
+            custom3DObject = obj;
+            activeSource = 'custom_model';
+            document.getElementById('objectSourceSelect').value = 'custom_model';
+            rebuildCurrent3DObject();
+          });
+        };
+        reader.readAsArrayBuffer(file);
+      }
+    }
+
+    function setupDragAndDrop() {
+      const dropOverlay = document.getElementById('dropOverlay');
+      const body = document.body;
+
+      ['dragenter', 'dragover'].forEach(ev => {
+        body.addEventListener(ev, (e) => {
+          e.preventDefault();
+          dropOverlay.classList.add('active');
+        });
+      });
+
+      ['dragleave', 'drop'].forEach(ev => {
+        body.addEventListener(ev, (e) => {
+          e.preventDefault();
+          dropOverlay.classList.remove('active');
+        });
+      });
+
+      body.addEventListener('drop', (e) => {
+        e.preventDefault();
+        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+          loadModelFromFile(e.dataTransfer.files[0]);
+        }
+      });
+    }
+
+    function switchMaterialType() {
+      activeMaterialType = document.getElementById('matTypeSelect').value;
+      if (threeCurrentMesh) {
+        if (threeCurrentMesh.isMesh) {
+          threeCurrentMesh.material = getActiveChromeMaterial();
+        } else {
+          applyMaterialToCustomModel(threeCurrentMesh);
+        }
+      }
+      if (threeChainMesh) {
+        const matKey = document.getElementById('chainMaterialSelect')?.value || 'same';
+        if (matKey === 'same') {
+          threeChainMesh.material = getActiveChromeMaterial();
+        }
+      }
+      if (threeBailMesh) {
+        const bailMat = getActiveChromeMaterial();
+        threeBailMesh.children.forEach(c => {
+          if (c.geometry && c.geometry.type === 'TorusGeometry') c.material = bailMat;
+        });
+      }
+    }
+
+    function applyMatcap(name) {
+      activeMatcapName = name;
+      document.querySelectorAll('.presets-grid .preset-btn').forEach(b => b.classList.remove('active'));
+      if (typeof event !== 'undefined' && event && event.target) {
+        event.target.classList.add('active');
+      }
+
+      if (threeCurrentMesh) {
+        if (threeCurrentMesh.isMesh) {
+          threeCurrentMesh.material = getActiveChromeMaterial();
+        } else {
+          applyMaterialToCustomModel(threeCurrentMesh);
+        }
+      }
+      if (threeChainMesh) {
+        const matKey = document.getElementById('chainMaterialSelect')?.value || 'same';
+        if (matKey === 'same') {
+          threeChainMesh.material = getActiveChromeMaterial();
+        }
+      }
+      if (threeBailMesh) {
+        const bailMat = getActiveChromeMaterial();
+        threeBailMesh.children.forEach(c => {
+          if (c.geometry && c.geometry.type === 'TorusGeometry') c.material = bailMat;
+        });
+      }
+    }
+
+    function trigger3DRebuild() {
+      if (document.getElementById('fontSize3DVal') && document.getElementById('fontSize3D')) {
+        document.getElementById('fontSize3DVal').innerText = document.getElementById('fontSize3D').value;
+      }
+      if (document.getElementById('valExtrudeDepth') && document.getElementById('meshExtrudeDepth')) {
+        document.getElementById('valExtrudeDepth').innerText = document.getElementById('meshExtrudeDepth').value + 'px';
+      }
+      if (document.getElementById('valBevelThickness') && document.getElementById('meshBevelThickness')) {
+        document.getElementById('valBevelThickness').innerText = document.getElementById('meshBevelThickness').value;
+      }
+      if (document.getElementById('valBevelSegments') && document.getElementById('meshBevelSegments')) {
+        document.getElementById('valBevelSegments').innerText = document.getElementById('meshBevelSegments').value;
+      }
+      if (document.getElementById('valLetterOverlap') && document.getElementById('letterOverlap')) {
+        document.getElementById('valLetterOverlap').innerText = document.getElementById('letterOverlap').value + '%';
+      }
+      if (document.getElementById('valBackplateDepth') && document.getElementById('backplateDepth')) {
+        document.getElementById('valBackplateDepth').innerText = document.getElementById('backplateDepth').value + 'px';
+      }
+      rebuildCurrent3DObject();
+      renderLogoMask();
+    }
+
+    function updateTurntableSpeed() {
+      const spd = parseFloat(document.getElementById('rotateSpeed').value);
+      document.getElementById('valRotateSpeed').innerText = spd + 'x';
+      if (threeControls) threeControls.autoRotateSpeed = spd;
+    }
+
+    function toggleAutoRotate() {
+      if (threeControls) threeControls.autoRotate = document.getElementById('autoRotate').checked;
+    }
+
+    function updateRipple() {
+      document.getElementById('valRipple').innerText = document.getElementById('rippleIntensity').value;
+      document.getElementById('valSpeed').innerText = document.getElementById('rippleSpeed').value + 'x';
+    }
+
+    function updateSparkleGlide() {
+      const spd = parseFloat(document.getElementById('sparkleGlideSpeed').value);
+      document.getElementById('valSparkleGlide').innerText = spd + 'x';
+    }
+
+    // --- MODE SWITCHER ---
+    function setMode(mode) {
+      activeMode = mode;
+      document.querySelectorAll('.top-mode-btn').forEach(b => b.classList.remove('active'));
+
+      const threeEl = document.getElementById('three-3d-canvas');
+      const glEl = document.getElementById('gl-liquid-canvas');
+      const vidEl = document.getElementById('video-loop-container');
+      const hudBadge = document.getElementById('hudEngineBadge');
+
+      threeEl.style.display = 'none';
+      glEl.style.display = 'none';
+      vidEl.style.display = 'none';
+
+      if (mode === '3d') {
+        document.getElementById('modeBtn3D').classList.add('active');
+        threeEl.style.display = 'block';
+        hudBadge.innerText = 'ENGINE: THREE.JS REAL 3D + LIQUID CHROME MATCAP';
+        rebuildCurrent3DObject();
+      } else if (mode === 'liquid') {
+        document.getElementById('modeBtnLiquid').classList.add('active');
+        glEl.style.display = 'block';
+        hudBadge.innerText = 'ENGINE: PAPER DESIGN LIQUID GLSL';
+        renderLogoMask();
+      } else if (mode === 'video') {
+        document.getElementById('modeBtnVideo').classList.add('active');
+        vidEl.style.display = 'flex';
+        hudBadge.innerText = 'SOURCE: RENDERED 60FPS LIQUID LOOP';
+        const v = document.getElementById('loopVideo');
+        if (v) v.play();
+      }
+    }
+
+    // --- 2. 2D LIQUID SHADER INTEGRATION (FOR MODE 2) ---
+    const glCanvas = document.getElementById('gl-liquid-canvas');
+    let gl = glCanvas.getContext('webgl2', { preserveDrawingBuffer: true, antialias: true });
+
+    const vsSource = `#version 300 es
+    in vec2 a_position; out vec2 vUv;
+    void main() { vUv = 0.5 * (a_position + 1.0); gl_Position = vec4(a_position, 0.0, 1.0); }`;
+
+    const fsSource = `#version 300 es
+    precision mediump float;
+    in vec2 vUv; out vec4 fragColor;
+    uniform sampler2D u_image_texture; uniform float u_time, u_ratio, u_img_ratio, u_patternScale, u_refraction, u_liquid;
+    uniform vec3 u_color1, u_color2;
+    vec3 mod289(vec3 x) { return x - floor(x * (1. / 289.)) * 289.; }
+    vec2 mod289(vec2 x) { return x - floor(x * (1. / 289.)) * 289.; }
+    vec3 permute(vec3 x) { return mod289(((x*34.)+1.)*x); }
+    float snoise(vec2 v) {
+        const vec4 C = vec4(0.211324865405187, 0.366025403784439, -0.577350269189626, 0.024390243902439);
+        vec2 i = floor(v + dot(v, C.yy)); vec2 x0 = v - i + dot(i, C.xx);
+        vec2 i1 = (x0.x > x0.y) ? vec2(1., 0.) : vec2(0., 1.);
+        vec4 x12 = x0.xyxy + C.xxzz; x12.xy -= i1; i = mod289(i);
+        vec3 p = permute(permute(i.y + vec3(0., i1.y, 1.)) + i.x + vec3(0., i1.x, 1.));
+        vec3 m = max(0.5 - vec3(dot(x0, x0), dot(x12.xy, x12.xy), dot(x12.zw, x12.zw)), 0.);
+        m = m*m; m = m*m;
+        vec3 x = 2. * fract(p * C.www) - 1.; vec3 h = abs(x) - 0.5;
+        vec3 ox = floor(x + 0.5); vec3 a0 = x - ox;
+        m *= 1.79284291400159 - 0.85373472095314 * (a0*a0 + h*h);
+        vec3 g; g.x = a0.x * x0.x + h.x * x0.y; g.yz = a0.yz * x12.xz + h.yz * x12.yw;
+        return 130. * dot(m, g);
+    }
+    vec2 get_img_uv() {
+        vec2 img_uv = vUv - .5;
+        if (u_ratio > u_img_ratio) img_uv.x = img_uv.x * u_ratio / u_img_ratio;
+        else img_uv.y = img_uv.y * u_img_ratio / u_ratio;
+        img_uv += .5; img_uv.y = 1. - img_uv.y; return img_uv;
+    }
+    void main() {
+        vec2 uv = vUv; uv.y = 1. - uv.y; uv.x *= u_ratio;
+        float diag = uv.x - uv.y; float t = .001 * u_time;
+        vec2 img_uv = get_img_uv(); vec4 img = texture(u_image_texture, img_uv);
+        float edge = img.r; float opacity = 1. - smoothstep(.75, 1.0, edge);
+        float noise = snoise(uv - t);
+        float dir = uv.x + diag * .5 + noise * u_liquid - t * .5;
+        float stripe = mod(dir * u_patternScale, 1.0);
+        float wave = sin(stripe * 6.283) * 0.5 + 0.5;
+        vec3 col = mix(u_color2, u_color1, wave) * opacity;
+        fragColor = vec4(col, opacity);
+    }`;
+
+    function createShader(gl, type, src) {
+      const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s); return s;
+    }
+    const prg = gl.createProgram();
+    gl.attachShader(prg, createShader(gl, gl.VERTEX_SHADER, vsSource));
+    gl.attachShader(prg, createShader(gl, gl.FRAGMENT_SHADER, fsSource));
+    gl.linkProgram(prg);
+
+    const posBuf = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, posBuf);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, -1,1, 1,-1, 1,1]), gl.STATIC_DRAW);
+    const posLoc = gl.getAttribLocation(prg, 'a_position');
+    gl.enableVertexAttribArray(posLoc);
+    gl.vertexAttribPointer(posLoc, 2, gl.FLOAT, false, 0, 0);
+
+    const uLocs = {
+      u_image_texture: gl.getUniformLocation(prg, 'u_image_texture'),
+      u_time: gl.getUniformLocation(prg, 'u_time'),
+      u_ratio: gl.getUniformLocation(prg, 'u_ratio'),
+      u_img_ratio: gl.getUniformLocation(prg, 'u_img_ratio'),
+      u_patternScale: gl.getUniformLocation(prg, 'u_patternScale'),
+      u_liquid: gl.getUniformLocation(prg, 'u_liquid'),
+      u_color1: gl.getUniformLocation(prg, 'u_color1'),
+      u_color2: gl.getUniformLocation(prg, 'u_color2')
+    };
+
+    const logoTex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, logoTex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+
+    const maskCanvas = document.createElement('canvas');
+    const maskCtx = maskCanvas.getContext('2d');
+    let maskRatio = 1.0;
+
+    function renderLogoMask() {
+      const textVal = getFormattedText();
+      const w = 1200, h = 500;
+      maskCanvas.width = w; maskCanvas.height = h; maskRatio = w / h;
+      maskCtx.fillStyle = '#ffffff'; maskCtx.fillRect(0, 0, w, h);
+      maskCtx.font = '900 180px "Syne", "Orbitron", sans-serif';
+      maskCtx.textAlign = 'center'; maskCtx.textBaseline = 'middle';
+      maskCtx.fillStyle = '#000000';
+      maskCtx.fillText(textVal, w / 2, h / 2);
+
+      gl.bindTexture(gl.TEXTURE_2D, logoTex);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskCanvas);
+    }
+
+    // --- ANIMATION MASTER LOOP ---
+    let startTime = performance.now();
+    let lastFpsTime = startTime;
+    let frames = 0;
+
+    function masterLoop(now) {
+      requestAnimationFrame(masterLoop);
+
+      frames++;
+      if (now - lastFpsTime >= 1000) {
+        document.getElementById('fpsCounter').innerText = frames;
+        frames = 0;
+        lastFpsTime = now;
+      }
+
+      const timeSec = (now - startTime) * 0.001;
+
+      if (activeMode === '3d') {
+        if (threeControls) threeControls.update();
+
+        // Handle Cinematic Transitions
+        if (transitionMode === 'swoop_lift') {
+          const elapsed = (now - transitionStartTime) * 0.001; // in seconds
+          const loopDuration = 7.5;
+          const loopTime = elapsed % loopDuration;
+
+          if (loopTime < 0.4) {
+            // Stage 0: kirtsoy stands perfectly still, flat, level, facing 100% straight forward at us!
+            updateChainThreading(0.0);
+            if (threeCurrentMesh) {
+              threeCurrentMesh.position.set(0, 0, 0);
+              threeCurrentMesh.rotation.set(0, 0, 0);
+            }
+            if (threeChainMesh) {
+              threeChainMesh.position.set(0, 0, 0);
+              threeChainMesh.rotation.set(0, 0, 0);
+            }
+          } else if (loopTime < 3.6) {
+            // Stage 1: Majestic 360° spin (0.4s to 3.6s = 3.2s duration)
+            const spinT = (loopTime - 0.4) / 3.2; // 0.0 to 1.0
+            const spinEase = 0.5 - 0.5 * Math.cos(spinT * Math.PI); // Smooth cosine ease
+            const spinAngle = spinEase * Math.PI * 2; // Exactly 0 to 360 degrees
+
+            if (threeCurrentMesh) {
+              threeCurrentMesh.position.set(0, 0, 0);
+              threeCurrentMesh.rotation.set(0, spinAngle, 0);
+            }
+            if (threeChainMesh) {
+              threeChainMesh.position.set(0, 0, 0);
+              threeChainMesh.rotation.set(0, 0, 0);
+            }
+
+            // Chain launches at t = 1.4s and flies continuously through t = 4.2s (ONE UNBROKEN FLUID FLIGHT!)
+            if (loopTime < 1.4) {
+              updateChainThreading(0.0);
+            } else {
+              // Smooth, continuous power-curve flight (NO pauses, NO slowdown after hole!)
+              const flightT = (loopTime - 1.4) / 2.8;
+              const p = 1.0 - Math.pow(1.0 - flightT, 1.55);
+              updateChainThreading(p);
+
+              // Subtle tactile tick when chain enters hole
+              if (p > 0.55 && p < 0.80 && threeCurrentMesh) {
+                threeCurrentMesh.position.x = (Math.random() - 0.5) * 0.25;
+              }
+            }
+          } else if (loopTime < 4.2) {
+            // Stage 2: Logo faces 100% straight forward at viewer (spin has completed at 3.6s)!
+            // Chain finishes smoothly gliding to the top-right anchor (p -> 1.00) without any pause!
+            const flightT = Math.min(1.0, (loopTime - 1.4) / 2.8);
+            const p = 1.0 - Math.pow(1.0 - flightT, 1.55);
+            updateChainThreading(p);
+
+            if (threeCurrentMesh) {
+              threeCurrentMesh.position.set(0, 0, 0);
+              threeCurrentMesh.rotation.set(0, 0, 0); // 100% flat front-facing
+            }
+            if (threeChainMesh) {
+              threeChainMesh.position.set(0, 0, 0);
+              threeChainMesh.rotation.set(0, 0, 0);
+            }
+          } else if (loopTime < 4.5) {
+            // Stage 3: Chain is locked in at 1.00! Snaps taut with a crisp tension tug!
+            updateChainThreading(1.0);
+            const tugT = (loopTime - 4.2) / 0.3;
+            const tug = Math.sin(tugT * Math.PI) * 5.0;
+
+            if (threeCurrentMesh) {
+              threeCurrentMesh.position.set(0, tug, 0);
+              threeCurrentMesh.rotation.set(0, 0, 0);
+            }
+            if (threeChainMesh) {
+              threeChainMesh.position.set(0, tug, 0);
+              threeChainMesh.rotation.z = Math.sin(tugT * Math.PI) * 0.04;
+            }
+          } else if (loopTime < 6.0) {
+            // Stage 4: POWERFUL CINEMATIC SWOOP UPWARD (УНОС ВВЕРХ)!
+            // Real physical lift-off: launches upwards and flies completely out of screen into darkness!
+            updateChainThreading(1.0);
+            const liftT = (loopTime - 4.5) / 1.5; // 0.0 to 1.0
+            // Quadratic + cubic acceleration curve: starts immediately and launches skyward
+            const liftProgress = liftT * liftT * (1.2 + 0.8 * liftT);
+            const liftY = liftProgress * 750; // High speed vertical launch (750+ units)
+            const tiltX = -Math.min(liftT * 0.45, 0.45); // Natural upward tilt under chain pull
+
+            if (threeCurrentMesh) {
+              threeCurrentMesh.position.set(0, liftY, 0);
+              threeCurrentMesh.rotation.set(tiltX, 0, 0);
+            }
+            if (threeChainMesh) {
+              threeChainMesh.position.set(0, liftY, 0);
+              threeChainMesh.rotation.set(tiltX * 0.8, 0, Math.sin(liftT * 4) * 0.08);
+            }
+          } else {
+            // Stage 5: Off-screen peaceful pause before clean loop
+            updateChainThreading(0.0);
+            if (threeCurrentMesh) {
+              threeCurrentMesh.position.set(0, 9999, 0);
+              threeCurrentMesh.rotation.set(0, 0, 0);
+            }
+            if (threeChainMesh) {
+              threeChainMesh.position.set(0, 9999, 0);
+              threeChainMesh.rotation.set(0, 0, 0);
+            }
+          }
+        } else if (transitionMode === 'thread_snake') {
+          // Dedicated threading inspection: starts front-facing, spins 360°, threads through hole smoothly
+          const elapsed = (now - transitionStartTime) * 0.001;
+
+          if (elapsed < 0.4) {
+            updateChainThreading(0.0);
+            if (threeCurrentMesh) {
+              threeCurrentMesh.position.set(0, 0, 0);
+              threeCurrentMesh.rotation.set(0, 0, 0);
+            }
+            if (threeChainMesh) {
+              threeChainMesh.position.set(0, 0, 0);
+              threeChainMesh.rotation.set(0, 0, 0);
+            }
+          } else if (elapsed < 3.6) {
+            const spinT = (elapsed - 0.4) / 3.2;
+            const spinEase = 0.5 - 0.5 * Math.cos(spinT * Math.PI);
+            const spinAngle = spinEase * Math.PI * 2;
+            if (threeCurrentMesh) {
+              threeCurrentMesh.position.set(0, 0, 0);
+              threeCurrentMesh.rotation.set(0, spinAngle, 0);
+            }
+            if (threeChainMesh) {
+              threeChainMesh.position.set(0, 0, 0);
+              threeChainMesh.rotation.set(0, 0, 0);
+            }
+
+            if (elapsed < 1.4) {
+              updateChainThreading(0.0);
+            } else {
+              const flightT = (elapsed - 1.4) / 2.8;
+              const p = 1.0 - Math.pow(1.0 - flightT, 1.55);
+              updateChainThreading(p);
+            }
+          } else if (elapsed < 4.2) {
+            const flightT = Math.min(1.0, (elapsed - 1.4) / 2.8);
+            const p = 1.0 - Math.pow(1.0 - flightT, 1.55);
+            updateChainThreading(p);
+            if (threeCurrentMesh) {
+              threeCurrentMesh.position.set(0, 0, 0);
+              threeCurrentMesh.rotation.set(0, 0, 0);
+            }
+            if (threeChainMesh) {
+              threeChainMesh.position.set(0, 0, 0);
+              threeChainMesh.rotation.set(0, 0, 0);
+            }
+          } else {
+            // Settled front-facing with gentle elastic bounce on chain
+            updateChainThreading(1.0);
+            const swingTime = elapsed - 4.2;
+            const damp = Math.exp(-swingTime * 0.9);
+            const bob = Math.sin(swingTime * 6.5) * 1.8 * damp;
+
+            if (threeCurrentMesh) {
+              threeCurrentMesh.rotation.set(0, 0, 0);
+              threeCurrentMesh.position.set(0, bob, 0);
+            }
+            if (threeChainMesh) {
+              threeChainMesh.rotation.set(0, 0, 0);
+              threeChainMesh.position.set(0, bob, 0);
+            }
+          }
+        } else if (transitionMode === 'hanging_swing') {
+          // Pendant swinging naturally on chain as if hanging on a walking character's neck
+          updateChainThreading(1.0);
+          const swing = Math.sin(timeSec * 2.2) * 0.12;
+          const bobY = Math.abs(Math.sin(timeSec * 4.4)) * 1.8;
+          if (threeCurrentMesh) {
+            threeCurrentMesh.rotation.z = swing;
+            threeCurrentMesh.position.x = Math.sin(timeSec * 2.2) * 4.5;
+            threeCurrentMesh.position.y = -bobY;
+          }
+          if (threeChainMesh) {
+            threeChainMesh.rotation.z = swing * 0.6;
+            threeChainMesh.position.y = -bobY * 0.5;
+          }
+        } else {
+          // Default Turntable & Gentle Ripple
+          const ripple = parseFloat(document.getElementById('rippleIntensity').value);
+          const rSpeed = parseFloat(document.getElementById('rippleSpeed').value);
+
+          if (threeCurrentMesh && ripple > 0) {
+            threeCurrentMesh.position.y = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
+            threeCurrentMesh.rotation.z = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
+          }
+          if (threeChainMesh && ripple > 0) {
+            threeChainMesh.position.y = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
+            threeChainMesh.rotation.z = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
+          }
+        }
+
+        // Dynamic Sparkle Glide (Organic light movement across facets)
+        const glideEl = document.getElementById('sparkleGlideSpeed');
+        const glideSpeed = glideEl ? parseFloat(glideEl.value) : 0;
+        if (glideSpeed > 0 && matcaps[activeMatcapName]) {
+          const curTex = matcaps[activeMatcapName];
+          curTex.center.set(0.5, 0.5);
+          curTex.rotation = timeSec * glideSpeed * 0.25;
+        }
+
+        if (threeRenderer && threeScene && threeCamera) {
+          threeRenderer.render(threeScene, threeCamera);
+        }
+      } else if (activeMode === 'liquid') {
+        const elapsed = (now - startTime) * 0.4;
+        gl.viewport(0, 0, glCanvas.width, glCanvas.height);
+        gl.useProgram(prg);
+        gl.uniform1f(uLocs.u_time, elapsed);
+        gl.uniform1f(uLocs.u_ratio, glCanvas.width / glCanvas.height);
+        gl.uniform1f(uLocs.u_img_ratio, maskRatio);
+        gl.uniform1f(uLocs.u_patternScale, 2.0);
+        gl.uniform1f(uLocs.u_liquid, 0.1);
+        
+        const colors = {
+          chrome: { c1: [0.98, 0.98, 1.0], c2: [0.08, 0.09, 0.14] },
+          gold: { c1: [1.0, 0.85, 0.35], c2: [0.22, 0.12, 0.02] },
+          cyber: { c1: [0.2, 0.85, 1.0], c2: [0.8, 0.1, 0.6] }
+        };
+        const curC = colors[activeMatcapName] || colors.chrome;
+        gl.uniform3fv(uLocs.u_color1, curC.c1);
+        gl.uniform3fv(uLocs.u_color2, curC.c2);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, logoTex);
+        gl.uniform1i(uLocs.u_image_texture, 0);
+
+        gl.drawArrays(gl.TRIANGLES, 0, 6);
+      }
+    }
+
+    // =========================================================================
+    // --- PRESETS & STYLES SYSTEM ---
+    // =========================================================================
+    const FACTORY_PRESETS = [
+      {
+        id: 'factory_swoop_lift',
+        name: '🚀 Круг 360° + Влёт цепи в "t" -> Унос ВВЕРХ',
+        isFactory: true,
+        data: {
+          source: 'pendant_real_hole',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 18,
+          bevel: 3.2,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
+          chainThreadingProgress: 1.0,
+          chainThreadingDirection: 'ltr',
+          transitionMode: 'swoop_lift',
+          matType: 'liquid_matcap',
+          matcap: 'iced_starburst',
+          rotateSpeed: 1.2,
+          autoRotate: false,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2,
+          cameraPosition: { x: 0, y: 0, z: 240 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
+        }
+      },
+      {
+        id: 'factory_thread_snake',
+        name: '🧵 Вдевание одного конца цепи в "t"',
+        isFactory: true,
+        data: {
+          source: 'pendant_real_hole',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 18,
+          bevel: 3.2,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
+          chainThreadingProgress: 1.0,
+          chainThreadingDirection: 'ltr',
+          transitionMode: 'thread_snake',
+          matType: 'liquid_matcap',
+          matcap: 'chrome',
+          rotateSpeed: 1.2,
+          autoRotate: false,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2,
+          cameraPosition: { x: 0, y: 0, z: 240 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
+        }
+      },
+      {
+        id: 'factory_hanging_neck',
+        name: '🕺 Покачивание кулона на шее (Miami Gold)',
+        isFactory: true,
+        data: {
+          source: 'pendant_real_hole',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 18,
+          bevel: 3.2,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          chainEnabled: true,
+          chainMaterial: 'cuban_gold',
+          chainScale: 1.0,
+          chainSag: 1.0,
+          chainThreadingProgress: 1.0,
+          chainThreadingDirection: 'ltr',
+          transitionMode: 'hanging_swing',
+          matType: 'liquid_matcap',
+          matcap: 'cuban_gold',
+          rotateSpeed: 1.2,
+          autoRotate: false,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2
+        }
+      },
+      {
+        id: 'factory_pendant_real_hole',
+        name: '💎 100% Физический Кулон с Цепью (Сквозная дырка в "t")',
+        isFactory: true,
+        data: {
+          source: 'pendant_real_hole',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 18,
+          bevel: 3.2,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
+          chainThreadingProgress: 1.0,
+          chainThreadingDirection: 'ltr',
+          transitionMode: 'none',
+          matType: 'liquid_matcap',
+          matcap: 'iced_starburst',
+          rotateSpeed: 1.2,
+          autoRotate: true,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2
+        }
+      },
+      {
+        id: 'factory_iced_starburst',
+        name: '✨ Iced Out Monolith (Слитный кулон с фасками)',
+        isFactory: true,
+        data: {
+          source: 'text',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 18,
+          bevel: 3.2,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
+          matType: 'liquid_matcap',
+          matcap: 'iced_starburst',
+          rotateSpeed: 1.5,
+          autoRotate: true,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2
+        }
+      },
+      {
+        id: 'factory_iced_caustics',
+        name: '🌊 Liquid Caustics (Каустики ртути)',
+        isFactory: true,
+        data: {
+          source: 'text',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 14,
+          bevel: 2.5,
+          matType: 'liquid_matcap',
+          matcap: 'iced_caustics',
+          rotateSpeed: 1.5,
+          autoRotate: true,
+          sparkleGlideSpeed: 1.0,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2
+        }
+      },
+      {
+        id: 'factory_iced_pave',
+        name: '❄️ Pavé Diamond Dust (Микро-камни)',
+        isFactory: true,
+        data: {
+          source: 'text',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 14,
+          bevel: 2.5,
+          matType: 'liquid_matcap',
+          matcap: 'iced_pave',
+          rotateSpeed: 1.5,
+          autoRotate: true,
+          sparkleGlideSpeed: 0.6,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2
+        }
+      },
+      {
+        id: 'factory_iced_aniso',
+        name: '🌈 Prismatic Sheen (Лезвия света)',
+        isFactory: true,
+        data: {
+          source: 'text',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 15,
+          bevel: 2.5,
+          matType: 'liquid_matcap',
+          matcap: 'iced_aniso',
+          rotateSpeed: 1.5,
+          autoRotate: true,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2
+        }
+      },
+      {
+        id: 'factory_iced_original',
+        name: '⚪ Classic Rings (Исходный с кольцами)',
+        isFactory: true,
+        data: {
+          source: 'text',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 14,
+          bevel: 2.5,
+          matType: 'liquid_matcap',
+          matcap: 'iced_diamond',
+          rotateSpeed: 1.5,
+          autoRotate: true,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2
+        }
+      },
+      {
+        id: 'factory_liquid_chrome',
+        name: '✨ Liquid Mirror Chrome',
+        isFactory: true,
+        data: {
+          source: 'text',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 16,
+          bevel: 3.0,
+          matType: 'liquid_matcap',
+          matcap: 'chrome',
+          rotateSpeed: 1.5,
+          autoRotate: true,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.4,
+          rippleSpeed: 1.5
+        }
+      },
+      {
+        id: 'factory_white_gold',
+        name: '⚪ White Gold Gothic',
+        isFactory: true,
+        data: {
+          source: 'text',
+          text: 'kirtsoy',
+          textCase: 'title',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 15,
+          bevel: 2.5,
+          matType: 'liquid_matcap',
+          matcap: 'white_gold',
+          rotateSpeed: 1.5,
+          autoRotate: true,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2
+        }
+      },
+      {
+        id: 'factory_cuban_gold',
+        name: '🟡 18K Heavy Cuban Trap',
+        isFactory: true,
+        data: {
+          source: 'text',
+          text: 'kirtsoy',
+          textCase: 'upper',
+          font: 'Syne',
+          fontSize: 36,
+          depth: 22,
+          bevel: 4.0,
+          matType: 'liquid_matcap',
+          matcap: 'cuban_gold',
+          rotateSpeed: 1.2,
+          autoRotate: true,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.3,
+          rippleSpeed: 1.0
+        }
+      },
+      {
+        id: 'factory_cyber_opium',
+        name: '🟣 Cyber Neon Opium Trap',
+        isFactory: true,
+        data: {
+          source: 'text',
+          text: 'kirtsoy',
+          textCase: 'upper',
+          font: 'RubikGlitch',
+          fontSize: 38,
+          depth: 18,
+          bevel: 2.0,
+          matType: 'liquid_matcap',
+          matcap: 'cyber',
+          rotateSpeed: 2.0,
+          autoRotate: true,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.5,
+          rippleSpeed: 1.8
+        }
+      },
+      {
+        id: 'factory_cuban_chain_iced',
+        name: '⛓️ Cuban Link Trap Chain (Iced)',
+        isFactory: true,
+        data: {
+          source: 'cuban_chain',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 14,
+          bevel: 2.5,
+          matType: 'liquid_matcap',
+          matcap: 'iced_starburst',
+          rotateSpeed: 1.2,
+          autoRotate: true,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2
+        }
+      }
+    ];
+
+    let userPresets = [];
+    let currentActivePresetId = 'factory_pendant_real_hole';
+
+    function initPresets() {
+      try {
+        const stored = localStorage.getItem('kirtsoy_user_presets');
+        if (stored) {
+          userPresets = JSON.parse(stored);
+        }
+      } catch (e) {
+        console.error('Failed to load user presets from localStorage', e);
+      }
+      renderPresetList();
+    }
+
+    function getAllPresets() {
+      return [...FACTORY_PRESETS, ...userPresets];
+    }
+
+    function renderPresetList() {
+      const container = document.getElementById('presetItemsList');
+      if (!container) return;
+      const all = getAllPresets();
+      document.getElementById('presetCountBadge').innerText = `${all.length} пресетов`;
+
+      container.innerHTML = all.map(p => {
+        const isActive = (p.id === currentActivePresetId);
+        const d = p.data || {};
+        const wordBadge = d.text ? `«${d.text}»` : '';
+        const fontName = (d.font || '').replace('UnifrakturCook_', '').replace('.json', '');
+        const subInfo = d.source === 'text' 
+          ? `${wordBadge} ${d.textCase || 'lower'} • ${fontName} • D:${d.depth} • B:${d.bevel} • ${d.matcap}`
+          : `3D: ${d.source} • ${d.matcap}`;
+        
+        const deleteBtn = p.isFactory ? '' : `
+          <button class="preset-delete-btn" onclick="deleteUserPreset(event, '${p.id}')" title="Удалить пресет">
+            🗑️
+          </button>
+        `;
+
+        return `
+          <div class="preset-item ${isActive ? 'active' : ''}" onclick="applyPresetById('${p.id}')">
+            <div class="preset-item-info">
+              <div class="preset-item-title">${p.name}</div>
+              <div class="preset-item-sub">${subInfo}</div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              ${p.isFactory ? '<span class="preset-item-badge">MASTER</span>' : '<span class="preset-item-badge" style="color: #4ade80;">USER</span>'}
+              ${deleteBtn}
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function captureCurrentSettings() {
+      // 1. Camera Framing
+      const camPos = threeCamera ? {
+        x: parseFloat(threeCamera.position.x.toFixed(2)),
+        y: parseFloat(threeCamera.position.y.toFixed(2)),
+        z: parseFloat(threeCamera.position.z.toFixed(2))
+      } : null;
+      const camTarget = threeControls ? {
+        x: parseFloat(threeControls.target.x.toFixed(2)),
+        y: parseFloat(threeControls.target.y.toFixed(2)),
+        z: parseFloat(threeControls.target.z.toFixed(2))
+      } : null;
+
+      return {
+        // 1. Mode & Source
+        activeMode: activeMode,
+        source: document.getElementById('objectSourceSelect')?.value || 'pendant_real_hole',
+
+        // 2. Text, Casing & Font
+        text: document.getElementById('logoText')?.value || 'kirtsoy',
+        textCase: currentCase,
+        font: document.getElementById('font3DSelect')?.value || 'UnifrakturCook_PrintedK',
+        fontSize: parseFloat(document.getElementById('fontSize3D')?.value || 38),
+
+        // 3. 3D Volumetric Extrusion, Bevels & Overlap
+        depth: parseFloat(document.getElementById('meshExtrudeDepth')?.value || 18),
+        bevel: parseFloat(document.getElementById('meshBevelThickness')?.value || 3.2),
+        bevelSegments: parseInt(document.getElementById('meshBevelSegments')?.value || 8),
+        letterOverlap: parseFloat(document.getElementById('letterOverlap')?.value || 15),
+        backplateEnabled: document.getElementById('backplateToggle')?.checked || false,
+        backplateDepth: parseFloat(document.getElementById('backplateDepth')?.value || 4),
+
+        // 4. Chain, Lateral Hole & Threading State
+        chainEnabled: document.getElementById('chainToggle') ? document.getElementById('chainToggle').checked : true,
+        chainMaterial: document.getElementById('chainMaterialSelect')?.value || 'same',
+        chainScale: parseFloat(document.getElementById('chainScaleSlider')?.value || 1.0),
+        chainSag: parseFloat(document.getElementById('chainSagSlider')?.value || 1.0),
+        bezelRimEnabled: document.getElementById('bezelRimToggle')?.checked || false,
+        chainThreadingProgress: chainThreadingProgress,
+        chainThreadingDirection: chainThreadingDirection,
+
+        // 5. Cinematic Animations / Transitions
+        transitionMode: transitionMode,
+
+        // 6. Materials & Shading
+        matType: document.getElementById('matTypeSelect')?.value || 'liquid_matcap',
+        matcap: activeMatcapName,
+
+        // 7. Rotation, Turntable & Physics Speeds
+        rotateSpeed: parseFloat(document.getElementById('rotateSpeed')?.value || 1.2),
+        autoRotate: document.getElementById('autoRotate')?.checked ?? true,
+        sparkleGlideSpeed: parseFloat(document.getElementById('sparkleGlideSpeed')?.value || 0.8),
+        rippleIntensity: parseFloat(document.getElementById('rippleIntensity')?.value || 0.35),
+        rippleSpeed: parseFloat(document.getElementById('rippleSpeed')?.value || 1.2),
+
+        // 8. 2D Liquid Parameters
+        liquidSpeed: parseFloat(document.getElementById('liquidSpeed')?.value || 1.0),
+        liquidPatternScale: parseFloat(document.getElementById('liquidPatternScale')?.value || 2.5),
+        liquidViscosity: parseFloat(document.getElementById('liquidViscosity')?.value || 0.6),
+        canvasTheme: document.getElementById('canvasThemeSelect')?.value || 'platinum',
+        font2D: document.getElementById('font2DSelect')?.value || 'Syne',
+
+        // 9. Camera Framing
+        cameraPosition: camPos,
+        cameraTarget: camTarget
+      };
+    }
+
+    function saveCurrentAsPreset() {
+      const nameInput = document.getElementById('customPresetName');
+      const curWord = document.getElementById('logoText').value || 'kirtsoy';
+      const name = (nameInput.value || '').trim() || `💎 ${curWord} (${activeMatcapName})`;
+      
+      const newPreset = {
+        id: 'user_preset_' + Date.now(),
+        name: name,
+        isFactory: false,
+        data: captureCurrentSettings()
+      };
+
+      userPresets.push(newPreset);
+      try {
+        localStorage.setItem('kirtsoy_user_presets', JSON.stringify(userPresets));
+      } catch (e) {
+        console.error('Error saving to localStorage', e);
+      }
+
+      currentActivePresetId = newPreset.id;
+      renderPresetList();
+      showToast(`💾 Пресет «${name}» успешно сохранён со всеми 100% параметрами!`);
+      nameInput.value = `💎 Пресет #${userPresets.length + 1}`;
+    }
+
+    function deleteUserPreset(event, id) {
+      event.stopPropagation();
+      userPresets = userPresets.filter(p => p.id !== id);
+      try {
+        localStorage.setItem('kirtsoy_user_presets', JSON.stringify(userPresets));
+      } catch (e) {
+        console.error('Error saving to localStorage', e);
+      }
+      if (currentActivePresetId === id) {
+        currentActivePresetId = 'factory_iced_original';
+      }
+      renderPresetList();
+      showToast('🗑️ Пресет удалён');
+    }
+
+    function applyPresetById(id) {
+      const preset = getAllPresets().find(p => p.id === id);
+      if (!preset) return;
+
+      currentActivePresetId = id;
+      const d = preset.data;
+
+      // 1. Mode & Source
+      if (d.activeMode && d.activeMode !== activeMode && typeof switchMode === 'function') {
+        switchMode(d.activeMode);
+      }
+
+      if (d.source) {
+        document.getElementById('objectSourceSelect').value = d.source;
+        activeSource = d.source;
+        const typoSec = document.getElementById('typographySection');
+        const uploadGrp = document.getElementById('fileUploadGroup');
+        const depthRow = document.getElementById('depthControlRow');
+        const bevelRow = document.getElementById('bevelControlRow');
+        if (d.source === 'text') {
+          typoSec.style.display = 'block';
+          uploadGrp.style.display = 'none';
+          depthRow.style.display = 'block';
+          bevelRow.style.display = 'block';
+        } else {
+          typoSec.style.display = 'none';
+          uploadGrp.style.display = (d.source === 'custom_model' ? 'block' : 'none');
+          depthRow.style.display = 'none';
+          bevelRow.style.display = 'none';
+        }
+      }
+
+      // 2. Text, Word Shape & Case
+      if (d.text !== undefined && document.getElementById('logoText')) {
+        document.getElementById('logoText').value = d.text;
+      }
+      currentCase = d.textCase || 'lower';
+      document.querySelectorAll('#typographySection .preset-btn').forEach(b => {
+        b.classList.remove('active');
+        const oc = b.getAttribute('onclick') || '';
+        if (oc.includes(`'${currentCase}'`)) b.classList.add('active');
+      });
+
+      // 3. Font & Size
+      if (d.font && document.getElementById('font3DSelect')) {
+        document.getElementById('font3DSelect').value = d.font;
+      }
+      if (d.fontSize !== undefined && document.getElementById('fontSize3D')) {
+        document.getElementById('fontSize3D').value = d.fontSize;
+        if (document.getElementById('fontSize3DVal')) document.getElementById('fontSize3DVal').innerText = d.fontSize;
+      }
+
+      // 4. Extrusion & Bevel (Form of the word)
+      if (d.depth !== undefined && document.getElementById('meshExtrudeDepth')) {
+        document.getElementById('meshExtrudeDepth').value = d.depth;
+        if (document.getElementById('valExtrudeDepth')) document.getElementById('valExtrudeDepth').innerText = d.depth + 'px';
+      }
+      if (d.bevel !== undefined && document.getElementById('meshBevelThickness')) {
+        document.getElementById('meshBevelThickness').value = d.bevel;
+        if (document.getElementById('valBevelThickness')) document.getElementById('valBevelThickness').innerText = d.bevel;
+      }
+      if (d.bevelSegments !== undefined && document.getElementById('meshBevelSegments')) {
+        document.getElementById('meshBevelSegments').value = d.bevelSegments;
+        if (document.getElementById('valBevelSegments')) document.getElementById('valBevelSegments').innerText = d.bevelSegments;
+      }
+      if (d.letterOverlap !== undefined && document.getElementById('letterOverlap')) {
+        document.getElementById('letterOverlap').value = d.letterOverlap;
+        if (document.getElementById('valLetterOverlap')) document.getElementById('valLetterOverlap').innerText = d.letterOverlap + '%';
+      }
+      if (document.getElementById('backplateToggle')) {
+        document.getElementById('backplateToggle').checked = (d.backplateEnabled !== undefined) ? d.backplateEnabled : false;
+        const grp = document.getElementById('backplateDepthGroup');
+        if (grp) grp.style.display = document.getElementById('backplateToggle').checked ? 'block' : 'none';
+      }
+      if (d.backplateDepth !== undefined && document.getElementById('backplateDepth')) {
+        document.getElementById('backplateDepth').value = d.backplateDepth;
+        if (document.getElementById('valBackplateDepth')) document.getElementById('valBackplateDepth').innerText = d.backplateDepth + 'px';
+      }
+
+      // 5. Chain, Lateral Bail Setup & Threading State
+      const chk = document.getElementById('chainToggle');
+      if (chk) {
+        chk.checked = (d.chainEnabled !== undefined) ? d.chainEnabled : true;
+        chainEnabled = chk.checked;
+      }
+      const cMat = document.getElementById('chainMaterialSelect');
+      if (cMat && d.chainMaterial) cMat.value = d.chainMaterial;
+
+      const cScale = document.getElementById('chainScaleSlider');
+      if (cScale && d.chainScale !== undefined) {
+        cScale.value = d.chainScale;
+        const vEl = document.getElementById('valChainScale');
+        if (vEl) vEl.innerText = d.chainScale + 'x';
+      }
+
+      const cSag = document.getElementById('chainSagSlider');
+      if (cSag && d.chainSag !== undefined) {
+        cSag.value = d.chainSag;
+        const vEl = document.getElementById('valChainSag');
+        if (vEl) vEl.innerText = d.chainSag + 'x';
+      }
+
+      const bezelToggle = document.getElementById('bezelRimToggle');
+      if (bezelToggle && d.bezelRimEnabled !== undefined) {
+        bezelToggle.checked = d.bezelRimEnabled;
+      }
+
+      if (d.chainThreadingDirection) {
+        chainThreadingDirection = d.chainThreadingDirection;
+        const lbl = document.getElementById('lblThreadDir');
+        if (lbl) lbl.innerText = (chainThreadingDirection === 'ltr') ? 'Слева направо' : 'Справа налево';
+      }
+
+      if (d.chainThreadingProgress !== undefined) {
+        chainThreadingProgress = d.chainThreadingProgress;
+      } else {
+        chainThreadingProgress = 1.0;
+      }
+
+      // 6. Rotation & Speeds
+      if (d.rotateSpeed !== undefined && document.getElementById('rotateSpeed')) {
+        document.getElementById('rotateSpeed').value = d.rotateSpeed;
+        document.getElementById('valRotateSpeed').innerText = d.rotateSpeed + 'x';
+        if (threeControls) threeControls.autoRotateSpeed = d.rotateSpeed;
+      }
+
+      if (d.autoRotate !== undefined && document.getElementById('autoRotate')) {
+        document.getElementById('autoRotate').checked = d.autoRotate;
+        if (threeControls) threeControls.autoRotate = d.autoRotate;
+      }
+
+      // 7. Material
+      if (d.matType && document.getElementById('matTypeSelect')) {
+        document.getElementById('matTypeSelect').value = d.matType;
+        activeMaterialType = d.matType;
+      }
+      if (d.matcap) {
+        activeMatcapName = d.matcap;
+        document.querySelectorAll('.presets-grid .preset-btn').forEach(b => {
+          b.classList.remove('active');
+          const onclickAttr = b.getAttribute('onclick') || '';
+          if (onclickAttr.includes(`'${d.matcap}'`)) {
+            b.classList.add('active');
+          }
+        });
+      }
+
+      // 8. Ripple & Sparkle Glide
+      if (document.getElementById('sparkleGlideSpeed')) {
+        const gSpeed = (d.sparkleGlideSpeed !== undefined) ? d.sparkleGlideSpeed : 0.8;
+        document.getElementById('sparkleGlideSpeed').value = gSpeed;
+        document.getElementById('valSparkleGlide').innerText = gSpeed + 'x';
+      }
+      if (document.getElementById('rippleIntensity')) {
+        document.getElementById('rippleIntensity').value = d.rippleIntensity;
+        document.getElementById('valRipple').innerText = d.rippleIntensity;
+      }
+      if (document.getElementById('rippleSpeed')) {
+        document.getElementById('rippleSpeed').value = d.rippleSpeed;
+        document.getElementById('valSpeed').innerText = d.rippleSpeed + 'x';
+      }
+
+      // 9. 2D Liquid Parameters
+      if (d.liquidSpeed !== undefined && document.getElementById('liquidSpeed')) document.getElementById('liquidSpeed').value = d.liquidSpeed;
+      if (d.liquidPatternScale !== undefined && document.getElementById('liquidPatternScale')) document.getElementById('liquidPatternScale').value = d.liquidPatternScale;
+      if (d.liquidViscosity !== undefined && document.getElementById('liquidViscosity')) document.getElementById('liquidViscosity').value = d.liquidViscosity;
+      if (d.canvasTheme && document.getElementById('canvasThemeSelect')) document.getElementById('canvasThemeSelect').value = d.canvasTheme;
+      if (d.font2D && document.getElementById('font2DSelect')) document.getElementById('font2DSelect').value = d.font2D;
+
+      // 10. Camera Framing Restore
+      if (d.cameraPosition && threeCamera) {
+        threeCamera.position.set(d.cameraPosition.x, d.cameraPosition.y, d.cameraPosition.z);
+      }
+      if (d.cameraTarget && threeControls) {
+        threeControls.target.set(d.cameraTarget.x, d.cameraTarget.y, d.cameraTarget.z);
+        threeControls.update();
+      }
+
+      // 11. Rebuild 3D Model / Text & Lateral Chain
+      if (d.source === 'text') {
+        if (loadedFonts[d.font]) {
+          threeFont = loadedFonts[d.font];
+          rebuildCurrent3DObject();
+          renderLogoMask();
+        } else {
+          const file = fontFileMap[d.font] || './assets/font_optimer.json';
+          fetch(file)
+            .then(r => r.json())
+            .then(data => {
+              loadedFonts[d.font] = new THREE.Font(data);
+              threeFont = loadedFonts[d.font];
+              rebuildCurrent3DObject();
+              renderLogoMask();
+            });
+        }
+      } else {
+        rebuildCurrent3DObject();
+      }
+
+      // 12. Restore or Reset Cinematic Transitions
+      if (d.transitionMode && d.transitionMode !== 'none') {
+        startTransition(d.transitionMode);
+      } else {
+        stopTransition();
+        updateChainThreading(chainThreadingProgress);
+      }
+
+      renderPresetList();
+      showToast(`✨ Применён пресет: «${preset.name}» (Все 100% параметров восстановлены!)`);
+    }
+
+    function exportPresetsJSON() {
+      const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(getAllPresets(), null, 2));
+      const downloadAnchor = document.createElement('a');
+      downloadAnchor.setAttribute("href", dataStr);
+      downloadAnchor.setAttribute("download", `kirtsoy_3d_presets_${Date.now()}.json`);
+      document.body.appendChild(downloadAnchor);
+      downloadAnchor.click();
+      downloadAnchor.remove();
+      showToast('📥 Файл пресетов скачан!');
+    }
+
+    function importPresetsJSON(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        try {
+          const parsed = JSON.parse(e.target.result);
+          if (Array.isArray(parsed)) {
+            const importedUser = parsed.filter(p => !p.isFactory);
+            userPresets = [...userPresets, ...importedUser];
+            const seen = new Set();
+            userPresets = userPresets.filter(p => {
+              if (seen.has(p.id)) return false;
+              seen.add(p.id);
+              return true;
+            });
+            localStorage.setItem('kirtsoy_user_presets', JSON.stringify(userPresets));
+            renderPresetList();
+            showToast(`📤 Успешно импортировано ${importedUser.length} пресетов!`);
+          }
+        } catch (err) {
+          showToast('❌ Ошибка чтения JSON файла пресетов');
+          console.error(err);
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    function showToast(msg) {
+      let toast = document.getElementById('toastBox');
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'toastBox';
+        toast.className = 'toast-msg';
+        document.body.appendChild(toast);
+      }
+      toast.innerText = msg;
+      toast.classList.add('show');
+      setTimeout(() => {
+        toast.classList.remove('show');
+      }, 2600);
+    }
+
+    // --- HELPERS ---
+    function getFormattedText() {
+      let t = document.getElementById('logoText').value || 'kirtsoy';
+      if (currentCase === 'upper') return t.toUpperCase();
+      if (currentCase === 'lower') return t.toLowerCase();
+      if (currentCase === 'title') return t.charAt(0).toUpperCase() + t.slice(1);
+      return t;
+    }
+
+    function setTextCase(c) {
+      currentCase = c;
+      document.querySelectorAll('#typographySection .preset-btn').forEach(b => {
+        b.classList.remove('active');
+        const oc = b.getAttribute('onclick') || '';
+        if (oc.includes(`'${c}'`)) b.classList.add('active');
+      });
+      trigger3DRebuild();
+    }
+
+    function resizeAll() {
+      const area = document.getElementById('viewportArea');
+      const w = area.clientWidth;
+      const h = area.clientHeight;
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+      glCanvas.width = w * dpr;
+      glCanvas.height = h * dpr;
+
+      if (threeRenderer) {
+        threeRenderer.setSize(w, h);
+        threeCamera.aspect = w / h;
+        threeCamera.updateProjectionMatrix();
+      }
+    }
+
+    function exportCurrentPNG() {
+      const activeCanvas = (activeMode === '3d') ? (threeRenderer ? threeRenderer.domElement : null) : glCanvas;
+      if (!activeCanvas) return;
+      const link = document.createElement('a');
+      link.download = `kirtsoy-3d-logo-${activeMode}-${Date.now()}.png`;
+      link.href = activeCanvas.toDataURL('image/png', 1.0);
+      link.click();
+    }
+
+    function openRendersFolder() {
+      window.open('file:///c:/KIRTSOY_CORE/AI_PROGRAMS/LOGO/renders', '_blank');
+    }
+
+    window.addEventListener('resize', resizeAll);
+    window.addEventListener('DOMContentLoaded', () => {
+      initThree3D();
+      initPresets();
+      resizeAll();
+      requestAnimationFrame(masterLoop);
+    });
+  </script>
+</body>
+</html>

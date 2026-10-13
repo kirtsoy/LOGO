@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600">
+  <defs>
+    <linearGradient id="metalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="50%" stop-color="#dddddd"/>
+      <stop offset="100%" stop-color="#aaaaaa"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="none"/>
+  <!-- Liquid Chrome Monogram & Orbital Rings for KIRTSOY -->
+  <g fill="url(#metalGrad)" stroke="#ffffff" stroke-width="4">
+    <!-- Outer Liquid Shield Ring -->
+    <path d="M 300 40 C 440 40, 560 160, 560 300 C 560 440, 440 560, 300 560 C 160 560, 40 440, 40 300 C 40 160, 160 40, 300 40 Z M 300 85 C 185 85, 85 185, 85 300 C 85 415, 185 515, 300 515 C 415 515, 515 415, 515 300 C 515 185, 415 85, 300 85 Z" />
+    
+    <!-- Bold 'K' Center Icon with Molten Flares -->
+    <path d="M 190 140 L 250 140 L 250 260 L 350 140 L 420 140 L 310 275 L 430 460 L 350 460 L 250 310 L 250 460 L 190 460 Z" />
+    
+    <!-- Futuristic Cross Cutout Flares -->
+    <circle cx="300" cy="300" r="14" fill="#ffffff" />
+    <path d="M 120 300 L 160 300 M 440 300 L 480 300" stroke="#ffffff" stroke-width="8" stroke-linecap="round" />
+  </g>
+</svg>
