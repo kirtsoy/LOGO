@@ -2127,27 +2127,22 @@
           const elapsed = (now - transitionStartTime) * 0.001; // in seconds
 
           // 1. Exact Turntable speed from slider/OrbitControls:
-          // In Three.js OrbitControls, getAutoRotationAngle() = (2 * Math.PI / 3600) * autoRotateSpeed
-          // At 60fps, angular speed = (2 * Math.PI / 60) * autoRotateSpeed rad/sec.
-          // Therefore, one full 360° circle (2*PI) takes exactly (60 / autoRotateSpeed) seconds!
-          const autoRotateSpeed = (threeControls ? threeControls.autoRotateSpeed : 1.5) || 1.5;
-          const spinDuration = 60.0 / autoRotateSpeed; // Exact duration for a full 360° circle!
-          const dropDuration = 2.4; // Ample time for smooth free-fall & multi-swing catenary settling
-          const liftDuration = 1.4; // Rocket swoop skyward
-          const pauseDuration = 0.5; // Peaceful pause offscreen
-          const loopDuration = 0.5 + spinDuration + dropDuration + liftDuration + pauseDuration;
+          // Calibrated Cinematic Intro Timing (8.1s loop):
+          // Stage 0: 0.0s to 0.4s (0.4s) - Front-facing with living ripple floating bob & sway
+          // Stage 1: 0.4s to 3.8s (3.4s) - Velvet 360° spin with living bob & sway, chain launches at 1.2s and enters hole
+          // Stage 2: 3.8s to 4.4s (0.6s) - Logo faces front, chain finishes gliding to right anchor and locks to 100%
+          // Stage 3: 4.4s to 6.4s (2.0s) - Realistic free-fall drop, lateral chain sliding sway & catenary deformation
+          // Stage 4: 6.4s to 7.7s (1.3s) - Powerful swoop lift-off skyward into darkness
+          // Stage 5: 7.7s to 8.1s (0.4s) - Peaceful offscreen pause before clean loop
+          const loopDuration = 8.1;
           const loopTime = elapsed % loopDuration;
 
-          const tStartSpin = 0.5;
-          const tEndSpin = tStartSpin + spinDuration;
-          const tEndDrop = tEndSpin + dropDuration;
-          const tEndLift = tEndDrop + liftDuration;
+          const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
+          const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
 
-          if (loopTime < tStartSpin) {
-            // Stage 0: kirtsoy stands facing forward, gently bobbing and swaying organically
+          if (loopTime < 0.4) {
+            // Stage 0: Front-facing with living ripple floating bob & sway
             updateChainThreading(0.0);
-            const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
-            const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
             const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
             const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
             const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple);
@@ -2160,21 +2155,14 @@
               threeChainMesh.position.set(0, bobY, 0);
               threeChainMesh.rotation.set(tiltX, 0, tiltZ);
             }
-          } else if (loopTime < tEndSpin) {
-            // Stage 1: 100% IDENTICAL Turntable 360° Rotation to "Кинематографичное 3D вращение"
-            // Constant angular velocity matching Three.js OrbitControls autoRotate + organic liquid floating bob & sway!
-            const spinT = loopTime - tStartSpin; // 0.0 to spinDuration
-            const spinAngle = (spinT / spinDuration) * (Math.PI * 2);
+          } else if (loopTime < 3.8) {
+            // Stage 1: Velvet 360° spin with living bob & sway (0.4s to 3.8s = 3.4s duration)
+            const spinT = (loopTime - 0.4) / 3.4; // 0.0 to 1.0
+            const spinAngle = spinT * Math.PI * 2; // Continuous 360° turn
 
-            const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
-            const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
-
-            // Organic bobbing up & down on Y + liquid swaying on Z/X (IDENTICAL to normal mode!):
-            const remTime = tEndSpin - loopTime;
-            const blend = (remTime < 1.0) ? (remTime / 1.0) : 1.0; // Smoothly settles before free-fall
-            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple) * blend;
-            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple) * blend;
-            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple) * blend;
+            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
+            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
+            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple);
 
             if (threeCurrentMesh) {
               threeCurrentMesh.position.set(0, bobY, 0);
@@ -2185,25 +2173,43 @@
               threeChainMesh.rotation.set(tiltX, 0, tiltZ);
             }
 
-            // Chain launches at 35% of the spin (after 90° profile has showcased the hole) and finishes threading at 98%
-            const tChainStart = tStartSpin + spinDuration * 0.35;
-            const tChainEnd = tStartSpin + spinDuration * 0.98;
-
-            if (loopTime < tChainStart) {
+            // Chain launches at t = 1.2s and glides towards letter "t"
+            if (loopTime < 1.2) {
               updateChainThreading(0.0);
             } else {
-              const chainFlightT = Math.min(1.0, (loopTime - tChainStart) / (tChainEnd - tChainStart));
-              const p = 1.0 - Math.pow(1.0 - chainFlightT, 1.45);
+              // Reaches hole (p ~ 0.78) exactly when logo finishes 360° turn at t = 3.8s!
+              const flightT = Math.min(1.0, (loopTime - 1.2) / 3.2); // 1.2s to 4.4s
+              const p = Math.pow(flightT, 1.15);
               updateChainThreading(p);
 
               // Subtle tactile contact tick when chain enters hole
-              if (p > 0.55 && p < 0.85 && threeCurrentMesh) {
+              if (p > 0.55 && p < 0.82 && threeCurrentMesh) {
                 threeCurrentMesh.position.x = (Math.random() - 0.5) * 0.25;
               }
             }
-          } else if (loopTime < tEndDrop) {
-            // Stage 2: REALISTIC PHYSICAL FREE-FALL, LATERAL CHAIN SWAY & CATENARY DEFORMATION
-            const tau = loopTime - tEndSpin; // 0.0 to 2.4s
+          } else if (loopTime < 4.4) {
+            // Stage 2: Logo faces 100% straight forward, chain finishes gliding to right anchor and locks!
+            const remTime = 4.4 - loopTime;
+            const blend = remTime / 0.6; // Softly calms ripple bob right before free fall
+            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple) * blend;
+            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple) * blend;
+            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple) * blend;
+
+            if (threeCurrentMesh) {
+              threeCurrentMesh.position.set(0, bobY, 0);
+              threeCurrentMesh.rotation.set(tiltX, 0, tiltZ);
+            }
+            if (threeChainMesh) {
+              threeChainMesh.position.set(0, bobY, 0);
+              threeChainMesh.rotation.set(tiltX, 0, tiltZ);
+            }
+
+            const flightT = Math.min(1.0, (loopTime - 1.2) / 3.2);
+            const p = Math.pow(flightT, 1.15);
+            updateChainThreading(p);
+          } else if (loopTime < 6.4) {
+            // Stage 3: REALISTIC PHYSICAL FREE-FALL, LATERAL CHAIN SWAY & CATENARY DEFORMATION
+            const tau = loopTime - 4.4; // 0.0 to 2.0s
             const phys = calculatePhysicalDrop(tau);
 
             // Pendant drops and sways laterally along the chain curve:
@@ -2218,10 +2224,10 @@
               threeChainMesh.position.set(0, 0, 0);
               threeChainMesh.rotation.set(0, 0, 0);
             }
-          } else if (loopTime < tEndLift) {
-            // Stage 3: POWERFUL CINEMATIC SWOOP UPWARD (УНОС ВВЕРХ)!
+          } else if (loopTime < 7.7) {
+            // Stage 4: POWERFUL CINEMATIC SWOOP UPWARD (УНОС ВВЕРХ)!
             updateChainThreading(1.0, 0, 0);
-            const liftT = (loopTime - tEndDrop) / liftDuration; // 0.0 to 1.0
+            const liftT = (loopTime - 6.4) / 1.3; // 0.0 to 1.0
             const liftProgress = liftT * liftT * (1.2 + 0.8 * liftT); // Rocket curve
             const liftY = -16.0 + liftProgress * 920; // Launches from -16 to +904
             const tiltX = -Math.min(liftT * 0.45, 0.45); // Tilts upward under chain pull
@@ -2235,7 +2241,7 @@
               threeChainMesh.rotation.set(tiltX * 0.8, 0, Math.sin(liftT * 4) * 0.08);
             }
           } else {
-            // Stage 4: Off-screen peaceful pause before clean loop
+            // Stage 5: Off-screen peaceful pause before clean loop
             updateChainThreading(0.0);
             if (threeCurrentMesh) {
               threeCurrentMesh.position.set(0, 9999, 0);
@@ -2247,18 +2253,13 @@
             }
           }
         } else if (transitionMode === 'thread_snake') {
-          // Dedicated threading inspection with exact Turntable speed and dynamic catenary physics
+          // Dedicated threading inspection
           const elapsed = (now - transitionStartTime) * 0.001;
-          const autoRotateSpeed = (threeControls ? threeControls.autoRotateSpeed : 1.5) || 1.5;
-          const spinDuration = 60.0 / autoRotateSpeed;
+          const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
+          const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
 
-          const tStartSpin = 0.5;
-          const tEndSpin = tStartSpin + spinDuration;
-
-          if (elapsed < tStartSpin) {
+          if (elapsed < 0.4) {
             updateChainThreading(0.0);
-            const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
-            const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
             const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
             const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
             const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple);
@@ -2271,17 +2272,12 @@
               threeChainMesh.position.set(0, bobY, 0);
               threeChainMesh.rotation.set(tiltX, 0, tiltZ);
             }
-          } else if (elapsed < tEndSpin) {
-            const spinT = elapsed - tStartSpin;
-            const spinAngle = (spinT / spinDuration) * (Math.PI * 2);
-
-            const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
-            const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
-            const remTime = tEndSpin - elapsed;
-            const blend = (remTime < 1.0) ? (remTime / 1.0) : 1.0;
-            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple) * blend;
-            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple) * blend;
-            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple) * blend;
+          } else if (elapsed < 3.8) {
+            const spinT = (elapsed - 0.4) / 3.4;
+            const spinAngle = spinT * Math.PI * 2;
+            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
+            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
+            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple);
 
             if (threeCurrentMesh) {
               threeCurrentMesh.position.set(0, bobY, 0);
@@ -2292,19 +2288,20 @@
               threeChainMesh.rotation.set(tiltX, 0, tiltZ);
             }
 
-            const tChainStart = tStartSpin + spinDuration * 0.35;
-            const tChainEnd = tStartSpin + spinDuration * 0.98;
-
-            if (elapsed < tChainStart) {
+            if (elapsed < 1.2) {
               updateChainThreading(0.0);
             } else {
-              const chainFlightT = Math.min(1.0, (elapsed - tChainStart) / (tChainEnd - tChainStart));
-              const p = 1.0 - Math.pow(1.0 - chainFlightT, 1.45);
+              const flightT = Math.min(1.0, (elapsed - 1.2) / 3.2);
+              const p = Math.pow(flightT, 1.15);
               updateChainThreading(p);
             }
+          } else if (elapsed < 4.4) {
+            const flightT = Math.min(1.0, (elapsed - 1.2) / 3.2);
+            const p = Math.pow(flightT, 1.15);
+            updateChainThreading(p);
           } else {
             // Settled front-facing with realistic physical free-fall, lateral sway & dynamic catenary jiggle
-            const tau = Math.min(2.4, elapsed - tEndSpin);
+            const tau = Math.min(2.0, elapsed - 4.4);
             const phys = calculatePhysicalDrop(tau);
 
             if (threeCurrentMesh) {
