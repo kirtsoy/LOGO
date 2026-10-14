@@ -463,6 +463,62 @@
       pointer-events: none;
     }
 
+    /* 16:9 Cinema Viewfinder & Safe Area Frame Overlay */
+    .frame-guide-169 {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: opacity 0.25s ease;
+    }
+    .frame-box-169 {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      width: min(94%, calc(94vh * (16 / 9)));
+      height: min(94%, calc(94vw * (9 / 16)));
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.62);
+      border: 1px dashed rgba(56, 189, 248, 0.45);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .frame-corner {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border: 2px solid #38bdf8;
+    }
+    .frame-corner.top-left { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+    .frame-corner.top-right { top: -2px; right: -2px; border-left: none; border-bottom: none; }
+    .frame-corner.bottom-left { bottom: -2px; left: -2px; border-right: none; border-top: none; }
+    .frame-corner.bottom-right { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+    .frame-center-cross {
+      position: absolute;
+      color: rgba(56, 189, 248, 0.35);
+      font-size: 22px;
+      font-weight: 300;
+      user-select: none;
+      line-height: 1;
+    }
+    .frame-badge-169 {
+      position: absolute;
+      bottom: 8px;
+      left: 12px;
+      background: rgba(10, 12, 19, 0.75);
+      border: 1px solid rgba(56, 189, 248, 0.3);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #38bdf8;
+      letter-spacing: 0.5px;
+    }
+
     .drop-overlay {
       position: absolute;
       inset: 20px;
@@ -761,6 +817,56 @@
       </div>
     </div>
 
+    <!-- Camera Framing & Viewport Safe 16:9 Frame -->
+    <div class="control-section" id="cameraFramingSection">
+      <div class="section-title">
+        <span>🎥 КАМЕРА И РАМКА 16:9</span>
+        <span class="preset-item-badge" style="color: #38bdf8;">FRAMING</span>
+      </div>
+
+      <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff;">
+          <input type="checkbox" id="frame169Toggle" checked onchange="toggle169FrameGuide()">
+          <span style="font-weight: 700;">🎬 Рамка кадра 16:9 (1920×1080 / 4K Safe Frame)</span>
+        </label>
+        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+          Кино-каше с затемнением за границами: показывает точный кадр видео
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 120px;">Дистанция (Zoom)</label>
+          <input type="range" id="camDistanceSlider" min="120" max="480" step="5" value="240" oninput="updateCameraFraming()">
+          <span class="slider-val" id="valCamDistance">240</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 120px;">Высота в кадре (Y)</label>
+          <input type="range" id="camOffsetYSlider" min="-80" max="80" step="2" value="0" oninput="updateCameraFraming()">
+          <span class="slider-val" id="valCamOffsetY">0</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 120px;">Сдвиг по ширине (X)</label>
+          <input type="range" id="camOffsetXSlider" min="-80" max="80" step="2" value="0" oninput="updateCameraFraming()">
+          <span class="slider-val" id="valCamOffsetX">0</span>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <div style="display: flex; gap: 6px;">
+          <button class="preset-btn" style="flex: 1;" onclick="setCameraPreset('macro')">🔍 Макро (160)</button>
+          <button class="preset-btn active" style="flex: 1;" onclick="setCameraPreset('standard')">🎯 Центр (240)</button>
+          <button class="preset-btn" style="flex: 1;" onclick="setCameraPreset('wide')">📐 Общий (340)</button>
+        </div>
+      </div>
+    </div>
+
     <!-- 3D Volumetric Parameters (Extrusion & Bevel) -->
     <div class="control-section" id="meshControlsGroup">
       <div class="section-title">
@@ -961,6 +1067,18 @@
     <!-- Mode 1: Real 3D Three.js Volumetric Text Mesh -->
     <div id="three-3d-canvas"></div>
 
+    <!-- 16:9 Viewport Mask & Frame Guide Overlay -->
+    <div id="frameGuide169" class="frame-guide-169">
+      <div class="frame-box-169">
+        <div class="frame-corner top-left"></div>
+        <div class="frame-corner top-right"></div>
+        <div class="frame-corner bottom-left"></div>
+        <div class="frame-corner bottom-right"></div>
+        <div class="frame-center-cross">+</div>
+        <div class="frame-badge-169">🎬 16:9 SAFE AREA (1920×1080 / 4K UHD)</div>
+      </div>
+    </div>
+
     <!-- Mode 2: Liquid Metal WebGL Shader -->
     <canvas id="gl-liquid-canvas"></canvas>
 
@@ -971,6 +1089,9 @@
 
     <!-- HUD Overlay -->
     <div class="viewport-hud">
+      <button class="hud-badge" id="hudFrame169Btn" style="cursor: pointer; color: #38bdf8; border-color: rgba(56,189,248,0.4); display: flex; align-items: center; gap: 4px;" onclick="toggle169FrameGuide()" title="Включить / Выключить кино-рамку 16:9">
+        🎬 16:9 Рамка
+      </button>
       <button class="hud-badge" style="cursor: pointer; color: #38bdf8; border-color: rgba(56,189,248,0.4); display: flex; align-items: center; gap: 4px;" onclick="resetCameraFront()" title="Выровнять камеру строго по центру лица кулона">
         🎥 Фронт
       </button>
@@ -1047,6 +1168,18 @@
       threeControls.dampingFactor = 0.05;
       threeControls.autoRotate = false; // Never drift or rotate camera automatically
       threeControls.autoRotateSpeed = 1.5;
+
+      threeControls.addEventListener('change', () => {
+        if (!isIntroRecording && transitionMode === 'none' && threeCamera) {
+          const dist = Math.round(threeCamera.position.distanceTo(threeControls.target));
+          const distEl = document.getElementById('camDistanceSlider');
+          const valEl = document.getElementById('valCamDistance');
+          if (distEl && Math.abs(parseFloat(distEl.value) - dist) >= 2) {
+            distEl.value = Math.min(480, Math.max(120, dist));
+            if (valEl) valEl.innerText = distEl.value;
+          }
+        }
+      });
 
       // Studio Lighting
       const ambLight = new THREE.AmbientLight(0xffffff, 1.2);
@@ -1492,12 +1625,77 @@
     }
     const updateIntroSpinSpeed = updateIntroTimingReadouts;
 
+    // --- CAMERA FRAMING & 16:9 VIEWPORT MASK ---
+    function updateCameraFraming() {
+      const dist = parseFloat(document.getElementById('camDistanceSlider')?.value || 240);
+      const offY = parseFloat(document.getElementById('camOffsetYSlider')?.value || 0);
+      const offX = parseFloat(document.getElementById('camOffsetXSlider')?.value || 0);
+
+      const valDist = document.getElementById('valCamDistance');
+      const valY = document.getElementById('valCamOffsetY');
+      const valX = document.getElementById('valCamOffsetX');
+      if (valDist) valDist.innerText = dist;
+      if (valY) valY.innerText = offY;
+      if (valX) valX.innerText = offX;
+
+      if (threeCamera && threeControls) {
+        threeCamera.position.set(offX, offY, dist);
+        threeControls.target.set(offX, offY, 0);
+        threeCamera.lookAt(offX, offY, 0);
+        threeControls.update();
+      }
+    }
+
+    function setCameraPreset(type) {
+      const distEl = document.getElementById('camDistanceSlider');
+      const offYEl = document.getElementById('camOffsetYSlider');
+      const offXEl = document.getElementById('camOffsetXSlider');
+      if (type === 'macro') {
+        if (distEl) distEl.value = 160;
+        if (offYEl) offYEl.value = 0;
+        if (offXEl) offXEl.value = 0;
+      } else if (type === 'standard') {
+        if (distEl) distEl.value = 240;
+        if (offYEl) offYEl.value = 0;
+        if (offXEl) offXEl.value = 0;
+      } else if (type === 'wide') {
+        if (distEl) distEl.value = 340;
+        if (offYEl) offYEl.value = 0;
+        if (offXEl) offXEl.value = 0;
+      }
+      updateCameraFraming();
+      document.querySelectorAll('#cameraFramingSection .preset-btn').forEach(b => b.classList.remove('active'));
+      if (typeof event !== 'undefined' && event && event.target && event.target.classList) {
+        event.target.classList.add('active');
+      }
+    }
+
+    function toggle169FrameGuide() {
+      const chk = document.getElementById('frame169Toggle');
+      const guide = document.getElementById('frameGuide169');
+      const hudBtn = document.getElementById('hudFrame169Btn');
+      if (guide) {
+        const isShown = guide.style.display !== 'none';
+        const nextState = (chk ? chk.checked : !isShown);
+        guide.style.display = nextState ? 'flex' : 'none';
+        if (chk) chk.checked = nextState;
+        if (hudBtn) {
+          hudBtn.style.color = nextState ? '#38bdf8' : '#94a3b8';
+          hudBtn.style.borderColor = nextState ? 'rgba(56,189,248,0.4)' : 'rgba(255,255,255,0.15)';
+        }
+      }
+    }
+
     // --- CINEMATIC TRANSITIONS ---
     function resetCameraFront() {
       if (threeCamera && threeControls) {
-        threeCamera.position.set(0, 0, 240);
-        threeControls.target.set(0, 0, 0);
-        threeCamera.lookAt(0, 0, 0);
+        const dist = parseFloat(document.getElementById('camDistanceSlider')?.value || 240);
+        const offY = parseFloat(document.getElementById('camOffsetYSlider')?.value || 0);
+        const offX = parseFloat(document.getElementById('camOffsetXSlider')?.value || 0);
+
+        threeCamera.position.set(offX, offY, dist);
+        threeControls.target.set(offX, offY, 0);
+        threeCamera.lookAt(offX, offY, 0);
         threeControls.update();
       }
     }
@@ -2983,7 +3181,11 @@
 
         // 9. Camera Framing
         cameraPosition: camPos,
-        cameraTarget: camTarget
+        cameraTarget: camTarget,
+        camDistance: parseFloat(document.getElementById('camDistanceSlider')?.value || 240),
+        camOffsetY: parseFloat(document.getElementById('camOffsetYSlider')?.value || 0),
+        camOffsetX: parseFloat(document.getElementById('camOffsetXSlider')?.value || 0),
+        frame169Enabled: document.getElementById('frame169Toggle')?.checked ?? true
       };
     }
 
@@ -3219,6 +3421,23 @@
         threeControls.update();
       }
 
+      if (d.camDistance !== undefined && document.getElementById('camDistanceSlider')) {
+        document.getElementById('camDistanceSlider').value = d.camDistance;
+        document.getElementById('valCamDistance').innerText = d.camDistance;
+      }
+      if (d.camOffsetY !== undefined && document.getElementById('camOffsetYSlider')) {
+        document.getElementById('camOffsetYSlider').value = d.camOffsetY;
+        document.getElementById('valCamOffsetY').innerText = d.camOffsetY;
+      }
+      if (d.camOffsetX !== undefined && document.getElementById('camOffsetXSlider')) {
+        document.getElementById('camOffsetXSlider').value = d.camOffsetX;
+        document.getElementById('valCamOffsetX').innerText = d.camOffsetX;
+      }
+      if (d.frame169Enabled !== undefined && document.getElementById('frame169Toggle')) {
+        document.getElementById('frame169Toggle').checked = d.frame169Enabled;
+        toggle169FrameGuide();
+      }
+
       // 11. Rebuild 3D Model / Text & Lateral Chain
       if (d.source === 'text') {
         if (loadedFonts[d.font]) {
@@ -3365,6 +3584,10 @@
         threeRenderer.setClearColor(0x000000, 0.0);
       }
 
+      // Hide frame guide during video recording so guide lines are not captured
+      const guide = document.getElementById('frameGuide169');
+      if (guide) guide.style.opacity = '0';
+
       // Reset camera and trigger intro transition
       startTransition('swoop_lift');
 
@@ -3398,6 +3621,7 @@
       introMediaRecorder.onstop = function() {
         isIntroRecording = false;
         threeScene.background = null; // Always restore transparent background
+        if (guide) guide.style.opacity = '1';
 
         const blob = new Blob(introRecordedChunks, { type: mimeType });
         const url = URL.createObjectURL(blob);
