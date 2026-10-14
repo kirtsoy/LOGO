@@ -680,18 +680,52 @@
               <input type="range" id="threadScrubSlider" min="0" max="100" step="1" value="100" oninput="onScrubThreading(this.value)">
             </div>
 
-            <!-- Intro 360° Rotation Speed Admin Control (ONLY affects rotation speed, perfectly syncing chain) -->
-            <div style="margin: 6px 0 8px 0; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08);">
-              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
-                <span style="font-size: 11px; color: #c084fc; font-weight: 700;">⚡ Скорость вращения 360° (только вращение):</span>
-                <span style="font-size: 11px; color: #a855f7; font-family: monospace; font-weight: 700;" id="valIntroSpinSpeed">1.0x (3.4с)</span>
+            <!-- Intro 360° & Chain Timing Admin Controls -->
+            <div style="margin: 6px 0 8px 0; padding: 8px; background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.22); border-radius: 8px;">
+              <!-- 1. Rotation Speed -->
+              <div style="margin-bottom: 8px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <span style="font-size: 11px; color: #c084fc; font-weight: 700;">⚡ Скорость вращения 360°:</span>
+                  <span style="font-size: 11px; color: #c084fc; font-family: monospace; font-weight: 700;" id="valIntroSpinSpeed">1.0x (3.4с)</span>
+                </div>
+                <div class="slider-row" style="margin: 2px 0;">
+                  <input type="range" id="introSpinSpeed" min="0.4" max="3.0" step="0.1" value="1.0" oninput="updateIntroTimingReadouts()">
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8;">
+                  <span>🐢 Медленно (0.4x)</span>
+                  <span>⚡ Быстро (3.0x)</span>
+                </div>
               </div>
-              <div class="slider-row" style="margin: 2px 0;">
-                <input type="range" id="introSpinSpeed" min="0.4" max="3.0" step="0.1" value="1.0" oninput="updateIntroSpinSpeed()">
+
+              <!-- 2. Chain Flight Speed -->
+              <div style="margin-bottom: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <span style="font-size: 11px; color: #38bdf8; font-weight: 700;">🚀 Скорость полёта цепи:</span>
+                  <span style="font-size: 11px; color: #38bdf8; font-family: monospace; font-weight: 700;" id="valIntroChainSpeed">1.0x (2.6с)</span>
+                </div>
+                <div class="slider-row" style="margin: 2px 0;">
+                  <input type="range" id="introChainSpeed" min="0.4" max="3.0" step="0.1" value="1.0" oninput="updateIntroTimingReadouts()">
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8;">
+                  <span>🐢 Плавный glide (0.4x)</span>
+                  <span>⚡ Snap-влёт (3.0x)</span>
+                </div>
               </div>
-              <div style="display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8; margin-bottom: 2px;">
-                <span>🐢 Медленно (0.4x ~ 8.5с)</span>
-                <span>⚡ Быстро (3.0x ~ 1.1с)</span>
+
+              <!-- 3. Chain Hole Entry Moment -->
+              <div style="padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <span style="font-size: 11px; color: #34d399; font-weight: 700;">🎯 Момент влёта в дырку "t":</span>
+                  <span style="font-size: 11px; color: #34d399; font-family: monospace; font-weight: 700;" id="valIntroChainHoleTiming">1.00 (Финал 360° — Лицом)</span>
+                </div>
+                <div class="slider-row" style="margin: 2px 0;">
+                  <input type="range" id="introChainHoleTiming" min="0.5" max="1.5" step="0.05" value="1.0" oninput="updateIntroTimingReadouts()">
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8;">
+                  <span>0.50 (Спина)</span>
+                  <span style="color: #a7f3d0; font-weight: 700;">1.00 (Идеально лицом)</span>
+                  <span>1.50 (Позже)</span>
+                </div>
               </div>
             </div>
 
@@ -1391,12 +1425,33 @@
       showToast('🚀 Запущен влёт цепи сквозь "t" и унос ВВЕРХ!');
     }
 
-    function updateIntroSpinSpeed() {
-      const speed = parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0);
-      const durationSec = (3.4 / Math.max(0.1, speed)).toFixed(1);
-      const valEl = document.getElementById('valIntroSpinSpeed');
-      if (valEl) valEl.innerText = `${speed.toFixed(1)}x (${durationSec}с)`;
+    function updateIntroTimingReadouts() {
+      const spinSpeed = parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0);
+      const chainSpeed = parseFloat(document.getElementById('introChainSpeed')?.value || 1.0);
+      const holeTiming = parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0);
+
+      const spinDuration = 3.4 / Math.max(0.1, spinSpeed);
+      const flightDuration = (spinDuration * 0.765) / Math.max(0.1, chainSpeed);
+
+      const valSpin = document.getElementById('valIntroSpinSpeed');
+      if (valSpin) valSpin.innerText = `${spinSpeed.toFixed(1)}x (${spinDuration.toFixed(1)}с)`;
+
+      const valChain = document.getElementById('valIntroChainSpeed');
+      if (valChain) valChain.innerText = `${chainSpeed.toFixed(1)}x (${flightDuration.toFixed(1)}с)`;
+
+      const valHole = document.getElementById('valIntroChainHoleTiming');
+      if (valHole) {
+        if (Math.abs(holeTiming - 1.0) < 0.02) {
+          valHole.innerText = `1.00 (Финал 360° — Лицом)`;
+        } else if (holeTiming < 1.0) {
+          const deg = Math.round(holeTiming * 360);
+          valHole.innerText = `${holeTiming.toFixed(2)} (${deg}° — Раньше)`;
+        } else {
+          valHole.innerText = `${holeTiming.toFixed(2)} (После разворота)`;
+        }
+      }
     }
+    const updateIntroSpinSpeed = updateIntroTimingReadouts;
 
     // --- CINEMATIC TRANSITIONS ---
     function resetCameraFront() {
@@ -2149,13 +2204,28 @@
         if (transitionMode === 'swoop_lift') {
           const elapsed = (now - transitionStartTime) * 0.001; // in seconds
 
-          // 1. Dynamic Parametric Timing based ONLY on 360° Rotation Speed Admin Slider:
+          // 1. Dynamic Parametric Timing based on Admin Sliders:
           const spinSpeedMult = parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0);
           const spinDuration = 3.4 / Math.max(0.1, spinSpeedMult); // Only affects 360° rotation!
 
+          const chainSpeedMult = parseFloat(document.getElementById('introChainSpeed')?.value || 1.0);
+          const holeTimingMult = parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0);
+
           const tStartSpin = 0.4;
           const tSpinEnd = tStartSpin + spinDuration;
-          const tAnchorEnd = tSpinEnd + 0.6; // Anchor lock takes exactly 0.6s
+
+          // Target moment when chain enters the hole (p = 0.78):
+          // Value 1.00 corresponds EXACTLY to tSpinEnd (logo completes 360° and looks directly forward)
+          const tHoleTarget = tStartSpin + spinDuration * holeTimingMult;
+
+          // Chain flight speed and launch timing:
+          const dFlightToHole = (spinDuration * 0.765) / Math.max(0.1, chainSpeedMult);
+          const tChainLaunch = Math.max(0.0, tHoleTarget - dFlightToHole);
+
+          // Lock duration from hole (0.78) to anchor (1.00):
+          const dToAnchor = 0.6 / Math.max(0.1, chainSpeedMult);
+          const tAnchorEnd = tHoleTarget + dToAnchor;
+
           const tDropEnd = tAnchorEnd + 2.0;  // Real free-fall takes exactly 2.0s
           const tLiftEnd = tDropEnd + 1.3;    // Swoop lift takes exactly 1.3s
           const loopDuration = tLiftEnd + 0.4; // 0.4s clean off-screen pause
@@ -2164,75 +2234,53 @@
           const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
           const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
 
-          // Calibrated chain launch: launches proportionally so it glides toward hole
-          const tChainStart = tStartSpin + spinDuration * 0.235;
+          // Calculate current chain progress p:
+          let chainP = 0.0;
+          if (loopTime < tChainLaunch) {
+            chainP = 0.0;
+          } else if (loopTime < tHoleTarget) {
+            const s = (loopTime - tChainLaunch) / Math.max(0.001, tHoleTarget - tChainLaunch);
+            chainP = 0.78 * Math.pow(Math.min(1.0, Math.max(0.0, s)), 1.2);
+          } else if (loopTime < tAnchorEnd) {
+            const q = (loopTime - tHoleTarget) / Math.max(0.001, tAnchorEnd - tHoleTarget);
+            chainP = 0.78 + 0.22 * (1.0 - Math.pow(1.0 - Math.min(1.0, Math.max(0.0, q)), 1.3));
+          } else {
+            chainP = 1.0;
+          }
 
-          if (loopTime < tStartSpin) {
-            // Stage 0: Front-facing with living ripple floating bob & sway
-            updateChainThreading(0.0);
-            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
-            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
-            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple);
+          // Living bob & tilt during front and rotation phases
+          const blendSettle = (loopTime >= tHoleTarget && loopTime < tAnchorEnd)
+            ? Math.max(0.0, (tAnchorEnd - loopTime) / Math.max(0.001, tAnchorEnd - tHoleTarget))
+            : 1.0;
+          const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple) * blendSettle;
+          const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple) * blendSettle;
+          const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple) * blendSettle;
+
+          if (loopTime < tAnchorEnd) {
+            // Stage 0, 1 & 2: 360° Velvet spin and chain threading into hole & right anchor
+            let spinAngle = 0.0;
+            if (loopTime >= tStartSpin && loopTime < tSpinEnd) {
+              const spinT = (loopTime - tStartSpin) / spinDuration;
+              spinAngle = spinT * Math.PI * 2;
+            } else if (loopTime >= tSpinEnd) {
+              spinAngle = 0.0; // Strictly front-facing
+            }
+
+            updateChainThreading(chainP);
 
             if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, bobY, 0);
-              threeCurrentMesh.rotation.set(tiltX, 0, tiltZ);
-            }
-            if (threeChainMesh) {
-              threeChainMesh.position.set(0, bobY, 0);
-              threeChainMesh.rotation.set(tiltX, 0, tiltZ);
-            }
-          } else if (loopTime < tSpinEnd) {
-            // Stage 1: Velvet 360° spin with living bob & sway (dynamically timed to slider)
-            const spinT = (loopTime - tStartSpin) / spinDuration; // 0.0 to 1.0
-            const spinAngle = spinT * Math.PI * 2; // Continuous 360° turn
-
-            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
-            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
-            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple);
-
-            if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, bobY, 0);
+              let tactileX = 0;
+              // Subtle tactile contact tick when chain enters hole
+              if (chainP > 0.55 && chainP < 0.78) {
+                tactileX = (Math.random() - 0.5) * 0.25;
+              }
+              threeCurrentMesh.position.set(tactileX, bobY, 0);
               threeCurrentMesh.rotation.set(tiltX, spinAngle, tiltZ);
             }
             if (threeChainMesh) {
               threeChainMesh.position.set(0, bobY, 0);
               threeChainMesh.rotation.set(tiltX, 0, tiltZ);
             }
-
-            // Chain flight mathematically scaled to reach EXACTLY 0.78 (inside hole in 't') at tSpinEnd!
-            if (loopTime < tChainStart) {
-              updateChainThreading(0.0);
-            } else {
-              const s = (loopTime - tChainStart) / (tSpinEnd - tChainStart);
-              const p = 0.78 * Math.pow(s, 1.2);
-              updateChainThreading(p);
-
-              // Subtle tactile contact tick when chain enters hole
-              if (p > 0.55 && p < 0.78 && threeCurrentMesh) {
-                threeCurrentMesh.position.x = (Math.random() - 0.5) * 0.25;
-              }
-            }
-          } else if (loopTime < tAnchorEnd) {
-            // Stage 2: Logo faces 100% straight forward, chain finishes gliding from hole (0.78) to right anchor (1.00)
-            const remTime = tAnchorEnd - loopTime;
-            const blend = remTime / 0.6; // Softly calms ripple bob right before free fall
-            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple) * blend;
-            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple) * blend;
-            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple) * blend;
-
-            if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, bobY, 0);
-              threeCurrentMesh.rotation.set(tiltX, 0, tiltZ);
-            }
-            if (threeChainMesh) {
-              threeChainMesh.position.set(0, bobY, 0);
-              threeChainMesh.rotation.set(tiltX, 0, tiltZ);
-            }
-
-            const q = (loopTime - tSpinEnd) / 0.6;
-            const p = 0.78 + 0.22 * (1.0 - Math.pow(1.0 - q, 1.3));
-            updateChainThreading(p);
           } else if (loopTime < tDropEnd) {
             // Stage 3: REALISTIC PHYSICAL FREE-FALL, LATERAL CHAIN SWAY & CATENARY DEFORMATION
             const tau = loopTime - tAnchorEnd; // 0.0 to 2.0s
@@ -2256,15 +2304,15 @@
             const liftT = (loopTime - tDropEnd) / 1.3; // 0.0 to 1.0
             const liftProgress = liftT * liftT * (1.2 + 0.8 * liftT); // Rocket curve
             const liftY = -16.0 + liftProgress * 920; // Launches from -16 to +904
-            const tiltX = -Math.min(liftT * 0.45, 0.45); // Tilts upward under chain pull
+            const liftTiltX = -Math.min(liftT * 0.45, 0.45); // Tilts upward under chain pull
 
             if (threeCurrentMesh) {
               threeCurrentMesh.position.set(0, liftY, 0);
-              threeCurrentMesh.rotation.set(tiltX, 0, 0);
+              threeCurrentMesh.rotation.set(liftTiltX, 0, 0);
             }
             if (threeChainMesh) {
               threeChainMesh.position.set(0, liftY, 0);
-              threeChainMesh.rotation.set(tiltX * 0.8, 0, Math.sin(liftT * 4) * 0.08);
+              threeChainMesh.rotation.set(liftTiltX * 0.8, 0, Math.sin(liftT * 4) * 0.08);
             }
           } else {
             // Stage 5: Off-screen peaceful pause before clean loop
@@ -2279,40 +2327,52 @@
             }
           }
         } else if (transitionMode === 'thread_snake') {
-          // Dedicated threading inspection with dynamic rotation speed
+          // Dedicated threading inspection with dynamic rotation and chain timing
           const elapsed = (now - transitionStartTime) * 0.001;
           const spinSpeedMult = parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0);
           const spinDuration = 3.4 / Math.max(0.1, spinSpeedMult);
 
+          const chainSpeedMult = parseFloat(document.getElementById('introChainSpeed')?.value || 1.0);
+          const holeTimingMult = parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0);
+
           const tStartSpin = 0.4;
           const tSpinEnd = tStartSpin + spinDuration;
-          const tAnchorEnd = tSpinEnd + 0.6;
+          const tHoleTarget = tStartSpin + spinDuration * holeTimingMult;
+          const dFlightToHole = (spinDuration * 0.765) / Math.max(0.1, chainSpeedMult);
+          const tChainLaunch = Math.max(0.0, tHoleTarget - dFlightToHole);
+          const dToAnchor = 0.6 / Math.max(0.1, chainSpeedMult);
+          const tAnchorEnd = tHoleTarget + dToAnchor;
 
           const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
           const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
-          const tChainStart = tStartSpin + spinDuration * 0.235;
 
-          if (elapsed < tStartSpin) {
-            updateChainThreading(0.0);
-            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
-            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
-            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple);
+          let chainP = 0.0;
+          if (elapsed < tChainLaunch) {
+            chainP = 0.0;
+          } else if (elapsed < tHoleTarget) {
+            const s = (elapsed - tChainLaunch) / Math.max(0.001, tHoleTarget - tChainLaunch);
+            chainP = 0.78 * Math.pow(Math.min(1.0, Math.max(0.0, s)), 1.2);
+          } else if (elapsed < tAnchorEnd) {
+            const q = (elapsed - tHoleTarget) / Math.max(0.001, tAnchorEnd - tHoleTarget);
+            chainP = 0.78 + 0.22 * (1.0 - Math.pow(1.0 - Math.min(1.0, Math.max(0.0, q)), 1.3));
+          } else {
+            chainP = 1.0;
+          }
 
-            if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, bobY, 0);
-              threeCurrentMesh.rotation.set(tiltX, 0, tiltZ);
+          if (elapsed < tAnchorEnd) {
+            let spinAngle = 0.0;
+            if (elapsed >= tStartSpin && elapsed < tSpinEnd) {
+              const spinT = (elapsed - tStartSpin) / spinDuration;
+              spinAngle = spinT * Math.PI * 2;
             }
-            if (threeChainMesh) {
-              threeChainMesh.position.set(0, bobY, 0);
-              threeChainMesh.rotation.set(tiltX, 0, tiltZ);
-            }
-          } else if (elapsed < tSpinEnd) {
-            const spinT = (elapsed - tStartSpin) / spinDuration;
-            const spinAngle = spinT * Math.PI * 2;
-            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
-            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
-            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple);
+            const blendSettle = (elapsed >= tHoleTarget && elapsed < tAnchorEnd)
+              ? Math.max(0.0, (tAnchorEnd - elapsed) / Math.max(0.001, tAnchorEnd - tHoleTarget))
+              : 1.0;
+            const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple) * blendSettle;
+            const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple) * blendSettle;
+            const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple) * blendSettle;
 
+            updateChainThreading(chainP);
             if (threeCurrentMesh) {
               threeCurrentMesh.position.set(0, bobY, 0);
               threeCurrentMesh.rotation.set(tiltX, spinAngle, tiltZ);
@@ -2321,18 +2381,6 @@
               threeChainMesh.position.set(0, bobY, 0);
               threeChainMesh.rotation.set(tiltX, 0, tiltZ);
             }
-
-            if (elapsed < tChainStart) {
-              updateChainThreading(0.0);
-            } else {
-              const s = (elapsed - tChainStart) / (tSpinEnd - tChainStart);
-              const p = 0.78 * Math.pow(s, 1.2);
-              updateChainThreading(p);
-            }
-          } else if (elapsed < tAnchorEnd) {
-            const q = (elapsed - tSpinEnd) / 0.6;
-            const p = 0.78 + 0.22 * (1.0 - Math.pow(1.0 - q, 1.3));
-            updateChainThreading(p);
           } else {
             // Settled front-facing with realistic physical free-fall, lateral sway & dynamic catenary jiggle
             const tau = Math.min(2.0, elapsed - tAnchorEnd);
@@ -2342,7 +2390,6 @@
               threeCurrentMesh.position.set(phys.x, phys.y, 0);
               threeCurrentMesh.rotation.set(phys.rotX, phys.rotY, phys.rotZ);
             }
-
             updateChainThreading(1.0, phys.y, phys.x);
             if (threeChainMesh) {
               threeChainMesh.position.set(0, 0, 0);
@@ -2865,6 +2912,9 @@
 
         // 5. Cinematic Animations / Transitions
         transitionMode: transitionMode,
+        introSpinSpeed: parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0),
+        introChainSpeed: parseFloat(document.getElementById('introChainSpeed')?.value || 1.0),
+        introChainHoleTiming: parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0),
 
         // 6. Materials & Shading
         matType: document.getElementById('matTypeSelect')?.value || 'liquid_matcap',
@@ -3060,6 +3110,17 @@
         document.getElementById('autoRotate').checked = d.autoRotate;
         if (threeControls) threeControls.autoRotate = d.autoRotate;
       }
+
+      if (d.introSpinSpeed !== undefined && document.getElementById('introSpinSpeed')) {
+        document.getElementById('introSpinSpeed').value = d.introSpinSpeed;
+      }
+      if (d.introChainSpeed !== undefined && document.getElementById('introChainSpeed')) {
+        document.getElementById('introChainSpeed').value = d.introChainSpeed;
+      }
+      if (d.introChainHoleTiming !== undefined && document.getElementById('introChainHoleTiming')) {
+        document.getElementById('introChainHoleTiming').value = d.introChainHoleTiming;
+      }
+      updateIntroTimingReadouts();
 
       // 7. Material
       if (d.matType && document.getElementById('matTypeSelect')) {
