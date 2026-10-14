@@ -713,7 +713,7 @@
               </div>
 
               <!-- 3. Chain Hole Entry Moment -->
-              <div style="padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08);">
+              <div style="margin-bottom: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08);">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
                   <span style="font-size: 11px; color: #34d399; font-weight: 700;">🎯 Момент влёта в дырку "t":</span>
                   <span style="font-size: 11px; color: #34d399; font-family: monospace; font-weight: 700;" id="valIntroChainHoleTiming">1.00 (Финал 360° — Лицом)</span>
@@ -725,6 +725,22 @@
                   <span>0.50 (Спина)</span>
                   <span style="color: #a7f3d0; font-weight: 700;">1.00 (Идеально лицом)</span>
                   <span>1.50 (Позже)</span>
+                </div>
+              </div>
+
+              <!-- 4. Pre-Spins Revolutions before Chain Flight -->
+              <div style="padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <span style="font-size: 11px; color: #fbbf24; font-weight: 700;">🔄 Обороты 360° перед цепью:</span>
+                  <span style="font-size: 11px; color: #fbbf24; font-family: monospace; font-weight: 700;" id="valIntroPreSpins">1 оборот (360°)</span>
+                </div>
+                <div class="slider-row" style="margin: 2px 0;">
+                  <input type="range" id="introPreSpins" min="0" max="5" step="1" value="1" oninput="updateIntroTimingReadouts()">
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8;">
+                  <span>0 (Сразу цепь)</span>
+                  <span style="color: #fde68a; font-weight: 700;">1 оборот</span>
+                  <span>5 оборотов</span>
                 </div>
               </div>
             </div>
@@ -1448,6 +1464,20 @@
           valHole.innerText = `${holeTiming.toFixed(2)} (${deg}° — Раньше)`;
         } else {
           valHole.innerText = `${holeTiming.toFixed(2)} (После разворота)`;
+        }
+      }
+
+      const preSpins = parseInt(document.getElementById('introPreSpins')?.value ?? 1);
+      const valPreSpins = document.getElementById('valIntroPreSpins');
+      if (valPreSpins) {
+        if (preSpins === 0) {
+          valPreSpins.innerText = '0 (Сразу цепь)';
+        } else if (preSpins === 1) {
+          valPreSpins.innerText = '1 оборот (360°)';
+        } else if (preSpins < 5) {
+          valPreSpins.innerText = `${preSpins} оборота (${preSpins * 360}°)`;
+        } else {
+          valPreSpins.innerText = `${preSpins} оборотов (${preSpins * 360}°)`;
         }
       }
     }
@@ -2210,13 +2240,16 @@
 
           const chainSpeedMult = parseFloat(document.getElementById('introChainSpeed')?.value || 1.0);
           const holeTimingMult = parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0);
+          const preSpins = Math.max(0, parseInt(document.getElementById('introPreSpins')?.value ?? 1));
 
           const tStartSpin = 0.4;
-          const tSpinEnd = tStartSpin + spinDuration;
+          const preSpinDuration = preSpins * spinDuration;
+          const tMainSpinStart = tStartSpin + preSpinDuration;
+          const tSpinEnd = tMainSpinStart + spinDuration;
 
           // Target moment when chain enters the hole (p = 0.78):
           // Value 1.00 corresponds EXACTLY to tSpinEnd (logo completes 360° and looks directly forward)
-          const tHoleTarget = tStartSpin + spinDuration * holeTimingMult;
+          const tHoleTarget = tMainSpinStart + spinDuration * holeTimingMult;
 
           // Chain flight speed and launch timing:
           const dFlightToHole = (spinDuration * 0.765) / Math.max(0.1, chainSpeedMult);
@@ -2334,10 +2367,14 @@
 
           const chainSpeedMult = parseFloat(document.getElementById('introChainSpeed')?.value || 1.0);
           const holeTimingMult = parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0);
+          const preSpins = Math.max(0, parseInt(document.getElementById('introPreSpins')?.value ?? 1));
 
           const tStartSpin = 0.4;
-          const tSpinEnd = tStartSpin + spinDuration;
-          const tHoleTarget = tStartSpin + spinDuration * holeTimingMult;
+          const preSpinDuration = preSpins * spinDuration;
+          const tMainSpinStart = tStartSpin + preSpinDuration;
+          const tSpinEnd = tMainSpinStart + spinDuration;
+
+          const tHoleTarget = tMainSpinStart + spinDuration * holeTimingMult;
           const dFlightToHole = (spinDuration * 0.765) / Math.max(0.1, chainSpeedMult);
           const tChainLaunch = Math.max(0.0, tHoleTarget - dFlightToHole);
           const dToAnchor = 0.6 / Math.max(0.1, chainSpeedMult);
@@ -2915,6 +2952,7 @@
         introSpinSpeed: parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0),
         introChainSpeed: parseFloat(document.getElementById('introChainSpeed')?.value || 1.0),
         introChainHoleTiming: parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0),
+        introPreSpins: parseInt(document.getElementById('introPreSpins')?.value ?? 1),
 
         // 6. Materials & Shading
         matType: document.getElementById('matTypeSelect')?.value || 'liquid_matcap',
@@ -3119,6 +3157,9 @@
       }
       if (d.introChainHoleTiming !== undefined && document.getElementById('introChainHoleTiming')) {
         document.getElementById('introChainHoleTiming').value = d.introChainHoleTiming;
+      }
+      if (d.introPreSpins !== undefined && document.getElementById('introPreSpins')) {
+        document.getElementById('introPreSpins').value = d.introPreSpins;
       }
       updateIntroTimingReadouts();
 
