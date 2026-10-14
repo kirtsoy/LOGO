@@ -17,6 +17,7 @@
   <script src="./assets/vendor/OBJLoader.js"></script>
   <script src="./assets/vendor/BufferGeometryUtils.js"></script>
   <script src="./assets/cuban_link_geo.js"></script>
+  <script src="./assets/vendor/jszip.min.js"></script>
 
   <style>
     :root {
@@ -1018,21 +1019,40 @@
     <!-- 7. Export Action Buttons -->
     <div class="control-section">
       <div class="section-title">
-        <span>7. ЭКСПОРТ</span>
+        <span>7. ЭКСПОРТ (ZERO LOSS & WEB)</span>
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Studio Zero-Loss Exporter -->
+        <div style="padding: 10px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px;">
+          <div style="font-size: 11px; font-weight: 800; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+            <span>💎 100% СТУДИЙНЫЙ РЕНДЕР (ZERO LOSS)</span>
+            <span style="font-size: 9px; background: rgba(56,189,248,0.2); padding: 2px 6px; border-radius: 4px; color: #38bdf8;">ALPHA PNG</span>
+          </div>
+          <div style="font-size: 10px; color: #94a3b8; margin-bottom: 8px; line-height: 1.35;">
+            Покадровый рендер без сжатия видео. 32-битная прозрачная PNG-секвенция (60 FPS) в ZIP архиве для Premiere, AE, DaVinci.
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn btn-primary" style="flex: 1.2; background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); border-color: #38bdf8; font-weight: 800; font-size: 11px; padding: 9px 6px;" onclick="startStudioOfflineRender(1920, 1080)">
+              💎 FullHD 1080p
+            </button>
+            <button class="btn btn-secondary" style="flex: 0.9; border-color: #c084fc; color: #e9d5ff; font-weight: 700; font-size: 11px; padding: 9px 6px;" onclick="startStudioOfflineRender(3840, 2160)">
+              ✨ 4K UHD
+            </button>
+          </div>
+        </div>
+
         <button class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-color: #10b981; font-weight: 700;" onclick="recordIntroAnimation('transparent')">
-          🎬 Записать интро с ПРОЗРАЧНЫМ фоном (WebM Alpha 60 FPS)
+          🎬 Быстрое видео WebM с прозрачностью (45 Mbps)
         </button>
         <button class="btn btn-secondary" style="border-color: #38bdf8; color: #bae6fd;" onclick="recordIntroAnimation('black')">
-          ⬛ Записать интро с чёрным фоном (60 FPS)
+          ⬛ Видео WebM с чёрным фоном (60 FPS)
         </button>
         <button class="btn btn-secondary" onclick="exportCurrentPNG()">
-          📸 Скачать 3D Кадр PNG (Прозрачный High-Res)
+          📸 Скачать 1 Кадр PNG (Прозрачный High-Res)
         </button>
         <button class="btn btn-secondary" style="border-color: #818cf8; color: #c7d2fe;" onclick="exportPendantOBJ()">
-          📦 Скачать 3D Модель Кулона с Цепью (.OBJ для Blender)
+          📦 Скачать 3D Модель (.OBJ для Blender)
         </button>
         <button class="btn btn-secondary" onclick="openRendersFolder()">
           📁 Открыть Папку с MP4 / GIF Рендерами
@@ -1112,6 +1132,62 @@
     <!-- Bottom Hint -->
     <div class="viewport-instructions">
       💡 Зажмите левую кнопку мыши для вращения 360°, колесико — зум, правая кнопка — перемещение
+    </div>
+
+    <!-- Studio Offline Render Modal -->
+    <div id="renderProgressModal" style="display: none; position: fixed; inset: 0; background: rgba(5, 7, 10, 0.88); backdrop-filter: blur(12px); z-index: 9999; align-items: center; justify-content: center;">
+      <div style="background: #0f172a; border: 1px solid rgba(56, 189, 248, 0.4); border-radius: 16px; padding: 24px; width: 460px; max-width: 92vw; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(56, 189, 248, 0.15); font-family: 'Space Grotesk', sans-serif; color: #f8fafc; text-align: center;">
+        
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px;">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span style="font-size: 20px;">💎</span>
+            <span style="font-weight: 800; font-size: 15px; letter-spacing: 0.5px; color: #38bdf8;">100% ZERO-LOSS STUDIO RENDER</span>
+          </div>
+          <span id="renderResBadge" style="font-family: 'JetBrains Mono', monospace; font-size: 11px; background: rgba(56, 189, 248, 0.15); color: #38bdf8; padding: 3px 8px; border-radius: 6px; border: 1px solid rgba(56, 189, 248, 0.3);">1920×1080</span>
+        </div>
+
+        <!-- Live Mini Thumbnail Preview -->
+        <div style="position: relative; width: 100%; height: 160px; background: #020617; border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.08); overflow: hidden; margin-bottom: 16px; display: flex; align-items: center; justify-content: center;">
+          <canvas id="renderPreviewThumb" width="320" height="180" style="max-width: 100%; max-height: 100%; object-fit: contain;"></canvas>
+          <div style="position: absolute; bottom: 6px; left: 8px; font-size: 10px; font-family: 'JetBrains Mono'; color: #4ade80; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px;">
+            ● RGBA 32-bit (Alpha 100% Прозрачный)
+          </div>
+        </div>
+
+        <!-- Status Text -->
+        <div id="renderStatusText" style="font-size: 13px; font-weight: 600; color: #cbd5e1; margin-bottom: 8px;">
+          Рендеринг кадра 0 из 0 (0%)...
+        </div>
+
+        <!-- Progress Bar -->
+        <div style="width: 100%; height: 10px; background: #1e293b; border-radius: 6px; overflow: hidden; margin-bottom: 16px; border: 1px solid rgba(255, 255, 255, 0.06);">
+          <div id="renderProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #0ea5e9, #6366f1, #a855f7); border-radius: 6px; transition: width 0.1s ease;"></div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 18px; font-family: 'JetBrains Mono', monospace; font-size: 11px;">
+          <div style="background: rgba(255,255,255,0.03); padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="color: #64748b; font-size: 9px;">КАДРЫ</div>
+            <div id="renderFramesStat" style="color: #38bdf8; font-weight: 700; margin-top: 2px;">0 / 0</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="color: #64748b; font-size: 9px;">ЧАСТОТА</div>
+            <div style="color: #4ade80; font-weight: 700; margin-top: 2px;">60 FPS</div>
+          </div>
+          <div style="background: rgba(255,255,255,0.03); padding: 8px 6px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.05);">
+            <div style="color: #64748b; font-size: 9px;">ОСТАЛОСЬ (ETA)</div>
+            <div id="renderEtaStat" style="color: #facc15; font-weight: 700; margin-top: 2px;">--:--</div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div style="display: flex; gap: 10px; justify-content: center;">
+          <button id="cancelRenderBtn" class="btn btn-secondary" style="width: auto; padding: 8px 24px; font-size: 12px; border-color: rgba(239, 68, 68, 0.4); color: #fca5a5;" onclick="cancelStudioRender()">
+            ❌ Отменить рендер
+          </button>
+        </div>
+
+      </div>
     </div>
 
   </main>
@@ -2417,13 +2493,176 @@
       return { y, v, x, rotX, rotY, rotZ };
     }
 
-    // --- ANIMATION MASTER LOOP ---
+    // --- ANIMATION MASTER LOOP & SHARED INTRO MOTOR ---
+    let isStudioRendering = false;
+    let studioRenderCancelled = false;
+
+    function getIntroTimingInfo() {
+      const spinSpeedMult = parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0);
+      const spinDuration = 3.4 / Math.max(0.1, spinSpeedMult); // Only affects 360° rotation!
+      const chainSpeedMult = parseFloat(document.getElementById('introChainSpeed')?.value || 1.0);
+      const holeTimingMult = parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0);
+      const preSpins = Math.max(0, parseInt(document.getElementById('introPreSpins')?.value ?? 1));
+
+      const tStartSpin = 0.4;
+      const preSpinDuration = preSpins * spinDuration;
+      const tMainSpinStart = tStartSpin + preSpinDuration;
+      const tSpinEnd = tMainSpinStart + spinDuration;
+
+      // Target moment when chain enters the hole (p = 0.78):
+      const tHoleTarget = tMainSpinStart + spinDuration * holeTimingMult;
+
+      // Chain flight speed and launch timing:
+      const dFlightToHole = (spinDuration * 0.765) / Math.max(0.1, chainSpeedMult);
+      const tChainLaunch = Math.max(0.0, tHoleTarget - dFlightToHole);
+
+      // Lock duration from hole (0.78) to anchor (1.00):
+      const dToAnchor = 0.6 / Math.max(0.1, chainSpeedMult);
+      const tAnchorEnd = tHoleTarget + dToAnchor;
+
+      const tDropEnd = tAnchorEnd + 2.0;  // Real free-fall takes exactly 2.0s
+      const tLiftEnd = tDropEnd + 1.3;    // Swoop lift takes exactly 1.3s
+      const loopDuration = tLiftEnd + 0.4; // 0.4s clean off-screen pause
+
+      return {
+        spinSpeedMult,
+        spinDuration,
+        chainSpeedMult,
+        holeTimingMult,
+        preSpins,
+        tStartSpin,
+        preSpinDuration,
+        tMainSpinStart,
+        tSpinEnd,
+        tHoleTarget,
+        dFlightToHole,
+        tChainLaunch,
+        dToAnchor,
+        tAnchorEnd,
+        tDropEnd,
+        tLiftEnd,
+        loopDuration
+      };
+    }
+
+    function applyIntroSwoopFrame(loopTime, timeSec = loopTime, timing = null) {
+      const t = timing || getIntroTimingInfo();
+      const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
+      const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
+
+      // Calculate current chain progress p:
+      let chainP = 0.0;
+      if (loopTime < t.tChainLaunch) {
+        chainP = 0.0;
+      } else if (loopTime < t.tHoleTarget) {
+        const s = (loopTime - t.tChainLaunch) / Math.max(0.001, t.tHoleTarget - t.tChainLaunch);
+        chainP = 0.78 * Math.pow(Math.min(1.0, Math.max(0.0, s)), 1.2);
+      } else if (loopTime < t.tAnchorEnd) {
+        const q = (loopTime - t.tHoleTarget) / Math.max(0.001, t.tAnchorEnd - t.tHoleTarget);
+        chainP = 0.78 + 0.22 * (1.0 - Math.pow(1.0 - Math.min(1.0, Math.max(0.0, q)), 1.3));
+      } else {
+        chainP = 1.0;
+      }
+
+      // Living bob & tilt during front and rotation phases
+      const blendSettle = (loopTime >= t.tHoleTarget && loopTime < t.tAnchorEnd)
+        ? Math.max(0.0, (t.tAnchorEnd - loopTime) / Math.max(0.001, t.tAnchorEnd - t.tHoleTarget))
+        : 1.0;
+      const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple) * blendSettle;
+      const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple) * blendSettle;
+      const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple) * blendSettle;
+
+      if (loopTime < t.tAnchorEnd) {
+        // Stage 0, 1 & 2: 360° Velvet spin and chain threading into hole & right anchor
+        let spinAngle = 0.0;
+        if (loopTime >= t.tStartSpin && loopTime < t.tSpinEnd) {
+          const spinT = (loopTime - t.tStartSpin) / t.spinDuration;
+          spinAngle = spinT * Math.PI * 2;
+        } else if (loopTime >= t.tSpinEnd) {
+          spinAngle = 0.0; // Strictly front-facing
+        }
+
+        updateChainThreading(chainP);
+
+        if (threeCurrentMesh) {
+          let tactileX = 0;
+          // Subtle tactile contact tick when chain enters hole
+          if (chainP > 0.55 && chainP < 0.78) {
+            tactileX = (Math.random() - 0.5) * 0.25;
+          }
+          threeCurrentMesh.position.set(tactileX, bobY, 0);
+          threeCurrentMesh.rotation.set(tiltX, spinAngle, tiltZ);
+        }
+        if (threeChainMesh) {
+          threeChainMesh.position.set(0, bobY, 0);
+          threeChainMesh.rotation.set(tiltX, 0, tiltZ);
+        }
+      } else if (loopTime < t.tDropEnd) {
+        // Stage 3: REALISTIC PHYSICAL FREE-FALL, LATERAL CHAIN SWAY & CATENARY DEFORMATION
+        const tau = loopTime - t.tAnchorEnd; // 0.0 to 2.0s
+        const phys = calculatePhysicalDrop(tau);
+
+        // Pendant drops and sways laterally along the chain curve:
+        if (threeCurrentMesh) {
+          threeCurrentMesh.position.set(phys.x, phys.y, 0);
+          threeCurrentMesh.rotation.set(phys.rotX, phys.rotY, phys.rotZ);
+        }
+
+        // Chain dynamically deforms its catenary arc under the falling and swaying pendant!
+        updateChainThreading(1.0, phys.y, phys.x);
+        if (threeChainMesh) {
+          threeChainMesh.position.set(0, 0, 0);
+          threeChainMesh.rotation.set(0, 0, 0);
+        }
+      } else if (loopTime < t.tLiftEnd) {
+        // Stage 4: POWERFUL CINEMATIC SWOOP UPWARD (УНОС ВВЕРХ)!
+        updateChainThreading(1.0, 0, 0);
+        const liftT = (loopTime - t.tDropEnd) / 1.3; // 0.0 to 1.0
+        const liftProgress = liftT * liftT * (1.2 + 0.8 * liftT); // Rocket curve
+        const liftY = -16.0 + liftProgress * 920; // Launches from -16 to +904
+        const liftTiltX = -Math.min(liftT * 0.45, 0.45); // Tilts upward under chain pull
+
+        if (threeCurrentMesh) {
+          threeCurrentMesh.position.set(0, liftY, 0);
+          threeCurrentMesh.rotation.set(liftTiltX, 0, 0);
+        }
+        if (threeChainMesh) {
+          threeChainMesh.position.set(0, liftY, 0);
+          threeChainMesh.rotation.set(liftTiltX * 0.8, 0, Math.sin(liftT * 4) * 0.08);
+        }
+      } else {
+        // Stage 5: Off-screen peaceful pause before clean loop
+        updateChainThreading(0.0);
+        if (threeCurrentMesh) {
+          threeCurrentMesh.position.set(0, 9999, 0);
+          threeCurrentMesh.rotation.set(0, 0, 0);
+        }
+        if (threeChainMesh) {
+          threeChainMesh.position.set(0, 9999, 0);
+          threeChainMesh.rotation.set(0, 0, 0);
+        }
+      }
+
+      // Dynamic Sparkle Glide
+      const glideEl = document.getElementById('sparkleGlideSpeed');
+      const glideSpeed = glideEl ? parseFloat(glideEl.value) : 0;
+      if (glideSpeed > 0 && matcaps[activeMatcapName]) {
+        const curTex = matcaps[activeMatcapName];
+        curTex.center.set(0.5, 0.5);
+        curTex.rotation = timeSec * glideSpeed * 0.25;
+      }
+    }
+
     let startTime = performance.now();
     let lastFpsTime = startTime;
     let frames = 0;
 
     function masterLoop(now) {
       requestAnimationFrame(masterLoop);
+
+      if (isStudioRendering) {
+        return; // Pause realtime loop during offline studio PNG rendering
+      }
 
       frames++;
       if (now - lastFpsTime >= 1000) {
@@ -2439,133 +2678,10 @@
 
         // Handle Cinematic Transitions
         if (transitionMode === 'swoop_lift') {
-          const elapsed = (now - transitionStartTime) * 0.001; // in seconds
-
-          // 1. Dynamic Parametric Timing based on Admin Sliders:
-          const spinSpeedMult = parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0);
-          const spinDuration = 3.4 / Math.max(0.1, spinSpeedMult); // Only affects 360° rotation!
-
-          const chainSpeedMult = parseFloat(document.getElementById('introChainSpeed')?.value || 1.0);
-          const holeTimingMult = parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0);
-          const preSpins = Math.max(0, parseInt(document.getElementById('introPreSpins')?.value ?? 1));
-
-          const tStartSpin = 0.4;
-          const preSpinDuration = preSpins * spinDuration;
-          const tMainSpinStart = tStartSpin + preSpinDuration;
-          const tSpinEnd = tMainSpinStart + spinDuration;
-
-          // Target moment when chain enters the hole (p = 0.78):
-          // Value 1.00 corresponds EXACTLY to tSpinEnd (logo completes 360° and looks directly forward)
-          const tHoleTarget = tMainSpinStart + spinDuration * holeTimingMult;
-
-          // Chain flight speed and launch timing:
-          const dFlightToHole = (spinDuration * 0.765) / Math.max(0.1, chainSpeedMult);
-          const tChainLaunch = Math.max(0.0, tHoleTarget - dFlightToHole);
-
-          // Lock duration from hole (0.78) to anchor (1.00):
-          const dToAnchor = 0.6 / Math.max(0.1, chainSpeedMult);
-          const tAnchorEnd = tHoleTarget + dToAnchor;
-
-          const tDropEnd = tAnchorEnd + 2.0;  // Real free-fall takes exactly 2.0s
-          const tLiftEnd = tDropEnd + 1.3;    // Swoop lift takes exactly 1.3s
-          const loopDuration = tLiftEnd + 0.4; // 0.4s clean off-screen pause
-          const loopTime = elapsed % loopDuration;
-
-          const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
-          const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
-
-          // Calculate current chain progress p:
-          let chainP = 0.0;
-          if (loopTime < tChainLaunch) {
-            chainP = 0.0;
-          } else if (loopTime < tHoleTarget) {
-            const s = (loopTime - tChainLaunch) / Math.max(0.001, tHoleTarget - tChainLaunch);
-            chainP = 0.78 * Math.pow(Math.min(1.0, Math.max(0.0, s)), 1.2);
-          } else if (loopTime < tAnchorEnd) {
-            const q = (loopTime - tHoleTarget) / Math.max(0.001, tAnchorEnd - tHoleTarget);
-            chainP = 0.78 + 0.22 * (1.0 - Math.pow(1.0 - Math.min(1.0, Math.max(0.0, q)), 1.3));
-          } else {
-            chainP = 1.0;
-          }
-
-          // Living bob & tilt during front and rotation phases
-          const blendSettle = (loopTime >= tHoleTarget && loopTime < tAnchorEnd)
-            ? Math.max(0.0, (tAnchorEnd - loopTime) / Math.max(0.001, tAnchorEnd - tHoleTarget))
-            : 1.0;
-          const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple) * blendSettle;
-          const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple) * blendSettle;
-          const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple) * blendSettle;
-
-          if (loopTime < tAnchorEnd) {
-            // Stage 0, 1 & 2: 360° Velvet spin and chain threading into hole & right anchor
-            let spinAngle = 0.0;
-            if (loopTime >= tStartSpin && loopTime < tSpinEnd) {
-              const spinT = (loopTime - tStartSpin) / spinDuration;
-              spinAngle = spinT * Math.PI * 2;
-            } else if (loopTime >= tSpinEnd) {
-              spinAngle = 0.0; // Strictly front-facing
-            }
-
-            updateChainThreading(chainP);
-
-            if (threeCurrentMesh) {
-              let tactileX = 0;
-              // Subtle tactile contact tick when chain enters hole
-              if (chainP > 0.55 && chainP < 0.78) {
-                tactileX = (Math.random() - 0.5) * 0.25;
-              }
-              threeCurrentMesh.position.set(tactileX, bobY, 0);
-              threeCurrentMesh.rotation.set(tiltX, spinAngle, tiltZ);
-            }
-            if (threeChainMesh) {
-              threeChainMesh.position.set(0, bobY, 0);
-              threeChainMesh.rotation.set(tiltX, 0, tiltZ);
-            }
-          } else if (loopTime < tDropEnd) {
-            // Stage 3: REALISTIC PHYSICAL FREE-FALL, LATERAL CHAIN SWAY & CATENARY DEFORMATION
-            const tau = loopTime - tAnchorEnd; // 0.0 to 2.0s
-            const phys = calculatePhysicalDrop(tau);
-
-            // Pendant drops and sways laterally along the chain curve:
-            if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(phys.x, phys.y, 0);
-              threeCurrentMesh.rotation.set(phys.rotX, phys.rotY, phys.rotZ);
-            }
-
-            // Chain dynamically deforms its catenary arc under the falling and swaying pendant!
-            updateChainThreading(1.0, phys.y, phys.x);
-            if (threeChainMesh) {
-              threeChainMesh.position.set(0, 0, 0);
-              threeChainMesh.rotation.set(0, 0, 0);
-            }
-          } else if (loopTime < tLiftEnd) {
-            // Stage 4: POWERFUL CINEMATIC SWOOP UPWARD (УНОС ВВЕРХ)!
-            updateChainThreading(1.0, 0, 0);
-            const liftT = (loopTime - tDropEnd) / 1.3; // 0.0 to 1.0
-            const liftProgress = liftT * liftT * (1.2 + 0.8 * liftT); // Rocket curve
-            const liftY = -16.0 + liftProgress * 920; // Launches from -16 to +904
-            const liftTiltX = -Math.min(liftT * 0.45, 0.45); // Tilts upward under chain pull
-
-            if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, liftY, 0);
-              threeCurrentMesh.rotation.set(liftTiltX, 0, 0);
-            }
-            if (threeChainMesh) {
-              threeChainMesh.position.set(0, liftY, 0);
-              threeChainMesh.rotation.set(liftTiltX * 0.8, 0, Math.sin(liftT * 4) * 0.08);
-            }
-          } else {
-            // Stage 5: Off-screen peaceful pause before clean loop
-            updateChainThreading(0.0);
-            if (threeCurrentMesh) {
-              threeCurrentMesh.position.set(0, 9999, 0);
-              threeCurrentMesh.rotation.set(0, 0, 0);
-            }
-            if (threeChainMesh) {
-              threeChainMesh.position.set(0, 9999, 0);
-              threeChainMesh.rotation.set(0, 0, 0);
-            }
-          }
+          const elapsed = (now - transitionStartTime) * 0.001;
+          const timing = getIntroTimingInfo();
+          const loopTime = elapsed % timing.loopDuration;
+          applyIntroSwoopFrame(loopTime, timeSec, timing);
         } else if (transitionMode === 'thread_snake') {
           // Dedicated threading inspection with dynamic rotation and chain timing
           const elapsed = (now - transitionStartTime) * 0.001;
@@ -3643,27 +3759,215 @@
       showToast('🔴 Идёт запись интро (60 FPS, ' + ((bgMode === 'transparent') ? 'Прозрачный Alpha-фон' : 'Чёрный фон') + ')...');
 
       // Calculate total duration until swoop lift is completed:
-      const spinSpeedMult = parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0);
-      const spinDuration = 3.4 / Math.max(0.1, spinSpeedMult);
-      const chainSpeedMult = parseFloat(document.getElementById('introChainSpeed')?.value || 1.0);
-      const holeTimingMult = parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0);
-      const preSpins = Math.max(0, parseInt(document.getElementById('introPreSpins')?.value ?? 1));
-
-      const tStartSpin = 0.4;
-      const preSpinDuration = preSpins * spinDuration;
-      const tMainSpinStart = tStartSpin + preSpinDuration;
-      const tHoleTarget = tMainSpinStart + spinDuration * holeTimingMult;
-      const dToAnchor = 0.6 / Math.max(0.1, chainSpeedMult);
-      const tAnchorEnd = tHoleTarget + dToAnchor;
-      const tDropEnd = tAnchorEnd + 2.0;
-      const tLiftEnd = tDropEnd + 1.3;
+      const timing = getIntroTimingInfo();
 
       // Auto-stop exactly when the pendant and chain swoop off-screen upward!
       setTimeout(() => {
         if (introMediaRecorder && introMediaRecorder.state === 'recording') {
           introMediaRecorder.stop();
         }
-      }, Math.round((tLiftEnd + 0.1) * 1000));
+      }, Math.round((timing.tLiftEnd + 0.1) * 1000));
+    }
+
+    // --- 100% ZERO-LOSS STUDIO OFFLINE RENDERER (PNG SEQUENCE ZIP) ---
+    async function startStudioOfflineRender(renderWidth = 1920, renderHeight = 1080) {
+      if (isStudioRendering) {
+        showToast('⏳ Рендеринг уже выполняется...');
+        return;
+      }
+      if (!threeRenderer || !threeScene || !threeCamera) {
+        showToast('❌ Ошибка: Three.js сцена не инициализирована');
+        return;
+      }
+      if (typeof JSZip === 'undefined') {
+        showToast('❌ Ошибка: Библиотека JSZip не загружена');
+        return;
+      }
+
+      isStudioRendering = true;
+      studioRenderCancelled = false;
+
+      // 1. Show modal and set initial UI state
+      const modal = document.getElementById('renderProgressModal');
+      const resBadge = document.getElementById('renderResBadge');
+      const statusText = document.getElementById('renderStatusText');
+      const progressBar = document.getElementById('renderProgressBar');
+      const framesStat = document.getElementById('renderFramesStat');
+      const etaStat = document.getElementById('renderEtaStat');
+      const thumbCanvas = document.getElementById('renderPreviewThumb');
+      const thumbCtx = thumbCanvas ? thumbCanvas.getContext('2d') : null;
+
+      if (modal) modal.style.display = 'flex';
+      if (resBadge) resBadge.innerText = `${renderWidth}×${renderHeight} (60 FPS)`;
+      if (statusText) statusText.innerText = 'Подготовка сцены и расчёт кадров...';
+      if (progressBar) progressBar.style.width = '0%';
+      if (framesStat) framesStat.innerText = `0 / ...`;
+      if (etaStat) etaStat.innerText = '--:--';
+
+      // 2. Hide 16:9 overlay guide during render so guide graphics are not captured
+      const guide = document.getElementById('frameGuide169');
+      const prevGuideOpacity = guide ? guide.style.opacity : '1';
+      if (guide) guide.style.opacity = '0';
+
+      // 3. Save original renderer state
+      const area = document.getElementById('viewportArea');
+      const origWidth = area ? area.clientWidth : window.innerWidth;
+      const origHeight = area ? area.clientHeight : window.innerHeight;
+      const origPixelRatio = threeRenderer.getPixelRatio();
+      const origAspect = threeCamera.aspect;
+
+      // 4. Set exact render dimensions and 1.0 pixel ratio for true 1:1 subpixel rendering
+      threeRenderer.setPixelRatio(1);
+      threeRenderer.setSize(renderWidth, renderHeight, false);
+      threeCamera.aspect = renderWidth / renderHeight;
+      threeCamera.updateProjectionMatrix();
+
+      // Ensure 100% transparent alpha clear color
+      threeScene.background = null;
+      threeRenderer.setClearColor(0x000000, 0.0);
+
+      // Position camera according to user's configured zoom & XY offset
+      resetCameraFront();
+
+      // 5. Calculate total frames needed for complete animation
+      const timing = getIntroTimingInfo();
+      const fps = 60;
+      // Render until the pendant and chain swoop completely off-screen (+0.1s margin)
+      const totalDuration = timing.tLiftEnd + 0.1;
+      const totalFrames = Math.ceil(totalDuration * fps);
+
+      const zip = new JSZip();
+      const startTimeMs = performance.now();
+
+      try {
+        for (let frameIdx = 0; frameIdx < totalFrames; frameIdx++) {
+          if (studioRenderCancelled) {
+            showToast('⏹️ Рендеринг отменён пользователем');
+            break;
+          }
+
+          const loopTime = frameIdx / fps;
+
+          // Mathematical precision frame state setup
+          applyIntroSwoopFrame(loopTime, loopTime, timing);
+
+          // Render Three.js frame
+          threeRenderer.render(threeScene, threeCamera);
+
+          // Grab blob from WebGL canvas
+          const canvas = threeRenderer.domElement;
+          const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+          if (!blob) throw new Error('Не удалось захватить PNG буфер кадра');
+
+          const frameFilename = `kirtsoy_intro_${String(frameIdx).padStart(5, '0')}.png`;
+          zip.file(frameFilename, blob);
+
+          // Update thumbnail preview every 3 frames
+          if (thumbCtx && frameIdx % 3 === 0) {
+            thumbCtx.clearRect(0, 0, thumbCanvas.width, thumbCanvas.height);
+            thumbCtx.drawImage(canvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+          }
+
+          // Progress reporting
+          const pct = Math.round(((frameIdx + 1) / totalFrames) * 100);
+          const elapsedSec = (performance.now() - startTimeMs) / 1000;
+          const avgSecPerFrame = elapsedSec / (frameIdx + 1);
+          const remainingFrames = totalFrames - (frameIdx + 1);
+          const etaSec = Math.round(avgSecPerFrame * remainingFrames);
+          const etaMinStr = Math.floor(etaSec / 60) + ':' + String(etaSec % 60).padStart(2, '0');
+
+          if (progressBar) progressBar.style.width = `${pct}%`;
+          if (statusText) statusText.innerText = `Рендеринг кадра ${frameIdx + 1} из ${totalFrames} (${pct}%)...`;
+          if (framesStat) framesStat.innerText = `${frameIdx + 1} / ${totalFrames}`;
+          if (etaStat) etaStat.innerText = etaMinStr;
+
+          // Yield briefly to main thread to keep UI interactive and responsive
+          if (frameIdx % 4 === 0) {
+            await new Promise(r => setTimeout(r, 0));
+          }
+        }
+
+        if (!studioRenderCancelled) {
+          if (statusText) statusText.innerText = '📦 Упаковка в ZIP архив без потерь...';
+          if (etaStat) etaStat.innerText = 'ZIP...';
+
+          // Add README guide with 1-click import instructions
+          const readmeText = `# KIRTSOY 3D INTRO — ZERO-LOSS PNG SEQUENCE
+# Resolution: ${renderWidth}x${renderHeight} | 60 FPS | Alpha 100% Transparent
+# Total Frames: ${totalFrames} | Duration: ${totalDuration.toFixed(2)} sec
+
+=== ИНСТРУКЦИЯ ПО ИМПОРТУ В 1 КЛИК ===
+
+1. ADOBE PREMIERE PRO:
+   1. Файл -> Импорт (Ctrl+I).
+   2. Выберите САМЫЙ ПЕРВЫЙ файл: "kirtsoy_intro_00000.png".
+   3. ОБЯЗАТЕЛЬНО поставьте галочку "Image Sequence" (Секвенция изображений) внизу диалогового окна.
+   4. Нажмите "Открыть".
+   5. Premiere сам создаст цельный видеофайл с прозрачным фоном.
+   6. Если секвенция импортировалась с частотой 29.97 FPS: кликните правой кнопкой на файл в окне Project -> Modify -> Interpret Footage -> выберите "Assume this frame rate: 60.0".
+
+2. ADOBE AFTER EFFECTS:
+   1. File -> Import -> File (Ctrl+I).
+   2. Выберите "kirtsoy_intro_00000.png" и убедитесь, что включена галочка "PNG Sequence".
+   3. Нажмите "Open".
+   4. Правый клик по секвенции -> Interpret Footage -> Main -> Укажите 60 FPS.
+
+3. DAVINCI RESOLVE:
+   1. Перейдите во вкладку "Media".
+   2. В правом верхнем углу меню кликните на "..." и убедитесь, что включен режим "Sequence View".
+   3. Перетащите папку с кадрами в Media Pool. DaVinci увидит её как один видеоклип 60 FPS.
+
+4. CAPCUT / SONY VEGAS:
+   1. Перетащите все PNG файлы на таймлайн или импортируйте как секвенцию кадров.
+
+ФОН: 100% прозрачный Alpha-канал (RGBA 32-bit). Любой задний фон в вашем видеоролике будет виден сквозь пустоты и буквы кулона.
+ПОЗИЦИЯ: Точно сохраняет ваш зум и смещение камеры из панели "КАМЕРА И РАМКА 16:9".
+`;
+          zip.file('README_IMPORT_GUIDE.txt', readmeText);
+
+          // Fast STORE compression because PNG files are already deflated
+          const zipContent = await zip.generateAsync({ type: 'blob', compression: 'STORE' }, (meta) => {
+            if (progressBar) progressBar.style.width = `${Math.round(meta.percent)}%`;
+            if (statusText) statusText.innerText = `📦 Создание архива ZIP (${Math.round(meta.percent)}%)...`;
+          });
+
+          // Trigger instant download
+          const downloadLink = document.createElement('a');
+          downloadLink.href = URL.createObjectURL(zipContent);
+          downloadLink.download = `kirtsoy_intro_zero_loss_${renderWidth}x${renderHeight}_60fps_${Date.now()}.zip`;
+          document.body.appendChild(downloadLink);
+          downloadLink.click();
+          setTimeout(() => {
+            URL.revokeObjectURL(downloadLink.href);
+            downloadLink.remove();
+          }, 2000);
+
+          showToast(`🎉 Студийный рендер ${renderWidth}×${renderHeight} завершён! Архив скачан.`);
+        }
+
+      } catch (err) {
+        console.error('Render error:', err);
+        showToast('❌ Ошибка во время рендеринга: ' + err.message);
+      } finally {
+        // 6. Restore original viewport and renderer state
+        threeRenderer.setPixelRatio(origPixelRatio);
+        threeRenderer.setSize(origWidth, origHeight);
+        threeCamera.aspect = origAspect;
+        threeCamera.updateProjectionMatrix();
+
+        if (guide) guide.style.opacity = prevGuideOpacity;
+        if (modal) modal.style.display = 'none';
+
+        isStudioRendering = false;
+        resetCameraFront();
+        stopTransition();
+      }
+    }
+
+    function cancelStudioRender() {
+      studioRenderCancelled = true;
+      const statusText = document.getElementById('renderStatusText');
+      if (statusText) statusText.innerText = 'Остановка рендера...';
     }
 
     function exportCurrentPNG() {
