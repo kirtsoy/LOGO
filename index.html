@@ -4279,13 +4279,66 @@
       if (statusText) statusText.innerText = 'Остановка рендера...';
     }
 
-    function exportCurrentPNG() {
-      const activeCanvas = (activeMode === '3d') ? (threeRenderer ? threeRenderer.domElement : null) : glCanvas;
-      if (!activeCanvas) return;
-      const link = document.createElement('a');
-      link.download = `kirtsoy-3d-logo-${activeMode}-${Date.now()}.png`;
-      link.href = activeCanvas.toDataURL('image/png', 1.0);
-      link.click();
+    function exportCurrentPNG(resW = 1920, resH = 1080) {
+      if (activeMode === '3d' && threeRenderer && threeScene && threeCamera) {
+        // Hide frame guides while capturing snapshot
+        const guide169 = document.getElementById('frameGuide169');
+        const guideYT = document.getElementById('frameGuideYT');
+        const prev169 = guide169 ? guide169.style.opacity : '1';
+        const prevYT = guideYT ? guideYT.style.opacity : '1';
+        if (guide169) guide169.style.opacity = '0';
+        if (guideYT) guideYT.style.opacity = '0';
+
+        const area = document.getElementById('viewportArea');
+        const origWidth = area ? area.clientWidth : window.innerWidth;
+        const origHeight = area ? area.clientHeight : window.innerHeight;
+        const origPixelRatio = threeRenderer.getPixelRatio();
+        const origAspect = threeCamera.aspect;
+        const prevBg = threeScene.background;
+
+        try {
+          // 100% Transparent Alpha Channel
+          threeScene.background = null;
+          threeRenderer.setClearColor(0x000000, 0.0);
+          threeRenderer.setPixelRatio(1);
+          threeRenderer.setSize(resW, resH, false);
+          threeCamera.aspect = resW / resH;
+          threeCamera.updateProjectionMatrix();
+
+          // Render exact single frame with subpixel antialiasing
+          threeRenderer.render(threeScene, threeCamera);
+
+          const canvas = threeRenderer.domElement;
+          const link = document.createElement('a');
+          link.download = `kirtsoy-3d-logo-${resW}x${resH}-transparent-${Date.now()}.png`;
+          link.href = canvas.toDataURL('image/png', 1.0);
+          document.body.appendChild(link);
+          link.click();
+          setTimeout(() => link.remove(), 1000);
+
+          showToast(`💎 1 Кадр сохранён в честном Full HD (${resW}×${resH} Lossless PNG)!`);
+        } catch (e) {
+          console.error(e);
+          showToast('❌ Ошибка сохранения кадра: ' + e.message);
+        } finally {
+          threeScene.background = prevBg;
+          threeRenderer.setPixelRatio(origPixelRatio);
+          threeRenderer.setSize(origWidth, origHeight);
+          threeCamera.aspect = origAspect;
+          threeCamera.updateProjectionMatrix();
+
+          if (guide169) guide169.style.opacity = prev169;
+          if (guideYT) guideYT.style.opacity = prevYT;
+        }
+      } else {
+        const activeCanvas = (activeMode === '3d') ? (threeRenderer ? threeRenderer.domElement : null) : glCanvas;
+        if (!activeCanvas) return;
+        const link = document.createElement('a');
+        link.download = `kirtsoy-3d-logo-${activeMode}-${Date.now()}.png`;
+        link.href = activeCanvas.toDataURL('image/png', 1.0);
+        link.click();
+        showToast('📸 Кадр сохранён (PNG)!');
+      }
     }
 
     function exportYouTubeBannerPNG(bgMode = 'transparent') {
