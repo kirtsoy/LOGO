@@ -1153,6 +1153,14 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 110px;">Частота волн</label>
+          <input type="range" id="rippleSpeed" min="0" max="3" step="0.1" value="1.2" oninput="updateRipple()">
+          <span class="slider-val" id="valSpeed">1.2x</span>
+        </div>
+      </div>
+
       <div class="form-group" style="padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.08);">
         <div class="slider-row">
           <label style="margin: 0; min-width: 110px; color: #facc15; font-weight: 700;">🌟 Brighten Boost</label>
@@ -2130,6 +2138,10 @@
         threeChainMesh.rotation.set(0, 0, 0);
       }
       updateChainThreading(1.0);
+      if (threeControls) {
+        threeControls.enabled = true;
+        threeControls.update();
+      }
       showToast('⏹️ Позиция сброшена на исходную (фронтальный вид)');
     }
 
@@ -2613,8 +2625,10 @@
     }
 
     function updateRipple() {
-      document.getElementById('valRipple').innerText = document.getElementById('rippleIntensity').value;
-      document.getElementById('valSpeed').innerText = document.getElementById('rippleSpeed').value + 'x';
+      const rip = document.getElementById('rippleIntensity');
+      if (rip && document.getElementById('valRipple')) document.getElementById('valRipple').innerText = rip.value;
+      const spd = document.getElementById('rippleSpeed');
+      if (spd && document.getElementById('valSpeed')) document.getElementById('valSpeed').innerText = spd.value + 'x';
     }
 
     function updateSparkleGlide() {
@@ -3182,8 +3196,8 @@
           }
         } else {
           // Default Turntable & Gentle Ripple
-          const ripple = parseFloat(document.getElementById('rippleIntensity').value);
-          const rSpeed = parseFloat(document.getElementById('rippleSpeed').value);
+          const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
+          const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.2);
 
           if (threeCurrentMesh && ripple > 0) {
             threeCurrentMesh.position.y = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
@@ -4577,6 +4591,7 @@
     window.addEventListener('DOMContentLoaded', () => {
       initThree3D();
       initPresets();
+      updateLightingBoost();
       resizeAll();
       requestAnimationFrame(masterLoop);
     });
