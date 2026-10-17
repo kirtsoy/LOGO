@@ -1203,31 +1203,31 @@
       </div>
 
       <div class="form-group">
-        <label>Крутые пресеты фона (Liquid Metal, Paper FX & Cyber):</label>
+        <label>Пресеты фона (Полноэкранные атмосферные для YouTube & Studio):</label>
         <div class="presets-grid" id="bgPresetsGrid" style="grid-template-columns: repeat(2, 1fr); gap: 6px;">
-          <button type="button" class="preset-btn active" onclick="setStudioBackgroundPreset('liquid_sphere')">
-            🔮 Liquid Orb (Paper Сфера)
+          <button type="button" class="preset-btn active" onclick="setStudioBackgroundPreset('liquid_silk')">
+            🌊 Ртутный Шёлк (Full-Bleed)
           </button>
-          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('liquid_waves')">
-            🌊 Liquid Waves (Ртутный Океан)
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('studio_smoke')">
+            💨 Студийный Дым и Контражур
           </button>
-          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('diamond_prism')">
-            🔷 Diamond Prism (Алмазный Шейдер)
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('cyber_horizon')">
+            ⚡ Кибер-Горизонт (Стрик)
           </button>
-          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('cyber_torus')">
-            🪐 Molten Torus (Хром-Портал)
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('caustics_nebula')">
+            🌌 Океанические Каустики
           </button>
-          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('molten_gold')">
-            🟡 24K Molten Gold (Жидкое Золото)
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('molten_sunrise')">
+            🟡 Золотой Рассвет (Amber)
           </button>
-          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('iridescent_oil')">
-            🌈 Iridescent Oil (Бензиновый Неон)
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('carbon_mesh')">
+            🔲 Титановый Карбон
           </button>
-          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('cyber_abyss')">
-            🟣 Cyber Abyss (Неоновые Каустики)
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('studio_softbox')">
+            🎯 Широкий Софтбокс (16:9)
           </button>
-          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('studio_vignette')">
-            🎯 Cinema Focus (Студийный Виньет)
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('liquid_sphere')">
+            🔮 Liquid Orb (Сфера Paper)
           </button>
           <button type="button" class="preset-btn" style="grid-column: span 2;" onclick="setStudioBackgroundPreset('deep_black')">
             ⬛ Pure Black (Чистый Студийный Чёрный)
@@ -1238,24 +1238,41 @@
       <!-- Fine-tune Liquid Background Sliders -->
       <div style="background: rgba(0,0,0,0.3); border: 1px solid var(--card-border); border-radius: 8px; padding: 10px; margin-top: 10px; display: flex; flex-direction: column; gap: 8px;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="font-size: 11px; font-weight: 700; color: #a855f7;">Калибровка фона:</span>
-          <span id="activeBgNameBadge" style="font-family: 'JetBrains Mono'; font-size: 10px; color: #c084fc;">🔮 Liquid Orb</span>
+          <span style="font-size: 11px; font-weight: 700; color: #a855f7;">Калибровка фона и контраста:</span>
+          <span id="activeBgNameBadge" style="font-family: 'JetBrains Mono'; font-size: 10px; color: #c084fc;">🌊 Ртутный Шёлк</span>
         </div>
 
         <div class="slider-row">
-          <span class="slider-label">Яркость / Интенсивность</span>
+          <span class="slider-label">✨ Контражур / Подсветка лого</span>
+          <input type="range" id="bgHaloSlider" min="0.0" max="1.5" step="0.05" value="0.8" oninput="updateBgParams()">
+          <span class="slider-val" id="valBgHalo">80%</span>
+        </div>
+
+        <div class="slider-row">
+          <span class="slider-label">🎨 Цвет ореола подсветки</span>
+          <select id="bgHaloColorSelect" class="input-text" style="width: 140px; padding: 4px 8px; font-size: 11px;" onchange="updateBgParams()">
+            <option value="auto" selected>Auto (Под стиль)</option>
+            <option value="white">Чистый Белый</option>
+            <option value="cyan">Неоновый Cyan</option>
+            <option value="gold">Тёплое Золото</option>
+            <option value="violet">Фиолетовый</option>
+          </select>
+        </div>
+
+        <div class="slider-row">
+          <span class="slider-label">Яркость атмосферы фона</span>
           <input type="range" id="bgIntensitySlider" min="0.1" max="1.6" step="0.05" value="1.0" oninput="updateBgParams()">
           <span class="slider-val" id="valBgIntensity">100%</span>
         </div>
 
         <div class="slider-row">
           <span class="slider-label">Скорость волн (0 = стоп-кадр)</span>
-          <input type="range" id="bgAnimSpeedSlider" min="0.0" max="2.5" step="0.1" value="1.0" oninput="updateBgParams()">
-          <span class="slider-val" id="valBgAnimSpeed">1.0x</span>
+          <input type="range" id="bgAnimSpeedSlider" min="0.0" max="2.5" step="0.1" value="0.0" oninput="updateBgParams()">
+          <span class="slider-val" id="valBgAnimSpeed">0.0x (Статика)</span>
         </div>
 
         <div class="slider-row">
-          <span class="slider-label">Масштаб фигуры / линзы</span>
+          <span class="slider-label">Масштаб текстуры / волн</span>
           <input type="range" id="bgScaleSlider" min="0.4" max="2.2" step="0.05" value="1.0" oninput="updateBgParams()">
           <span class="slider-val" id="valBgScale">1.0x</span>
         </div>
@@ -2714,21 +2731,23 @@
       }
     }
 
-    // --- 🌊 ADVANCED DYNAMIC STUDIO LIQUID BACKGROUND SYSTEM ---
-    let activeBgPreset = 'liquid_sphere';
+    // --- 🌊 ADVANCED DYNAMIC STUDIO LIQUID & FULL-BLEED BACKGROUND SYSTEM ---
+    let activeBgPreset = 'liquid_silk';
     let bgIntensity = 1.0;
-    let bgAnimSpeed = 1.0;
+    let bgAnimSpeed = 0.0; // 0.0 for crisp static YouTube banner by default
     let bgScale = 1.0;
+    let bgHaloIntensity = 0.8;
+    let bgHaloColor = 'auto';
 
     const bgPresetNames = {
-      liquid_sphere: '🔮 Liquid Orb (Paper Сфера)',
-      liquid_waves: '🌊 Liquid Waves (Ртутный Океан)',
-      diamond_prism: '🔷 Diamond Prism (Алмазный Шейдер)',
-      cyber_torus: '🪐 Molten Torus (Хром-Портал)',
-      molten_gold: '🟡 24K Molten Gold (Жидкое Золото)',
-      iridescent_oil: '🌈 Iridescent Oil (Бензиновый Неон)',
-      cyber_abyss: '🟣 Cyber Abyss (Неоновые Каустики)',
-      studio_vignette: '🎯 Cinema Focus (Студийный Виньет)',
+      liquid_silk: '🌊 Ртутный Шёлк (Full-Bleed)',
+      studio_smoke: '💨 Студийный Дым и Контражур',
+      cyber_horizon: '⚡ Кибер-Горизонт (Стрик)',
+      caustics_nebula: '🌌 Океанические Каустики',
+      molten_sunrise: '🟡 Золотой Рассвет (Amber)',
+      carbon_mesh: '🔲 Титановый Карбон',
+      studio_softbox: '🎯 Широкий Софтбокс (16:9)',
+      liquid_sphere: '🔮 Liquid Orb (Сфера Paper)',
       deep_black: '⬛ Pure Black (Чистый Студийный Чёрный)'
     };
 
@@ -2736,6 +2755,8 @@
       const intEl = document.getElementById('bgIntensitySlider');
       const spdEl = document.getElementById('bgAnimSpeedSlider');
       const sclEl = document.getElementById('bgScaleSlider');
+      const haloEl = document.getElementById('bgHaloSlider');
+      const haloColEl = document.getElementById('bgHaloColorSelect');
 
       if (intEl) {
         bgIntensity = parseFloat(intEl.value);
@@ -2745,12 +2766,20 @@
       if (spdEl) {
         bgAnimSpeed = parseFloat(spdEl.value);
         const v = document.getElementById('valBgAnimSpeed');
-        if (v) v.innerText = bgAnimSpeed + 'x';
+        if (v) v.innerText = (bgAnimSpeed === 0) ? '0.0x (Статика)' : (bgAnimSpeed + 'x');
       }
       if (sclEl) {
         bgScale = parseFloat(sclEl.value);
         const v = document.getElementById('valBgScale');
         if (v) v.innerText = bgScale + 'x';
+      }
+      if (haloEl) {
+        bgHaloIntensity = parseFloat(haloEl.value);
+        const v = document.getElementById('valBgHalo');
+        if (v) v.innerText = Math.round(bgHaloIntensity * 100) + '%';
+      }
+      if (haloColEl) {
+        bgHaloColor = haloColEl.value;
       }
     }
 
@@ -2777,7 +2806,7 @@
       const minDim = Math.min(width, height);
       const maxDim = Math.max(width, height);
 
-      // Base cosmic dark gradient
+      // Base deep canvas gradient
       const baseGrad = ctx.createRadialGradient(cx, cy, minDim * 0.1, cx, cy, maxDim * 0.75);
       baseGrad.addColorStop(0, '#04060b');
       baseGrad.addColorStop(0.6, '#010204');
@@ -2785,11 +2814,234 @@
       ctx.fillStyle = baseGrad;
       ctx.fillRect(0, 0, width, height);
 
-      if (presetKey === 'liquid_sphere') {
-        // 🔮 LIQUID CHROME ORB (Paper Signature Shader with chromatic dispersion)
-        const R = minDim * 0.30 * scale;
+      if (presetKey === 'liquid_silk') {
+        // 🌊 FULL-BLEED LIQUID SILK / MERCURY WAVES (Spans the entire 2560px banner)
+        const folds = 14;
+        for (let i = 0; i < folds; i++) {
+          const norm = i / folds;
+          const yBase = height * (0.05 + norm * 0.95);
+          const phase = t * 1.2 + i * 0.85;
 
-        // Base sphere dark metallic body
+          ctx.save();
+          ctx.beginPath();
+          ctx.moveTo(0, height);
+          ctx.lineTo(0, yBase);
+
+          for (let x = 0; x <= width; x += 35) {
+            const wave = Math.sin(x * 0.003 * scale + phase) * (45 * scale)
+                       + Math.cos(x * 0.006 * scale - phase * 0.6) * (20 * scale)
+                       + Math.sin(x * 0.0012 + phase * 0.4) * (25 * scale);
+            ctx.lineTo(x, yBase + wave);
+          }
+          ctx.lineTo(width, height);
+          ctx.closePath();
+
+          const fGrad = ctx.createLinearGradient(0, yBase - 40, 0, yBase + 140);
+          const luma = 18 + i * 8;
+          fGrad.addColorStop(0, `rgba(${luma + 45}, ${luma + 60}, ${luma + 80}, ${0.45 * intensity})`);
+          fGrad.addColorStop(0.35, `rgba(${luma}, ${luma + 12}, ${luma + 25}, ${0.75 * intensity})`);
+          fGrad.addColorStop(1, `rgba(2, 4, 8, ${0.9 * intensity})`);
+          ctx.fillStyle = fGrad;
+          ctx.fill();
+
+          // Chrome ribbon crest highlight
+          ctx.globalCompositeOperation = 'screen';
+          ctx.lineWidth = (2.2 + (i % 2) * 1.8) * scale;
+          ctx.strokeStyle = (i % 3 === 0)
+            ? `rgba(0, 229, 255, ${0.45 * intensity})`
+            : ((i % 3 === 1) ? `rgba(217, 70, 239, ${0.35 * intensity})` : `rgba(255, 255, 255, ${0.65 * intensity})`);
+          ctx.stroke();
+          ctx.restore();
+        }
+
+      } else if (presetKey === 'studio_smoke') {
+        // 💨 CINEMATIC STAGE FOG & VOLUMETRIC BACKLIGHT
+        ctx.save();
+        // Background spotlight back-glow
+        const stageGlow = ctx.createRadialGradient(cx, cy, 30, cx, cy, minDim * 0.85);
+        stageGlow.addColorStop(0, `rgba(51, 65, 85, ${0.45 * intensity})`);
+        stageGlow.addColorStop(0.45, `rgba(15, 23, 42, ${0.35 * intensity})`);
+        stageGlow.addColorStop(1, '#000000');
+        ctx.fillStyle = stageGlow;
+        ctx.fillRect(0, 0, width, height);
+
+        // Volumetric atmospheric smoke clouds across the banner
+        const smokePuffs = 22;
+        for (let i = 0; i < smokePuffs; i++) {
+          const sAngle = (i / smokePuffs) * Math.PI * 2 + t * 0.2;
+          const sDist = (minDim * 0.35 * scale) + Math.sin(i * 2.3 + t * 0.8) * 60;
+          const px = cx + Math.cos(sAngle) * sDist * 1.6;
+          const py = cy + Math.sin(sAngle) * (sDist * 0.7);
+          const rPuff = (120 + (i % 4) * 50) * scale;
+
+          const pGrad = ctx.createRadialGradient(px, py, 10, px, py, rPuff);
+          pGrad.addColorStop(0, `rgba(148, 163, 184, ${0.12 * intensity})`);
+          pGrad.addColorStop(0.5, `rgba(71, 85, 105, ${0.06 * intensity})`);
+          pGrad.addColorStop(1, 'rgba(0,0,0,0)');
+
+          ctx.fillStyle = pGrad;
+          ctx.beginPath();
+          ctx.arc(px, py, rPuff, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.restore();
+
+      } else if (presetKey === 'cyber_horizon') {
+        // ⚡ CYBER HORIZON & ANAMORPHIC HORIZONTAL STREAK (Perfect for YouTube Banner Band)
+        ctx.save();
+        // Upper celestial space & lower digital ground
+        const horizY = cy + 20;
+
+        // Ground perspective grid lines
+        ctx.strokeStyle = `rgba(56, 189, 248, ${0.12 * intensity})`;
+        ctx.lineWidth = 1;
+        for (let x = -width * 0.5; x <= width * 1.5; x += 110) {
+          ctx.beginPath();
+          ctx.moveTo(cx, horizY);
+          ctx.lineTo(x, height);
+          ctx.stroke();
+        }
+        for (let y = horizY + 15; y <= height; y += Math.max(12, (y - horizY) * 0.4)) {
+          ctx.beginPath();
+          ctx.moveTo(0, y);
+          ctx.lineTo(width, y);
+          ctx.stroke();
+        }
+
+        // Anamorphic horizontal laser streak through center
+        ctx.globalCompositeOperation = 'screen';
+        const streakGrad = ctx.createLinearGradient(0, horizY - 35, 0, horizY + 35);
+        streakGrad.addColorStop(0, 'rgba(0, 240, 255, 0)');
+        streakGrad.addColorStop(0.3, `rgba(0, 240, 255, ${0.35 * intensity})`);
+        streakGrad.addColorStop(0.5, `rgba(255, 255, 255, ${0.85 * intensity})`);
+        streakGrad.addColorStop(0.7, `rgba(217, 70, 239, ${0.35 * intensity})`);
+        streakGrad.addColorStop(1, 'rgba(217, 70, 239, 0)');
+
+        ctx.fillStyle = streakGrad;
+        ctx.fillRect(0, horizY - 35, width, 70);
+
+        // Core laser line
+        ctx.strokeStyle = `rgba(255, 255, 255, ${0.95 * intensity})`;
+        ctx.lineWidth = 2.5;
+        ctx.shadowColor = '#00f0ff';
+        ctx.shadowBlur = 18;
+        ctx.beginPath();
+        ctx.moveTo(0, horizY);
+        ctx.lineTo(width, horizY);
+        ctx.stroke();
+        ctx.restore();
+
+      } else if (presetKey === 'caustics_nebula') {
+        // 🌌 FULL-BLEED DEEP OCEAN CAUSTICS
+        ctx.save();
+        const nGrad = ctx.createRadialGradient(cx, cy, 40, cx, cy, maxDim * 0.65);
+        nGrad.addColorStop(0, `rgba(15, 23, 42, ${0.6 * intensity})`);
+        nGrad.addColorStop(0.5, `rgba(6, 11, 24, ${0.75 * intensity})`);
+        nGrad.addColorStop(1, '#020408');
+        ctx.fillStyle = nGrad;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.globalCompositeOperation = 'screen';
+        const linesCount = 28;
+        for (let i = 0; i < linesCount; i++) {
+          const phase = t * 1.1 + i * 0.6;
+          const yP = (i / linesCount) * height;
+
+          ctx.beginPath();
+          ctx.moveTo(0, yP);
+          for (let x = 0; x <= width; x += 45) {
+            const dy = Math.sin(x * 0.005 * scale + phase) * 25
+                     + Math.cos(x * 0.012 * scale - phase * 0.7) * 15;
+            ctx.lineTo(x, yP + dy);
+          }
+
+          ctx.strokeStyle = (i % 2 === 0)
+            ? `rgba(56, 189, 248, ${0.28 * intensity})`
+            : `rgba(168, 85, 247, ${0.22 * intensity})`;
+          ctx.lineWidth = 2.0 * scale;
+          ctx.shadowColor = '#38bdf8';
+          ctx.shadowBlur = 12;
+          ctx.stroke();
+        }
+        ctx.restore();
+
+      } else if (presetKey === 'molten_sunrise') {
+        // 🟡 24K MOLTEN GOLD AMBER HORIZON
+        ctx.save();
+        const sunGrad = ctx.createLinearGradient(0, height * 0.25, 0, height);
+        sunGrad.addColorStop(0, '#040200');
+        sunGrad.addColorStop(0.5, `rgba(120, 53, 15, ${0.45 * intensity})`);
+        sunGrad.addColorStop(0.75, `rgba(245, 158, 11, ${0.35 * intensity})`);
+        sunGrad.addColorStop(1, `rgba(254, 240, 138, ${0.2 * intensity})`);
+        ctx.fillStyle = sunGrad;
+        ctx.fillRect(0, 0, width, height);
+
+        // Molten gold ripples along the lower horizon
+        ctx.globalCompositeOperation = 'screen';
+        for (let i = 0; i < 7; i++) {
+          const yP = height * (0.6 + (i / 7) * 0.38);
+          const phase = t * 1.5 + i * 0.9;
+          ctx.beginPath();
+          ctx.moveTo(0, yP);
+          for (let x = 0; x <= width; x += 40) {
+            const dy = Math.sin(x * 0.005 * scale + phase) * (20 * scale)
+                     + Math.cos(x * 0.01 * scale - phase * 0.5) * (10 * scale);
+            ctx.lineTo(x, yP + dy);
+          }
+          ctx.strokeStyle = `rgba(251, 191, 36, ${0.55 * intensity})`;
+          ctx.lineWidth = 2.5 * scale;
+          ctx.shadowColor = '#f59e0b';
+          ctx.shadowBlur = 15;
+          ctx.stroke();
+        }
+        ctx.restore();
+
+      } else if (presetKey === 'carbon_mesh') {
+        // 🔲 TITANIUM CARBON MESH
+        ctx.save();
+        ctx.fillStyle = '#06080d';
+        ctx.fillRect(0, 0, width, height);
+
+        // Carbon weave pattern
+        ctx.fillStyle = 'rgba(255, 255, 255, 0.035)';
+        const step = 20 * scale;
+        for (let x = 0; x < width; x += step) {
+          for (let y = 0; y < height; y += step) {
+            if (((x / step + y / step) % 2) === 0) {
+              ctx.fillRect(x, y, step * 0.9, step * 0.9);
+            }
+          }
+        }
+
+        // Anisotropic diagonal metallic light sweep
+        const sweep = ctx.createLinearGradient(0, 0, width, height);
+        sweep.addColorStop(0, 'rgba(0,0,0,0)');
+        sweep.addColorStop(0.4, `rgba(148, 163, 184, ${0.15 * intensity})`);
+        sweep.addColorStop(0.5, `rgba(255, 255, 255, ${0.25 * intensity})`);
+        sweep.addColorStop(0.6, `rgba(148, 163, 184, ${0.15 * intensity})`);
+        sweep.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = sweep;
+        ctx.fillRect(0, 0, width, height);
+        ctx.restore();
+
+      } else if (presetKey === 'studio_softbox') {
+        // 🎯 WIDE 16:9 PRO PHOTO SOFTBOX
+        ctx.save();
+        const sbGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, maxDim * 0.6);
+        sbGrad.addColorStop(0, `rgba(51, 65, 85, ${0.65 * intensity})`);
+        sbGrad.addColorStop(0.35, `rgba(30, 41, 59, ${0.45 * intensity})`);
+        sbGrad.addColorStop(0.7, `rgba(15, 23, 42, ${0.2 * intensity})`);
+        sbGrad.addColorStop(1, '#000000');
+
+        ctx.fillStyle = sbGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, cy, width * 0.65 * scale, height * 0.45 * scale, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.restore();
+
+      } else if (presetKey === 'liquid_sphere') {
+        // 🔮 LIQUID CHROME ORB (Paper Signature Center Shader)
+        const R = minDim * 0.30 * scale;
         const sphGrad = ctx.createRadialGradient(cx, cy - R * 0.2, R * 0.1, cx, cy, R);
         sphGrad.addColorStop(0, `rgba(45, 55, 72, ${0.9 * intensity})`);
         sphGrad.addColorStop(0.35, `rgba(18, 24, 38, ${0.95 * intensity})`);
@@ -2801,15 +3053,12 @@
         ctx.fillStyle = sphGrad;
         ctx.fill();
 
-        // Concentric Distorted Liquid Ripples & Chromatic Dispersion
-        const numRipples = 7;
-        for (let i = 0; i < numRipples; i++) {
-          const normI = i / numRipples;
+        for (let i = 0; i < 7; i++) {
+          const normI = i / 7;
           const phase = t * 1.6 + normI * Math.PI * 2;
           const rBase = R * (0.25 + 0.72 * ((normI + (t * 0.12) % 1) % 1));
           const wPhase = Math.sin(phase) * 14 * scale;
 
-          // 1. Vibrant Cyan dispersion pass
           ctx.save();
           ctx.globalCompositeOperation = 'screen';
           ctx.beginPath();
@@ -2820,7 +3069,6 @@
           ctx.shadowBlur = 15;
           ctx.stroke();
 
-          // 2. Magenta / Neon Pink dispersion pass (offset by phase and space)
           ctx.beginPath();
           ctx.ellipse(cx, cy - Math.sin(phase * 0.8) * 8, rBase - wPhase * 0.7, (rBase - wPhase * 0.7) * (0.55 + 0.25 * Math.sin(phase + 1.0)), -0.1 * Math.cos(t), 0, Math.PI * 2);
           ctx.strokeStyle = `rgba(255, 0, 160, ${0.65 * intensity})`;
@@ -2829,236 +3077,43 @@
           ctx.shadowBlur = 12;
           ctx.stroke();
 
-          // 3. Specular Chrome White Core Crest
           ctx.beginPath();
           ctx.ellipse(cx, cy, rBase, rBase * (0.58 + 0.2 * Math.cos(phase + 0.5)), 0, 0, Math.PI * 2);
           ctx.strokeStyle = `rgba(255, 255, 255, ${0.85 * intensity})`;
           ctx.lineWidth = 2.0 * scale;
-          ctx.shadowColor = '#ffffff';
-          ctx.shadowBlur = 8;
           ctx.stroke();
           ctx.restore();
         }
+      }
 
-        // Top glossy specular reflection highlight (crescent lens)
+      // ✨ VOLUMETRIC BACKLIGHT HALO (Directly illuminates and silhouettes the 3D logo!)
+      if (bgHaloIntensity > 0) {
         ctx.save();
-        ctx.beginPath();
-        ctx.ellipse(cx - R * 0.15, cy - R * 0.38, R * 0.45, R * 0.18, -0.25, 0, Math.PI * 2);
-        const specGrad = ctx.createLinearGradient(cx - R * 0.3, cy - R * 0.5, cx, cy - R * 0.2);
-        specGrad.addColorStop(0, `rgba(255, 255, 255, ${0.75 * intensity})`);
-        specGrad.addColorStop(0.5, `rgba(180, 220, 255, ${0.35 * intensity})`);
-        specGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = specGrad;
-        ctx.fill();
-        ctx.restore();
-
-      } else if (presetKey === 'liquid_waves') {
-        // 🌊 LIQUID WAVES (Flowing Molten Mercury Ocean)
-        const waveCount = 9;
-        for (let i = 0; i < waveCount; i++) {
-          const normY = (i + 1) / (waveCount + 2);
-          const yCenter = height * normY;
-          const phase = t * 1.5 + i * 0.7;
-
-          ctx.save();
-          ctx.beginPath();
-          ctx.moveTo(0, height);
-          ctx.lineTo(0, yCenter);
-
-          for (let x = 0; x <= width; x += 30) {
-            const waveY = yCenter + Math.sin(x * 0.004 * scale + phase) * (35 * scale) + Math.cos(x * 0.008 * scale - phase * 0.7) * (18 * scale);
-            ctx.lineTo(x, waveY);
-          }
-          ctx.lineTo(width, height);
-          ctx.closePath();
-
-          const waveGrad = ctx.createLinearGradient(0, yCenter - 40, 0, yCenter + 120);
-          const shade = 25 + i * 15;
-          waveGrad.addColorStop(0, `rgba(${shade + 50}, ${shade + 70}, ${shade + 90}, ${0.45 * intensity})`);
-          waveGrad.addColorStop(0.4, `rgba(${shade}, ${shade + 10}, ${shade + 25}, ${0.7 * intensity})`);
-          waveGrad.addColorStop(1, `rgba(2, 4, 8, ${0.9 * intensity})`);
-          ctx.fillStyle = waveGrad;
-          ctx.fill();
-
-          // Chrome crest highlight
-          ctx.globalCompositeOperation = 'screen';
-          ctx.lineWidth = (2.0 + (i % 2) * 1.5) * scale;
-          ctx.strokeStyle = (i % 2 === 0)
-            ? `rgba(0, 229, 255, ${0.6 * intensity})`
-            : `rgba(255, 255, 255, ${0.75 * intensity})`;
-          ctx.stroke();
-          ctx.restore();
-        }
-
-      } else if (presetKey === 'diamond_prism') {
-        // 🔷 DIAMOND PRISM (Rotated 45 deg Diamond with chromatic refraction)
-        const S = minDim * 0.42 * scale;
-        ctx.save();
-        ctx.translate(cx, cy);
-        ctx.rotate(Math.PI / 4 + Math.sin(t * 0.5) * 0.08);
-
-        // Nested refracted diamond facets
-        for (let d = 5; d >= 1; d--) {
-          const sz = S * (d / 5);
-          const phase = t * 2.0 + d * 0.8;
-          ctx.save();
-          ctx.beginPath();
-          ctx.rect(-sz, -sz, sz * 2, sz * 2);
-
-          const dGrad = ctx.createLinearGradient(-sz, -sz, sz, sz);
-          if (d === 5) {
-            dGrad.addColorStop(0, `rgba(30, 41, 59, ${0.8 * intensity})`);
-            dGrad.addColorStop(0.5, `rgba(15, 23, 42, ${0.9 * intensity})`);
-            dGrad.addColorStop(1, `rgba(2, 6, 23, ${0.95 * intensity})`);
-          } else {
-            dGrad.addColorStop(0, `rgba(0, 229, 255, ${0.12 * intensity})`);
-            dGrad.addColorStop(0.5, `rgba(255, 0, 160, ${0.08 * intensity})`);
-            dGrad.addColorStop(1, `rgba(255, 255, 255, ${0.15 * intensity})`);
-          }
-          ctx.fillStyle = dGrad;
-          ctx.fill();
-
-          ctx.globalCompositeOperation = 'screen';
-          ctx.strokeStyle = (d % 2 === 0) ? `rgba(0, 240, 255, ${0.8 * intensity})` : `rgba(255, 0, 180, ${0.75 * intensity})`;
-          ctx.lineWidth = (2.5 + Math.sin(phase) * 1.5) * scale;
-          ctx.shadowColor = (d % 2 === 0) ? '#00f0ff' : '#ff00b4';
-          ctx.shadowBlur = 16;
-          ctx.stroke();
-          ctx.restore();
-        }
-        ctx.restore();
-
-      } else if (presetKey === 'cyber_torus') {
-        // 🪐 MOLTEN TORUS (Liquid Chrome Halo / Cyber Portal)
-        const R_out = minDim * 0.36 * scale;
-        const R_in = minDim * 0.22 * scale;
-
-        ctx.save();
-        const corona = ctx.createRadialGradient(cx, cy, R_in * 0.8, cx, cy, R_out * 1.5);
-        corona.addColorStop(0, 'rgba(0, 0, 0, 0)');
-        corona.addColorStop(0.5, `rgba(139, 92, 246, ${0.35 * intensity})`);
-        corona.addColorStop(0.8, `rgba(59, 130, 246, ${0.2 * intensity})`);
-        corona.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = corona;
-        ctx.beginPath();
-        ctx.arc(cx, cy, R_out * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.beginPath();
-        for (let a = 0; a <= Math.PI * 2 + 0.1; a += 0.08) {
-          const rWarp = R_out + Math.sin(a * 6.0 + t * 2.5) * (10.0 * scale);
-          const px = cx + Math.cos(a) * rWarp;
-          const py = cy + Math.sin(a) * rWarp;
-          if (a === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
-        }
-        for (let a = Math.PI * 2 + 0.1; a >= 0; a -= 0.08) {
-          const rWarpIn = R_in + Math.cos(a * 6.0 - t * 2.0) * (8.0 * scale);
-          const px = cx + Math.cos(a) * rWarpIn;
-          const py = cy + Math.sin(a) * rWarpIn;
-          ctx.lineTo(px, py);
-        }
-        ctx.closePath();
-
-        const ringGrad = ctx.createLinearGradient(cx - R_out, cy - R_out, cx + R_out, cy + R_out);
-        ringGrad.addColorStop(0, `rgba(226, 232, 240, ${0.85 * intensity})`);
-        ringGrad.addColorStop(0.3, `rgba(71, 85, 105, ${0.9 * intensity})`);
-        ringGrad.addColorStop(0.7, `rgba(15, 23, 42, ${0.95 * intensity})`);
-        ringGrad.addColorStop(1, `rgba(203, 213, 225, ${0.85 * intensity})`);
-        ctx.fillStyle = ringGrad;
-        ctx.fill();
-
         ctx.globalCompositeOperation = 'screen';
-        ctx.strokeStyle = `rgba(192, 132, 252, ${0.9 * intensity})`;
-        ctx.lineWidth = 3.5 * scale;
-        ctx.shadowColor = '#c084fc';
-        ctx.shadowBlur = 18;
-        ctx.stroke();
+        const haloR = minDim * 0.38 * scale;
+        const hGrad = ctx.createRadialGradient(cx, cy, 10, cx, cy, haloR);
+
+        let hCol = 'rgba(255, 255, 255,';
+        if (bgHaloColor === 'cyan' || (bgHaloColor === 'auto' && (presetKey === 'cyber_horizon' || presetKey === 'caustics_nebula'))) {
+          hCol = 'rgba(0, 240, 255,';
+        } else if (bgHaloColor === 'gold' || (bgHaloColor === 'auto' && presetKey === 'molten_sunrise')) {
+          hCol = 'rgba(245, 158, 11,';
+        } else if (bgHaloColor === 'violet' || (bgHaloColor === 'auto' && presetKey === 'studio_smoke')) {
+          hCol = 'rgba(192, 132, 252,';
+        } else {
+          hCol = 'rgba(255, 255, 255,';
+        }
+
+        hGrad.addColorStop(0, `${hCol} ${0.55 * bgHaloIntensity})`);
+        hGrad.addColorStop(0.35, `${hCol} ${0.28 * bgHaloIntensity})`);
+        hGrad.addColorStop(0.7, `${hCol} ${0.08 * bgHaloIntensity})`);
+        hGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+
+        ctx.fillStyle = hGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, haloR, 0, Math.PI * 2);
+        ctx.fill();
         ctx.restore();
-
-      } else if (presetKey === 'molten_gold') {
-        // 🟡 24K MOLTEN GOLD (Liquid Gold Caustics)
-        const R = minDim * 0.35 * scale;
-        const goldWarm = ctx.createRadialGradient(cx, cy, 30, cx, cy, minDim * 0.6);
-        goldWarm.addColorStop(0, `rgba(120, 53, 15, ${0.5 * intensity})`);
-        goldWarm.addColorStop(0.5, `rgba(45, 20, 5, ${0.6 * intensity})`);
-        goldWarm.addColorStop(1, '#050200');
-        ctx.fillStyle = goldWarm;
-        ctx.fillRect(0, 0, width, height);
-
-        for (let i = 0; i < 6; i++) {
-          const phase = t * 1.4 + i * 1.1;
-          const rG = R * (0.3 + 0.7 * (i / 5));
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.beginPath();
-          ctx.ellipse(cx, cy, rG + Math.sin(phase) * 12 * scale, (rG + Math.sin(phase) * 12 * scale) * 0.75, 0.2 * Math.sin(phase), 0, Math.PI * 2);
-          ctx.strokeStyle = (i % 2 === 0) ? `rgba(251, 191, 36, ${0.8 * intensity})` : `rgba(254, 240, 138, ${0.9 * intensity})`;
-          ctx.lineWidth = (3.0 + (i % 2) * 2.0) * scale;
-          ctx.shadowColor = '#f59e0b';
-          ctx.shadowBlur = 20;
-          ctx.stroke();
-          ctx.restore();
-        }
-
-      } else if (presetKey === 'iridescent_oil') {
-        // 🌈 IRIDESCENT OIL SLICK (Thin-Film Interference Rainbow Sheen)
-        const R = minDim * 0.38 * scale;
-        const colors = [
-          'rgba(20, 184, 166, 0.7)',
-          'rgba(168, 85, 247, 0.7)',
-          'rgba(236, 72, 153, 0.7)',
-          'rgba(245, 158, 11, 0.7)',
-          'rgba(6, 182, 212, 0.7)'
-        ];
-
-        for (let i = 0; i < colors.length; i++) {
-          const phase = t * 1.3 + i * 1.25;
-          const rOil = R * (0.35 + 0.65 * (i / colors.length));
-          ctx.save();
-          ctx.globalCompositeOperation = 'screen';
-          ctx.beginPath();
-          ctx.ellipse(cx + Math.cos(phase * 0.7) * 15, cy + Math.sin(phase * 0.7) * 15, rOil, rOil * (0.65 + 0.2 * Math.sin(phase)), phase * 0.5, 0, Math.PI * 2);
-          ctx.strokeStyle = colors[i];
-          ctx.lineWidth = 4.0 * scale;
-          ctx.shadowColor = colors[i];
-          ctx.shadowBlur = 18;
-          ctx.stroke();
-          ctx.restore();
-        }
-
-      } else if (presetKey === 'cyber_abyss') {
-        // 🟣 CYBER ABYSS (Deep Caustics & Electric Filaments)
-        ctx.save();
-        const abGrad = ctx.createRadialGradient(cx, cy, 20, cx, cy, minDim * 0.65);
-        abGrad.addColorStop(0, `rgba(46, 16, 80, ${0.5 * intensity})`);
-        abGrad.addColorStop(0.5, `rgba(19, 6, 36, ${0.7 * intensity})`);
-        abGrad.addColorStop(1, '#020105');
-        ctx.fillStyle = abGrad;
-        ctx.fillRect(0, 0, width, height);
-
-        for (let i = 0; i < 28; i++) {
-          const angle = (i / 28) * Math.PI * 2 + t * 0.2;
-          const dist = (minDim * 0.28) + Math.sin(i * 3 + t * 1.5) * (40 * scale);
-          const px = cx + Math.cos(angle) * dist;
-          const py = cy + Math.sin(angle) * (dist * 0.7);
-
-          ctx.beginPath();
-          ctx.ellipse(px, py, 70 * scale, 25 * scale, angle + 0.4, 0, Math.PI * 2);
-          ctx.fillStyle = (i % 2 === 0)
-            ? `rgba(56, 189, 248, ${0.08 * intensity})`
-            : `rgba(168, 85, 247, ${0.09 * intensity})`;
-          ctx.fill();
-        }
-        ctx.restore();
-
-      } else if (presetKey === 'studio_vignette') {
-        // 🎯 CINEMA FOCUS (Ultra-Clean Studio Vignette)
-        const vGrad = ctx.createRadialGradient(cx, cy, minDim * 0.05, cx, cy, minDim * 0.6);
-        vGrad.addColorStop(0, `rgba(30, 41, 59, ${0.45 * intensity})`);
-        vGrad.addColorStop(0.55, `rgba(15, 23, 42, ${0.25 * intensity})`);
-        vGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-        ctx.fillStyle = vGrad;
-        ctx.fillRect(0, 0, width, height);
       }
 
       ctx.restore();
@@ -4080,7 +4135,9 @@
         bgPreset: activeBgPreset,
         bgIntensity: bgIntensity,
         bgAnimSpeed: bgAnimSpeed,
-        bgScale: bgScale
+        bgScale: bgScale,
+        bgHaloIntensity: bgHaloIntensity,
+        bgHaloColor: bgHaloColor
       };
     }
 
@@ -4358,6 +4415,16 @@
         document.getElementById('bgScaleSlider').value = bgScale;
         const v = document.getElementById('valBgScale');
         if (v) v.innerText = bgScale + 'x';
+      }
+      if (d.bgHaloIntensity !== undefined && document.getElementById('bgHaloSlider')) {
+        bgHaloIntensity = d.bgHaloIntensity;
+        document.getElementById('bgHaloSlider').value = bgHaloIntensity;
+        const v = document.getElementById('valBgHalo');
+        if (v) v.innerText = Math.round(bgHaloIntensity * 100) + '%';
+      }
+      if (d.bgHaloColor && document.getElementById('bgHaloColorSelect')) {
+        bgHaloColor = d.bgHaloColor;
+        document.getElementById('bgHaloColorSelect').value = bgHaloColor;
       }
 
       // 11. Rebuild 3D Model / Text & Lateral Chain
