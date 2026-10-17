@@ -325,6 +325,20 @@
       color: #ef4444;
       background: rgba(239, 68, 68, 0.15);
     }
+    .preset-action-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      cursor: pointer;
+      padding: 4px 6px;
+      border-radius: 4px;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    .preset-action-btn:hover {
+      color: #38bdf8;
+      background: rgba(56, 189, 248, 0.15);
+    }
     .preset-actions-bar {
       display: flex;
       gap: 6px;
@@ -1299,7 +1313,13 @@
 
       <!-- Preset List -->
       <div class="form-group">
-        <label>Библиотека пресетов (1 клик для загрузки):</label>
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px;">
+          <label style="margin: 0; font-size: 11px;">Библиотека пресетов (1 клик):</label>
+          <label style="display: flex; align-items: center; gap: 5px; font-size: 10px; color: #94a3b8; cursor: pointer; text-transform: none; letter-spacing: normal;" title="Если включено, выбор пресета переключает и сохранённый фон. Если отключено, текущий фон остаётся заблокирован.">
+            <input type="checkbox" id="applyBgWithPresetToggle" checked style="accent-color: #38bdf8; cursor: pointer;">
+            <span>Фон из пресета</span>
+          </label>
+        </div>
         <div id="presetItemsList" style="max-height: 220px; overflow-y: auto; padding-right: 4px;">
           <!-- Rendered dynamically -->
         </div>
@@ -3868,12 +3888,12 @@
           camOffsetX: 0,
           frame169Enabled: true,
           frameYTEnabled: false,
-          bgPreset: 'liquid_silk',
+          bgPreset: 'deep_black',
           bgIntensity: 1.0,
           bgAnimSpeed: 0.0,
           bgScale: 1.0,
-          bgHaloIntensity: 0.85,
-          bgHaloColor: 'auto'
+          bgHaloIntensity: 0.0,
+          bgHaloColor: 'white'
         }
       },
       {
@@ -4103,11 +4123,11 @@
           camOffsetX: 0,
           frame169Enabled: true,
           frameYTEnabled: false,
-          bgPreset: 'liquid_silk',
+          bgPreset: 'deep_black',
           bgIntensity: 1.0,
           bgAnimSpeed: 0.0,
           bgScale: 1.0,
-          bgHaloIntensity: 0.8,
+          bgHaloIntensity: 0.0,
           bgHaloColor: 'white'
         }
       },
@@ -4378,11 +4398,18 @@
         const d = p.data || {};
         const wordBadge = d.text ? `«${d.text}»` : '';
         const fontName = (d.font || '').replace('UnifrakturCook_', '').replace('.json', '');
-        const bgLabel = bgPresetNames[d.bgPreset] ? bgPresetNames[d.bgPreset].split(' ')[1] || d.bgPreset : (d.bgPreset || 'Шёлк');
+        const bgLabel = d.bgPreset 
+          ? (bgPresetNames[d.bgPreset] ? bgPresetNames[d.bgPreset].split(' ')[1] || d.bgPreset : d.bgPreset) 
+          : 'Без фона';
         const subInfo = d.source === 'text' 
           ? `${wordBadge} ${d.textCase || 'lower'} • ${fontName} • ${d.matcap} • 🎨 ${bgLabel}`
           : `3D: ${d.source} • ${d.matcap} • 🎨 ${bgLabel}`;
         
+        const updateBtn = p.isFactory ? '' : `
+          <button class="preset-action-btn" onclick="updateUserPreset(event, '${p.id}')" title="Перезаписать пресет текущими настройками (включая ракурс и фон)">
+            🔄
+          </button>
+        `;
         const deleteBtn = p.isFactory ? '' : `
           <button class="preset-delete-btn" onclick="deleteUserPreset(event, '${p.id}')" title="Удалить пресет">
             🗑️
@@ -4395,8 +4422,9 @@
               <div class="preset-item-title">${p.name}</div>
               <div class="preset-item-sub">${subInfo}</div>
             </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
+            <div style="display: flex; align-items: center; gap: 4px;">
               ${p.isFactory ? '<span class="preset-item-badge">MASTER</span>' : '<span class="preset-item-badge" style="color: #4ade80;">USER</span>'}
+              ${updateBtn}
               ${deleteBtn}
             </div>
           </div>
@@ -4541,6 +4569,22 @@
       }
       renderPresetList();
       showToast('🗑️ Пресет удалён');
+    }
+
+    function updateUserPreset(event, id) {
+      if (event) event.stopPropagation();
+      const idx = userPresets.findIndex(p => p.id === id);
+      if (idx === -1) return;
+
+      userPresets[idx].data = captureCurrentSettings();
+      try {
+        localStorage.setItem('kirtsoy_user_presets', JSON.stringify(userPresets));
+      } catch (e) {
+        console.error('Error updating preset in localStorage', e);
+      }
+      currentActivePresetId = id;
+      renderPresetList();
+      showToast(`🔄 Пресет «${userPresets[idx].name}» обновлён текущими настройками и фоном!`);
     }
 
     function applyPresetById(id) {
@@ -4778,41 +4822,55 @@
         toggleYTFrameGuide();
       }
 
-      // 10.5 Background Parameters Restore
-      const targetBg = d.bgPreset || 'liquid_silk';
-      setStudioBackgroundPreset(targetBg, true);
+      // 10.5 Background Parameters Restore (Strict Protection: never overwrite if preset has no bg or toggle is disabled)
+      const applyBgToggle = document.getElementById('applyBgWithPresetToggle');
+      const allowBgSwitch = applyBgToggle ? applyBgToggle.checked : true;
 
-      bgIntensity = (d.bgIntensity !== undefined) ? d.bgIntensity : 1.0;
-      if (document.getElementById('bgIntensitySlider')) {
-        document.getElementById('bgIntensitySlider').value = bgIntensity;
-        const v = document.getElementById('valBgIntensity');
-        if (v) v.innerText = Math.round(bgIntensity * 100) + '%';
-      }
+      if (allowBgSwitch && d.bgPreset !== undefined && d.bgPreset !== null) {
+        setStudioBackgroundPreset(d.bgPreset, true);
 
-      bgAnimSpeed = (d.bgAnimSpeed !== undefined) ? d.bgAnimSpeed : 0.0;
-      if (document.getElementById('bgAnimSpeedSlider')) {
-        document.getElementById('bgAnimSpeedSlider').value = bgAnimSpeed;
-        const v = document.getElementById('valBgAnimSpeed');
-        if (v) v.innerText = (bgAnimSpeed === 0) ? '0.0x (Статика)' : (bgAnimSpeed + 'x');
-      }
+        if (d.bgIntensity !== undefined) {
+          bgIntensity = d.bgIntensity;
+          if (document.getElementById('bgIntensitySlider')) {
+            document.getElementById('bgIntensitySlider').value = bgIntensity;
+            const v = document.getElementById('valBgIntensity');
+            if (v) v.innerText = Math.round(bgIntensity * 100) + '%';
+          }
+        }
 
-      bgScale = (d.bgScale !== undefined) ? d.bgScale : 1.0;
-      if (document.getElementById('bgScaleSlider')) {
-        document.getElementById('bgScaleSlider').value = bgScale;
-        const v = document.getElementById('valBgScale');
-        if (v) v.innerText = bgScale + 'x';
-      }
+        if (d.bgAnimSpeed !== undefined) {
+          bgAnimSpeed = d.bgAnimSpeed;
+          if (document.getElementById('bgAnimSpeedSlider')) {
+            document.getElementById('bgAnimSpeedSlider').value = bgAnimSpeed;
+            const v = document.getElementById('valBgAnimSpeed');
+            if (v) v.innerText = (bgAnimSpeed === 0) ? '0.0x (Статика)' : (bgAnimSpeed + 'x');
+          }
+        }
 
-      bgHaloIntensity = (d.bgHaloIntensity !== undefined) ? d.bgHaloIntensity : 0.8;
-      if (document.getElementById('bgHaloSlider')) {
-        document.getElementById('bgHaloSlider').value = bgHaloIntensity;
-        const v = document.getElementById('valBgHalo');
-        if (v) v.innerText = Math.round(bgHaloIntensity * 100) + '%';
-      }
+        if (d.bgScale !== undefined) {
+          bgScale = d.bgScale;
+          if (document.getElementById('bgScaleSlider')) {
+            document.getElementById('bgScaleSlider').value = bgScale;
+            const v = document.getElementById('valBgScale');
+            if (v) v.innerText = bgScale + 'x';
+          }
+        }
 
-      bgHaloColor = d.bgHaloColor || 'auto';
-      if (document.getElementById('bgHaloColorSelect')) {
-        document.getElementById('bgHaloColorSelect').value = bgHaloColor;
+        if (d.bgHaloIntensity !== undefined) {
+          bgHaloIntensity = d.bgHaloIntensity;
+          if (document.getElementById('bgHaloSlider')) {
+            document.getElementById('bgHaloSlider').value = bgHaloIntensity;
+            const v = document.getElementById('valBgHalo');
+            if (v) v.innerText = Math.round(bgHaloIntensity * 100) + '%';
+          }
+        }
+
+        if (d.bgHaloColor) {
+          bgHaloColor = d.bgHaloColor;
+          if (document.getElementById('bgHaloColorSelect')) {
+            document.getElementById('bgHaloColorSelect').value = bgHaloColor;
+          }
+        }
       }
 
       // 10.6 Lighting Boost Restore
