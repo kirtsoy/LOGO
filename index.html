@@ -1219,7 +1219,13 @@
       <div class="form-group">
         <label>Пресеты фона (Полноэкранные атмосферные для YouTube & Studio):</label>
         <div class="presets-grid" id="bgPresetsGrid" style="grid-template-columns: repeat(2, 1fr); gap: 6px;">
-          <button type="button" class="preset-btn active" onclick="setStudioBackgroundPreset('liquid_silk')">
+          <button type="button" class="preset-btn" style="border-color: #38bdf8; color: #bae6fd; font-weight: 700;" onclick="setStudioBackgroundPreset('liquid_mercury')">
+            ✨ Mercury Caustics (24 Ореола)
+          </button>
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('dark_iridescent')">
+            🌈 Iridescent Oil (Нефть)
+          </button>
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('liquid_silk')">
             🌊 Ртутный Шёлк (Full-Bleed)
           </button>
           <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('studio_smoke')">
@@ -2774,6 +2780,11 @@
     let bgHaloColor = 'auto';
 
     const bgPresetNames = {
+      liquid_mercury: '✨ Mercury Caustics (24 Ореола / YouTube Banner)',
+      dark_iridescent: '🌈 Iridescent Oil (Нефть)',
+      liquid_gold: '🟡 Molten Gold (Золотые Каустики)',
+      cyber_abyss: '🟣 Cyber Abyss (Неоновые Каустики)',
+      studio_vignette: '🎯 Cinema Vignette (Фокус)',
       liquid_silk: '🌊 Ртутный Шёлк (Full-Bleed)',
       studio_smoke: '💨 Студийный Дым и Контражур',
       cyber_horizon: '⚡ Кибер-Горизонт (Стрик)',
@@ -2848,7 +2859,49 @@
       ctx.fillStyle = baseGrad;
       ctx.fillRect(0, 0, width, height);
 
-      if (presetKey === 'liquid_silk') {
+      if (presetKey === 'liquid_mercury' || presetKey === 'dark_iridescent' || presetKey === 'liquid_gold' || presetKey === 'cyber_abyss' || presetKey === 'studio_vignette') {
+        // ✨ CLASSIC CELESTIAL CAUSTICS (24 Soft Glowing Ellipses Halo from YouTube Banner preset)
+        const cfgMap = {
+          liquid_mercury: { center: '#222f3e', bg: '#05070c', edge: '#04060a', accent: 'rgba(255, 255, 255, 0.06)' },
+          dark_iridescent: { center: '#133535', bg: '#04080a', edge: '#020508', accent: 'rgba(56, 189, 248, 0.07)' },
+          liquid_gold: { center: '#3b2204', bg: '#080501', edge: '#050301', accent: 'rgba(245, 158, 11, 0.08)' },
+          cyber_abyss: { center: '#2d0f4d', bg: '#06030b', edge: '#040207', accent: 'rgba(168, 85, 247, 0.08)' },
+          studio_vignette: { center: '#182030', bg: '#020305', edge: '#010203', accent: 'none' }
+        };
+        const cfg = cfgMap[presetKey] || cfgMap.liquid_mercury;
+
+        ctx.save();
+        const radius = Math.max(width, height) * 0.7;
+        const grad = ctx.createRadialGradient(cx, cy, 40 * scale, cx, cy, radius);
+        grad.addColorStop(0, cfg.center);
+        grad.addColorStop(0.55, cfg.bg);
+        grad.addColorStop(1, cfg.edge);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, width, height);
+
+        if (cfg.accent !== 'none') {
+          // Proportional scaling for live viewport vs 2560x1440 YouTube banner export
+          const scaleFactor = Math.min(width, height) / 576.0;
+          for (let i = 0; i < 24; i++) {
+            ctx.beginPath();
+            const angle = (i / 24) * Math.PI * 2 + t * 0.1;
+            const rDist = (200 + (i % 3) * 80) * scale * scaleFactor;
+            ctx.ellipse(
+              cx + Math.cos(angle) * rDist,
+              cy + Math.sin(angle) * (rDist * 0.55),
+              140 * scale * scaleFactor,
+              50 * scale * scaleFactor,
+              angle + 0.3,
+              0,
+              Math.PI * 2
+            );
+            ctx.fillStyle = cfg.accent;
+            ctx.fill();
+          }
+        }
+        ctx.restore();
+
+      } else if (presetKey === 'liquid_silk') {
         // 🌊 FULL-BLEED LIQUID SILK / MERCURY WAVES (Spans the entire 2560px banner)
         const folds = 14;
         for (let i = 0; i < folds; i++) {
@@ -3702,6 +3755,56 @@
     // --- PRESETS & STYLES SYSTEM ---
     // =========================================================================
     const FACTORY_PRESETS = [
+      {
+        id: 'factory_yt_banner_resize_full',
+        name: '📺 YouTube Banner Resize Full (Mercury Caustics)',
+        isFactory: true,
+        data: {
+          activeMode: '3d',
+          source: 'text',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 18,
+          bevel: 3.2,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: false,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
+          chainThreadingProgress: 1.0,
+          chainThreadingDirection: 'ltr',
+          transitionMode: 'none',
+          matType: 'liquid_matcap',
+          matcap: 'iced_aniso',
+          rotateSpeed: 1.2,
+          autoRotate: false,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2,
+          brightenBoost: 1.4,
+          rimLight: 3.2,
+          cameraPosition: { x: 0, y: 15, z: 250 },
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: -0.22, y: 0.04, z: 0.0 },
+          camDistance: 250,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: true,
+          bgPreset: 'liquid_mercury',
+          bgIntensity: 1.0,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.0,
+          bgHaloIntensity: 0.0,
+          bgHaloColor: 'white'
+        }
+      },
       {
         id: 'factory_swoop_lift',
         name: '🚀 Круг 360° + Влёт цепи в "t" -> Унос ВВЕРХ',
