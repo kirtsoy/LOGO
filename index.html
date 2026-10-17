@@ -3139,7 +3139,7 @@
       drawStudioBackground(bgCanvas, bgCanvas.width, bgCanvas.height, activeBgPreset, timeSec);
     }
 
-    function setStudioBackgroundPreset(presetKey) {
+    function setStudioBackgroundPreset(presetKey, silent = false) {
       activeBgPreset = presetKey;
       document.querySelectorAll('#bgPresetsGrid .preset-btn').forEach(b => b.classList.remove('active'));
       const btn = Array.from(document.querySelectorAll('#bgPresetsGrid .preset-btn')).find(b => b.getAttribute('onclick')?.includes(`'${presetKey}'`));
@@ -3151,7 +3151,9 @@
       }
 
       const name = bgPresetNames[presetKey] || presetKey;
-      showToast('🎨 Пресет фона: ' + name);
+      if (!silent) {
+        showToast('🎨 Пресет фона: ' + name);
+      }
     }
 
     // --- MODE SWITCHER ---
@@ -3685,6 +3687,7 @@
         name: '🚀 Круг 360° + Влёт цепи в "t" -> Унос ВВЕРХ',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'pendant_real_hole',
           text: 'kirtsoy',
           textCase: 'lower',
@@ -3708,8 +3711,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
           rippleSpeed: 1.2,
+          brightenBoost: 1.45,
+          rimLight: 3.5,
           cameraPosition: { x: 0, y: 0, z: 240 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 240,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'caustics_nebula',
+          bgIntensity: 1.15,
+          bgAnimSpeed: 0.8,
+          bgScale: 1.1,
+          bgHaloIntensity: 0.9,
+          bgHaloColor: 'cyan'
         }
       },
       {
@@ -3717,6 +3735,7 @@
         name: '🧵 Вдевание одного конца цепи в "t"',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'pendant_real_hole',
           text: 'kirtsoy',
           textCase: 'lower',
@@ -3740,8 +3759,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
           rippleSpeed: 1.2,
+          brightenBoost: 1.4,
+          rimLight: 3.0,
           cameraPosition: { x: 0, y: 0, z: 240 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 240,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'studio_smoke',
+          bgIntensity: 1.0,
+          bgAnimSpeed: 0.5,
+          bgScale: 1.0,
+          bgHaloIntensity: 0.85,
+          bgHaloColor: 'white'
         }
       },
       {
@@ -3749,6 +3783,7 @@
         name: '🕺 Покачивание кулона на шее (Miami Gold)',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'pendant_real_hole',
           text: 'kirtsoy',
           textCase: 'lower',
@@ -3772,8 +3807,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
           rippleSpeed: 1.2,
+          brightenBoost: 1.45,
+          rimLight: 3.8,
           cameraPosition: { x: 0, y: 0, z: 240 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 240,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'molten_sunrise',
+          bgIntensity: 1.2,
+          bgAnimSpeed: 0.6,
+          bgScale: 1.0,
+          bgHaloIntensity: 1.0,
+          bgHaloColor: 'gold'
         }
       },
       {
@@ -3781,6 +3831,7 @@
         name: '💎 100% Физический Кулон с Цепью (Сквозная дырка в "t")',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'pendant_real_hole',
           text: 'kirtsoy',
           textCase: 'lower',
@@ -3806,8 +3857,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
           rippleSpeed: 1.2,
+          brightenBoost: 1.4,
+          rimLight: 3.2,
           cameraPosition: { x: 0, y: 0, z: 240 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 240,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'liquid_silk',
+          bgIntensity: 1.0,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.0,
+          bgHaloIntensity: 0.85,
+          bgHaloColor: 'auto'
         }
       },
       {
@@ -3815,6 +3881,7 @@
         name: '✨ Iced Out Monolith (Слитный кулон с фасками)',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'text',
           text: 'kirtsoy',
           textCase: 'lower',
@@ -3837,8 +3904,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
           rippleSpeed: 1.2,
+          brightenBoost: 1.5,
+          rimLight: 4.0,
           cameraPosition: { x: 35, y: 15, z: 235 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 240,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'studio_softbox',
+          bgIntensity: 1.05,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.0,
+          bgHaloIntensity: 0.95,
+          bgHaloColor: 'white'
         }
       },
       {
@@ -3846,6 +3928,7 @@
         name: '🌊 Liquid Caustics (Каустики ртути)',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'text',
           text: 'kirtsoy',
           textCase: 'lower',
@@ -3853,6 +3936,14 @@
           fontSize: 38,
           depth: 14,
           bevel: 2.5,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
           matType: 'liquid_matcap',
           matcap: 'iced_caustics',
           rotateSpeed: 1.5,
@@ -3860,8 +3951,23 @@
           sparkleGlideSpeed: 1.0,
           rippleIntensity: 0.35,
           rippleSpeed: 1.2,
+          brightenBoost: 1.4,
+          rimLight: 3.6,
           cameraPosition: { x: -35, y: 18, z: 235 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 240,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'caustics_nebula',
+          bgIntensity: 1.25,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.2,
+          bgHaloIntensity: 1.05,
+          bgHaloColor: 'cyan'
         }
       },
       {
@@ -3869,6 +3975,7 @@
         name: '❄️ Pavé Diamond Dust (Микро-камни)',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'text',
           text: 'kirtsoy',
           textCase: 'lower',
@@ -3876,6 +3983,14 @@
           fontSize: 38,
           depth: 14,
           bevel: 2.5,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
           matType: 'liquid_matcap',
           matcap: 'iced_pave',
           rotateSpeed: 1.5,
@@ -3883,8 +3998,23 @@
           sparkleGlideSpeed: 0.6,
           rippleIntensity: 0.35,
           rippleSpeed: 1.2,
+          brightenBoost: 1.35,
+          rimLight: 3.0,
           cameraPosition: { x: 0, y: -8, z: 220 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 220,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'studio_smoke',
+          bgIntensity: 0.95,
+          bgAnimSpeed: 0.0,
+          bgScale: 0.9,
+          bgHaloIntensity: 0.8,
+          bgHaloColor: 'white'
         }
       },
       {
@@ -3892,6 +4022,7 @@
         name: '🌈 Prismatic Sheen (Лезвия света)',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'text',
           text: 'kirtsoy',
           textCase: 'lower',
@@ -3899,6 +4030,14 @@
           fontSize: 38,
           depth: 15,
           bevel: 2.5,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
           matType: 'liquid_matcap',
           matcap: 'iced_aniso',
           rotateSpeed: 1.5,
@@ -3906,8 +4045,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
           rippleSpeed: 1.2,
+          brightenBoost: 1.45,
+          rimLight: 3.8,
           cameraPosition: { x: 45, y: -10, z: 230 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 240,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'cyber_horizon',
+          bgIntensity: 1.15,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.0,
+          bgHaloIntensity: 0.9,
+          bgHaloColor: 'violet'
         }
       },
       {
@@ -3915,6 +4069,7 @@
         name: '⚪ Classic Rings (Исходный с кольцами)',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'text',
           text: 'kirtsoy',
           textCase: 'lower',
@@ -3922,6 +4077,14 @@
           fontSize: 38,
           depth: 14,
           bevel: 2.5,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
           matType: 'liquid_matcap',
           matcap: 'iced_diamond',
           rotateSpeed: 1.5,
@@ -3929,8 +4092,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
           rippleSpeed: 1.2,
+          brightenBoost: 1.4,
+          rimLight: 3.0,
           cameraPosition: { x: 0, y: 0, z: 240 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 240,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'liquid_silk',
+          bgIntensity: 1.0,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.0,
+          bgHaloIntensity: 0.8,
+          bgHaloColor: 'white'
         }
       },
       {
@@ -3938,6 +4116,7 @@
         name: '✨ Liquid Mirror Chrome',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'text',
           text: 'kirtsoy',
           textCase: 'lower',
@@ -3945,6 +4124,14 @@
           fontSize: 38,
           depth: 16,
           bevel: 3.0,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
           matType: 'liquid_matcap',
           matcap: 'chrome',
           rotateSpeed: 1.5,
@@ -3952,8 +4139,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.4,
           rippleSpeed: 1.5,
+          brightenBoost: 1.4,
+          rimLight: 3.4,
           cameraPosition: { x: -25, y: 12, z: 235 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 240,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'liquid_silk',
+          bgIntensity: 1.1,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.05,
+          bgHaloIntensity: 0.95,
+          bgHaloColor: 'white'
         }
       },
       {
@@ -3961,6 +4163,7 @@
         name: '⚪ White Gold Gothic',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'text',
           text: 'kirtsoy',
           textCase: 'title',
@@ -3968,6 +4171,14 @@
           fontSize: 38,
           depth: 15,
           bevel: 2.5,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
           matType: 'liquid_matcap',
           matcap: 'white_gold',
           rotateSpeed: 1.5,
@@ -3975,8 +4186,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
           rippleSpeed: 1.2,
+          brightenBoost: 1.4,
+          rimLight: 3.2,
           cameraPosition: { x: 25, y: -5, z: 235 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 240,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'carbon_mesh',
+          bgIntensity: 1.0,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.0,
+          bgHaloIntensity: 0.85,
+          bgHaloColor: 'white'
         }
       },
       {
@@ -3984,6 +4210,7 @@
         name: '🟡 18K Heavy Cuban Trap',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'text',
           text: 'kirtsoy',
           textCase: 'upper',
@@ -3991,6 +4218,14 @@
           fontSize: 36,
           depth: 22,
           bevel: 4.0,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'cuban_gold',
+          chainScale: 1.0,
+          chainSag: 1.0,
           matType: 'liquid_matcap',
           matcap: 'cuban_gold',
           rotateSpeed: 1.2,
@@ -3998,8 +4233,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.3,
           rippleSpeed: 1.0,
+          brightenBoost: 1.5,
+          rimLight: 4.2,
           cameraPosition: { x: 40, y: 15, z: 245 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 245,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'molten_sunrise',
+          bgIntensity: 1.2,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.0,
+          bgHaloIntensity: 1.05,
+          bgHaloColor: 'gold'
         }
       },
       {
@@ -4007,6 +4257,7 @@
         name: '🟣 Cyber Neon Opium Trap',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'text',
           text: 'kirtsoy',
           textCase: 'upper',
@@ -4014,6 +4265,14 @@
           fontSize: 38,
           depth: 18,
           bevel: 2.0,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
           matType: 'liquid_matcap',
           matcap: 'cyber',
           rotateSpeed: 2.0,
@@ -4021,8 +4280,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.5,
           rippleSpeed: 1.8,
+          brightenBoost: 1.55,
+          rimLight: 4.5,
           cameraPosition: { x: -40, y: -12, z: 230 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 230,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'cyber_horizon',
+          bgIntensity: 1.3,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.1,
+          bgHaloIntensity: 1.15,
+          bgHaloColor: 'violet'
         }
       },
       {
@@ -4030,6 +4304,7 @@
         name: '⛓️ Cuban Link Trap Chain (Iced)',
         isFactory: true,
         data: {
+          activeMode: '3d',
           source: 'cuban_chain',
           text: 'kirtsoy',
           textCase: 'lower',
@@ -4037,6 +4312,14 @@
           fontSize: 38,
           depth: 14,
           bevel: 2.5,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
           matType: 'liquid_matcap',
           matcap: 'iced_starburst',
           rotateSpeed: 1.2,
@@ -4044,8 +4327,23 @@
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
           rippleSpeed: 1.2,
+          brightenBoost: 1.4,
+          rimLight: 3.2,
           cameraPosition: { x: 0, y: 0, z: 250 },
-          cameraTarget: { x: 0, y: 0, z: 0 }
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 250,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'studio_smoke',
+          bgIntensity: 1.0,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.0,
+          bgHaloIntensity: 0.85,
+          bgHaloColor: 'white'
         }
       }
     ];
@@ -4080,9 +4378,10 @@
         const d = p.data || {};
         const wordBadge = d.text ? `«${d.text}»` : '';
         const fontName = (d.font || '').replace('UnifrakturCook_', '').replace('.json', '');
+        const bgLabel = bgPresetNames[d.bgPreset] ? bgPresetNames[d.bgPreset].split(' ')[1] || d.bgPreset : (d.bgPreset || 'Шёлк');
         const subInfo = d.source === 'text' 
-          ? `${wordBadge} ${d.textCase || 'lower'} • ${fontName} • D:${d.depth} • B:${d.bevel} • ${d.matcap}`
-          : `3D: ${d.source} • ${d.matcap}`;
+          ? `${wordBadge} ${d.textCase || 'lower'} • ${fontName} • ${d.matcap} • 🎨 ${bgLabel}`
+          : `3D: ${d.source} • ${d.matcap} • 🎨 ${bgLabel}`;
         
         const deleteBtn = p.isFactory ? '' : `
           <button class="preset-delete-btn" onclick="deleteUserPreset(event, '${p.id}')" title="Удалить пресет">
@@ -4163,9 +4462,11 @@
         introChainHoleTiming: parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0),
         introPreSpins: parseInt(document.getElementById('introPreSpins')?.value ?? 1),
 
-        // 6. Materials & Shading
+        // 6. Materials, Shading & Lighting Boost
         matType: document.getElementById('matTypeSelect')?.value || 'liquid_matcap',
         matcap: activeMatcapName,
+        brightenBoost: parseFloat(document.getElementById('brightenBoostSlider')?.value || 1.4),
+        rimLight: parseFloat(document.getElementById('rimLightSlider')?.value || 3.0),
 
         // 7. Rotation, Turntable & Physics Speeds
         rotateSpeed: parseFloat(document.getElementById('rotateSpeed')?.value || 1.2),
@@ -4192,13 +4493,13 @@
         frame169Enabled: document.getElementById('frame169Toggle')?.checked ?? true,
         frameYTEnabled: document.getElementById('frameYTToggle')?.checked ?? false,
 
-        // 10. Background Settings
+        // 10. Background & Atmosphere Settings
         bgPreset: activeBgPreset,
-        bgIntensity: bgIntensity,
-        bgAnimSpeed: bgAnimSpeed,
-        bgScale: bgScale,
-        bgHaloIntensity: bgHaloIntensity,
-        bgHaloColor: bgHaloColor
+        bgIntensity: parseFloat(document.getElementById('bgIntensitySlider')?.value ?? bgIntensity),
+        bgAnimSpeed: parseFloat(document.getElementById('bgAnimSpeedSlider')?.value ?? bgAnimSpeed),
+        bgScale: parseFloat(document.getElementById('bgScaleSlider')?.value ?? bgScale),
+        bgHaloIntensity: parseFloat(document.getElementById('bgHaloSlider')?.value ?? bgHaloIntensity),
+        bgHaloColor: document.getElementById('bgHaloColorSelect')?.value || bgHaloColor
       };
     }
 
@@ -4250,8 +4551,8 @@
       const d = preset.data;
 
       // 1. Mode & Source
-      if (d.activeMode && d.activeMode !== activeMode && typeof switchMode === 'function') {
-        switchMode(d.activeMode);
+      if (d.activeMode && d.activeMode !== activeMode && typeof setMode === 'function') {
+        setMode(d.activeMode);
       }
 
       if (d.source) {
@@ -4478,37 +4779,50 @@
       }
 
       // 10.5 Background Parameters Restore
-      if (d.bgPreset) {
-        setStudioBackgroundPreset(d.bgPreset);
-      }
-      if (d.bgIntensity !== undefined && document.getElementById('bgIntensitySlider')) {
-        bgIntensity = d.bgIntensity;
+      const targetBg = d.bgPreset || 'liquid_silk';
+      setStudioBackgroundPreset(targetBg, true);
+
+      bgIntensity = (d.bgIntensity !== undefined) ? d.bgIntensity : 1.0;
+      if (document.getElementById('bgIntensitySlider')) {
         document.getElementById('bgIntensitySlider').value = bgIntensity;
         const v = document.getElementById('valBgIntensity');
         if (v) v.innerText = Math.round(bgIntensity * 100) + '%';
       }
-      if (d.bgAnimSpeed !== undefined && document.getElementById('bgAnimSpeedSlider')) {
-        bgAnimSpeed = d.bgAnimSpeed;
+
+      bgAnimSpeed = (d.bgAnimSpeed !== undefined) ? d.bgAnimSpeed : 0.0;
+      if (document.getElementById('bgAnimSpeedSlider')) {
         document.getElementById('bgAnimSpeedSlider').value = bgAnimSpeed;
         const v = document.getElementById('valBgAnimSpeed');
-        if (v) v.innerText = bgAnimSpeed + 'x';
+        if (v) v.innerText = (bgAnimSpeed === 0) ? '0.0x (Статика)' : (bgAnimSpeed + 'x');
       }
-      if (d.bgScale !== undefined && document.getElementById('bgScaleSlider')) {
-        bgScale = d.bgScale;
+
+      bgScale = (d.bgScale !== undefined) ? d.bgScale : 1.0;
+      if (document.getElementById('bgScaleSlider')) {
         document.getElementById('bgScaleSlider').value = bgScale;
         const v = document.getElementById('valBgScale');
         if (v) v.innerText = bgScale + 'x';
       }
-      if (d.bgHaloIntensity !== undefined && document.getElementById('bgHaloSlider')) {
-        bgHaloIntensity = d.bgHaloIntensity;
+
+      bgHaloIntensity = (d.bgHaloIntensity !== undefined) ? d.bgHaloIntensity : 0.8;
+      if (document.getElementById('bgHaloSlider')) {
         document.getElementById('bgHaloSlider').value = bgHaloIntensity;
         const v = document.getElementById('valBgHalo');
         if (v) v.innerText = Math.round(bgHaloIntensity * 100) + '%';
       }
-      if (d.bgHaloColor && document.getElementById('bgHaloColorSelect')) {
-        bgHaloColor = d.bgHaloColor;
+
+      bgHaloColor = d.bgHaloColor || 'auto';
+      if (document.getElementById('bgHaloColorSelect')) {
         document.getElementById('bgHaloColorSelect').value = bgHaloColor;
       }
+
+      // 10.6 Lighting Boost Restore
+      if (d.brightenBoost !== undefined && document.getElementById('brightenBoostSlider')) {
+        document.getElementById('brightenBoostSlider').value = d.brightenBoost;
+      }
+      if (d.rimLight !== undefined && document.getElementById('rimLightSlider')) {
+        document.getElementById('rimLightSlider').value = d.rimLight;
+      }
+      updateLightingBoost();
 
       // 11. Rebuild 3D Model / Text & Lateral Chain
       if (d.source === 'text') {
