@@ -1578,6 +1578,8 @@
     let threeScene, threeCamera, threeRenderer, threeCurrentMesh, threeControls;
     let threeAmbLight = null, threeMainLight = null, threeBlueRim = null, threePinkRim = null;
     let envTexture = null;
+    let baseMeshPos = { x: 0, y: 0, z: 0 };
+    let baseMeshRot = { x: 0, y: 0, z: 0 };
 
     function initThree3D() {
       threeScene = new THREE.Scene();
@@ -2423,6 +2425,8 @@
         const meshGeo = buildInterlockingPendantMesh(textVal, threeFont, size, depth, bevel, bevelSegs, overlapRatio, backplateOn, bpDepth);
         const mat = getActiveChromeMaterial();
         threeCurrentMesh = new THREE.Mesh(meshGeo, mat);
+        if (baseMeshRot) threeCurrentMesh.rotation.set(baseMeshRot.x, baseMeshRot.y, baseMeshRot.z);
+        if (baseMeshPos) threeCurrentMesh.position.set(baseMeshPos.x, baseMeshPos.y, baseMeshPos.z);
         threeScene.add(threeCurrentMesh);
 
         // Build threaded chain through the pendant hole
@@ -2443,6 +2447,8 @@
       } else if (activeSource === 'custom_model' && custom3DObject) {
         applyMaterialToCustomModel(custom3DObject);
         threeCurrentMesh = custom3DObject;
+        if (baseMeshRot) threeCurrentMesh.rotation.set(baseMeshRot.x, baseMeshRot.y, baseMeshRot.z);
+        if (baseMeshPos) threeCurrentMesh.position.set(baseMeshPos.x, baseMeshPos.y, baseMeshPos.z);
         threeScene.add(threeCurrentMesh);
       }
     }
@@ -2516,6 +2522,14 @@
         applyMaterialToCustomModel(obj);
         if (threeCurrentMesh) threeScene.remove(threeCurrentMesh);
         threeCurrentMesh = obj;
+        if (baseMeshRot) {
+          threeCurrentMesh.rotation.set(baseMeshRot.x, baseMeshRot.y, baseMeshRot.z);
+        }
+        if (baseMeshPos) {
+          threeCurrentMesh.position.x += baseMeshPos.x;
+          threeCurrentMesh.position.y += baseMeshPos.y;
+          threeCurrentMesh.position.z += baseMeshPos.z;
+        }
         threeScene.add(threeCurrentMesh);
         if (callback) callback(obj);
       });
@@ -3602,9 +3616,20 @@
           const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
           const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.2);
 
-          if (threeCurrentMesh && ripple > 0) {
-            threeCurrentMesh.position.y = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
-            threeCurrentMesh.rotation.z = Math.sin(timeSec * rSpeed) * (0.04 * ripple);
+          if (threeCurrentMesh) {
+            const curBasePos = baseMeshPos || { x: 0, y: 0, z: 0 };
+            const curBaseRot = baseMeshRot || { x: 0, y: 0, z: 0 };
+            if (ripple > 0) {
+              threeCurrentMesh.position.y = curBasePos.y + Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
+              threeCurrentMesh.rotation.z = curBaseRot.z + Math.sin(timeSec * rSpeed) * (0.04 * ripple);
+            } else {
+              threeCurrentMesh.position.y = curBasePos.y;
+              threeCurrentMesh.rotation.z = curBaseRot.z;
+            }
+            threeCurrentMesh.position.x = curBasePos.x;
+            threeCurrentMesh.position.z = curBasePos.z;
+            threeCurrentMesh.rotation.x = curBaseRot.x;
+            threeCurrentMesh.rotation.y = curBaseRot.y;
           }
           if (threeChainMesh && ripple > 0) {
             threeChainMesh.position.y = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
@@ -3746,7 +3771,9 @@
           autoRotate: false,
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
-          rippleSpeed: 1.2
+          rippleSpeed: 1.2,
+          cameraPosition: { x: 0, y: 0, z: 240 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       },
       {
@@ -3775,10 +3802,12 @@
           matType: 'liquid_matcap',
           matcap: 'iced_starburst',
           rotateSpeed: 1.2,
-          autoRotate: true,
+          autoRotate: false,
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
-          rippleSpeed: 1.2
+          rippleSpeed: 1.2,
+          cameraPosition: { x: 0, y: 0, z: 240 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       },
       {
@@ -3804,10 +3833,12 @@
           matType: 'liquid_matcap',
           matcap: 'iced_starburst',
           rotateSpeed: 1.5,
-          autoRotate: true,
+          autoRotate: false,
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
-          rippleSpeed: 1.2
+          rippleSpeed: 1.2,
+          cameraPosition: { x: 35, y: 15, z: 235 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       },
       {
@@ -3825,10 +3856,12 @@
           matType: 'liquid_matcap',
           matcap: 'iced_caustics',
           rotateSpeed: 1.5,
-          autoRotate: true,
+          autoRotate: false,
           sparkleGlideSpeed: 1.0,
           rippleIntensity: 0.35,
-          rippleSpeed: 1.2
+          rippleSpeed: 1.2,
+          cameraPosition: { x: -35, y: 18, z: 235 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       },
       {
@@ -3846,10 +3879,12 @@
           matType: 'liquid_matcap',
           matcap: 'iced_pave',
           rotateSpeed: 1.5,
-          autoRotate: true,
+          autoRotate: false,
           sparkleGlideSpeed: 0.6,
           rippleIntensity: 0.35,
-          rippleSpeed: 1.2
+          rippleSpeed: 1.2,
+          cameraPosition: { x: 0, y: -8, z: 220 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       },
       {
@@ -3867,10 +3902,12 @@
           matType: 'liquid_matcap',
           matcap: 'iced_aniso',
           rotateSpeed: 1.5,
-          autoRotate: true,
+          autoRotate: false,
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
-          rippleSpeed: 1.2
+          rippleSpeed: 1.2,
+          cameraPosition: { x: 45, y: -10, z: 230 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       },
       {
@@ -3888,10 +3925,12 @@
           matType: 'liquid_matcap',
           matcap: 'iced_diamond',
           rotateSpeed: 1.5,
-          autoRotate: true,
+          autoRotate: false,
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
-          rippleSpeed: 1.2
+          rippleSpeed: 1.2,
+          cameraPosition: { x: 0, y: 0, z: 240 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       },
       {
@@ -3909,10 +3948,12 @@
           matType: 'liquid_matcap',
           matcap: 'chrome',
           rotateSpeed: 1.5,
-          autoRotate: true,
+          autoRotate: false,
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.4,
-          rippleSpeed: 1.5
+          rippleSpeed: 1.5,
+          cameraPosition: { x: -25, y: 12, z: 235 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       },
       {
@@ -3930,10 +3971,12 @@
           matType: 'liquid_matcap',
           matcap: 'white_gold',
           rotateSpeed: 1.5,
-          autoRotate: true,
+          autoRotate: false,
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
-          rippleSpeed: 1.2
+          rippleSpeed: 1.2,
+          cameraPosition: { x: 25, y: -5, z: 235 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       },
       {
@@ -3951,10 +3994,12 @@
           matType: 'liquid_matcap',
           matcap: 'cuban_gold',
           rotateSpeed: 1.2,
-          autoRotate: true,
+          autoRotate: false,
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.3,
-          rippleSpeed: 1.0
+          rippleSpeed: 1.0,
+          cameraPosition: { x: 40, y: 15, z: 245 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       },
       {
@@ -3972,10 +4017,12 @@
           matType: 'liquid_matcap',
           matcap: 'cyber',
           rotateSpeed: 2.0,
-          autoRotate: true,
+          autoRotate: false,
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.5,
-          rippleSpeed: 1.8
+          rippleSpeed: 1.8,
+          cameraPosition: { x: -40, y: -12, z: 230 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       },
       {
@@ -3993,10 +4040,12 @@
           matType: 'liquid_matcap',
           matcap: 'iced_starburst',
           rotateSpeed: 1.2,
-          autoRotate: true,
+          autoRotate: false,
           sparkleGlideSpeed: 0.8,
           rippleIntensity: 0.35,
-          rippleSpeed: 1.2
+          rippleSpeed: 1.2,
+          cameraPosition: { x: 0, y: 0, z: 250 },
+          cameraTarget: { x: 0, y: 0, z: 0 }
         }
       }
     ];
@@ -4057,7 +4106,7 @@
     }
 
     function captureCurrentSettings() {
-      // 1. Camera Framing
+      // 1. Camera Framing & Space Position / Angles
       const camPos = threeCamera ? {
         x: parseFloat(threeCamera.position.x.toFixed(2)),
         y: parseFloat(threeCamera.position.y.toFixed(2)),
@@ -4068,6 +4117,16 @@
         y: parseFloat(threeControls.target.y.toFixed(2)),
         z: parseFloat(threeControls.target.z.toFixed(2))
       } : null;
+      const meshPos = threeCurrentMesh ? {
+        x: parseFloat(threeCurrentMesh.position.x.toFixed(2)),
+        y: parseFloat(threeCurrentMesh.position.y.toFixed(2)),
+        z: parseFloat(threeCurrentMesh.position.z.toFixed(2))
+      } : (baseMeshPos ? { ...baseMeshPos } : null);
+      const meshRot = threeCurrentMesh ? {
+        x: parseFloat(threeCurrentMesh.rotation.x.toFixed(4)),
+        y: parseFloat(threeCurrentMesh.rotation.y.toFixed(4)),
+        z: parseFloat(threeCurrentMesh.rotation.z.toFixed(4))
+      } : (baseMeshRot ? { ...baseMeshRot } : null);
 
       return {
         // 1. Mode & Source
@@ -4110,7 +4169,7 @@
 
         // 7. Rotation, Turntable & Physics Speeds
         rotateSpeed: parseFloat(document.getElementById('rotateSpeed')?.value || 1.2),
-        autoRotate: document.getElementById('autoRotate')?.checked ?? true,
+        autoRotate: document.getElementById('autoRotate')?.checked ?? false,
         sparkleGlideSpeed: parseFloat(document.getElementById('sparkleGlideSpeed')?.value || 0.8),
         rippleIntensity: parseFloat(document.getElementById('rippleIntensity')?.value || 0.35),
         rippleSpeed: parseFloat(document.getElementById('rippleSpeed')?.value || 1.2),
@@ -4122,9 +4181,11 @@
         canvasTheme: document.getElementById('canvasThemeSelect')?.value || 'platinum',
         font2D: document.getElementById('font2DSelect')?.value || 'Syne',
 
-        // 9. Camera Framing
+        // 9. Camera & Mesh Spatial Framing
         cameraPosition: camPos,
         cameraTarget: camTarget,
+        meshPosition: meshPos,
+        meshRotation: meshRot,
         camDistance: parseFloat(document.getElementById('camDistanceSlider')?.value || 240),
         camOffsetY: parseFloat(document.getElementById('camOffsetYSlider')?.value || 0),
         camOffsetX: parseFloat(document.getElementById('camOffsetXSlider')?.value || 0),
@@ -4364,12 +4425,34 @@
       if (d.canvasTheme && document.getElementById('canvasThemeSelect')) document.getElementById('canvasThemeSelect').value = d.canvasTheme;
       if (d.font2D && document.getElementById('font2DSelect')) document.getElementById('font2DSelect').value = d.font2D;
 
-      // 10. Camera Framing Restore
+      // 10. Spatial Angles & Mesh/Camera Transform Restore
+      baseMeshRot = d.meshRotation ? { ...d.meshRotation } : { x: 0, y: 0, z: 0 };
+      baseMeshPos = d.meshPosition ? { ...d.meshPosition } : { x: 0, y: 0, z: 0 };
+      if (threeCurrentMesh) {
+        threeCurrentMesh.rotation.set(baseMeshRot.x, baseMeshRot.y, baseMeshRot.z);
+        threeCurrentMesh.position.set(baseMeshPos.x, baseMeshPos.y, baseMeshPos.z);
+      }
+      if (threeChainMesh) {
+        threeChainMesh.rotation.set(baseMeshRot.x, 0, baseMeshRot.z);
+        threeChainMesh.position.set(baseMeshPos.x, baseMeshPos.y, baseMeshPos.z);
+      }
+
+      // Camera Framing Restore
       if (d.cameraPosition && threeCamera) {
         threeCamera.position.set(d.cameraPosition.x, d.cameraPosition.y, d.cameraPosition.z);
+      } else if (threeCamera) {
+        const dDist = d.camDistance || 240;
+        const dY = d.camOffsetY || 0;
+        const dX = d.camOffsetX || 0;
+        threeCamera.position.set(dX, dY, dDist);
       }
       if (d.cameraTarget && threeControls) {
         threeControls.target.set(d.cameraTarget.x, d.cameraTarget.y, d.cameraTarget.z);
+      } else if (threeControls) {
+        threeControls.target.set(d.camOffsetX || 0, d.camOffsetY || 0, 0);
+      }
+      if (threeCamera && threeControls) {
+        threeCamera.lookAt(threeControls.target);
         threeControls.update();
       }
 
@@ -4452,7 +4535,12 @@
       if (d.transitionMode && d.transitionMode !== 'none') {
         startTransition(d.transitionMode);
       } else {
-        stopTransition();
+        // Safe transition stop without destroying camera position/angles
+        transitionMode = 'none';
+        if (threeControls) {
+          threeControls.enabled = true;
+          threeControls.update();
+        }
         updateChainThreading(chainThreadingProgress);
       }
 
