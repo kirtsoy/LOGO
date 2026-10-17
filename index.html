@@ -520,6 +520,157 @@
       letter-spacing: 0.5px;
     }
 
+    /* YouTube Channel Art Banner Guide (2560x1440 TV, 2560x423 Desktop, 1546x423 Mobile Safe Area) */
+    .frame-guide-yt {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: opacity 0.25s ease;
+    }
+    .yt-banner-canvas {
+      position: relative;
+      aspect-ratio: 16 / 9;
+      width: min(94%, calc(94vh * (16 / 9)));
+      height: min(94%, calc(94vw * (9 / 16)));
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.76);
+      border: 1px dashed rgba(245, 158, 11, 0.55);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .yt-tv-shade-top, .yt-tv-shade-bottom {
+      position: absolute;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #94a3b8;
+      letter-spacing: 0.5px;
+      pointer-events: none;
+    }
+    .yt-tv-shade-top {
+      top: 0;
+      height: 35.3125%;
+      border-bottom: 1px dashed rgba(245, 158, 11, 0.4);
+    }
+    .yt-tv-shade-bottom {
+      bottom: 0;
+      height: 35.3125%;
+      border-top: 1px dashed rgba(245, 158, 11, 0.4);
+    }
+    .yt-desktop-band {
+      position: absolute;
+      top: 35.3125%;
+      bottom: 35.3125%;
+      left: 0;
+      right: 0;
+      background: rgba(245, 158, 11, 0.05);
+      border-top: 2px solid rgba(245, 158, 11, 0.7);
+      border-bottom: 2px solid rgba(245, 158, 11, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .yt-desktop-wing-left, .yt-desktop-wing-right {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      background: rgba(99, 102, 241, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #a5b4fc;
+      padding: 0 4px;
+      text-align: center;
+      pointer-events: none;
+    }
+    .yt-desktop-wing-left {
+      left: 0;
+      width: 19.8046875%;
+      border-right: 1px dashed rgba(99, 102, 241, 0.6);
+    }
+    .yt-desktop-wing-right {
+      right: 0;
+      width: 19.8046875%;
+      border-left: 1px dashed rgba(99, 102, 241, 0.6);
+    }
+    .yt-safe-area {
+      position: absolute;
+      left: 19.8046875%;
+      width: 60.390625%;
+      top: 0;
+      bottom: 0;
+      background: rgba(16, 185, 129, 0.08);
+      border: 2px solid #10b981;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 25px rgba(16, 185, 129, 0.3);
+    }
+    .yt-corner {
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border: 2px solid #34d399;
+    }
+    .yt-corner.top-left { top: -2px; left: -2px; border-right: none; border-bottom: none; }
+    .yt-corner.top-right { top: -2px; right: -2px; border-left: none; border-bottom: none; }
+    .yt-corner.bottom-left { bottom: -2px; left: -2px; border-right: none; border-top: none; }
+    .yt-corner.bottom-right { bottom: -2px; right: -2px; border-left: none; border-top: none; }
+    .yt-safe-badge {
+      position: absolute;
+      bottom: 4px;
+      left: 8px;
+      background: rgba(6, 78, 59, 0.9);
+      border: 1px solid #10b981;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #a7f3d0;
+      font-weight: 700;
+      letter-spacing: 0.4px;
+    }
+    .yt-desktop-badge {
+      position: absolute;
+      top: 4px;
+      left: 8px;
+      background: rgba(10, 12, 19, 0.85);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #f59e0b;
+      letter-spacing: 0.4px;
+    }
+    .yt-tv-badge {
+      position: absolute;
+      top: 8px;
+      left: 10px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: #f59e0b;
+      letter-spacing: 0.4px;
+    }
+
     .drop-overlay {
       position: absolute;
       inset: 20px;
@@ -821,7 +972,7 @@
     <!-- Camera Framing & Viewport Safe 16:9 Frame -->
     <div class="control-section" id="cameraFramingSection">
       <div class="section-title">
-        <span>🎥 КАМЕРА И РАМКА 16:9</span>
+        <span>🎥 КАМЕРА И РАМКИ (16:9 & YOUTUBE)</span>
         <span class="preset-item-badge" style="color: #38bdf8;">FRAMING</span>
       </div>
 
@@ -832,6 +983,16 @@
         </label>
         <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
           Кино-каше с затемнением за границами: показывает точный кадр видео
+        </div>
+      </div>
+
+      <div class="form-group" style="padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.08);">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #f59e0b;">
+          <input type="checkbox" id="frameYTToggle" onchange="toggleYTFrameGuide()">
+          <span style="font-weight: 700;">📺 Сетка баннера YouTube (2560×1440)</span>
+        </label>
+        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+          Десктоп-полоса (2560×423) и Safe Area (1546×423) для смартфонов
         </div>
       </div>
 
@@ -860,10 +1021,11 @@
       </div>
 
       <div class="form-group">
-        <div style="display: flex; gap: 6px;">
-          <button class="preset-btn" style="flex: 1;" onclick="setCameraPreset('macro')">🔍 Макро (160)</button>
-          <button class="preset-btn active" style="flex: 1;" onclick="setCameraPreset('standard')">🎯 Центр (240)</button>
-          <button class="preset-btn" style="flex: 1;" onclick="setCameraPreset('wide')">📐 Общий (340)</button>
+        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;">
+          <button class="preset-btn" onclick="setCameraPreset('macro')">🔍 Макро (160)</button>
+          <button class="preset-btn active" onclick="setCameraPreset('standard')">🎯 Центр (240)</button>
+          <button class="preset-btn" onclick="setCameraPreset('wide')">📐 Общий (340)</button>
+          <button class="preset-btn" style="border-color: rgba(245,158,11,0.4); color: #fde68a;" onclick="setCameraPreset('yt_banner')">📺 Баннер YT (320)</button>
         </div>
       </div>
     </div>
@@ -1054,6 +1216,26 @@
         <button class="btn btn-secondary" onclick="exportCurrentPNG()">
           📸 Скачать 1 Кадр PNG (Прозрачный High-Res)
         </button>
+
+        <!-- YouTube Banner High-Res Exporter -->
+        <div style="padding: 10px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 10px;">
+          <div style="font-size: 11px; font-weight: 800; color: #f59e0b; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
+            <span>📺 БАННЕР ДЛЯ YOUTUBE</span>
+            <span style="font-size: 9px; background: rgba(245,158,11,0.2); padding: 2px 6px; border-radius: 4px; color: #f59e0b;">2560×1440 UHD</span>
+          </div>
+          <div style="font-size: 10px; color: #94a3b8; margin-bottom: 8px; line-height: 1.35;">
+            Рендерит точный кадр в официальном разрешении YouTube (2560×1440) со 100% центрированием в Safe Area (1546×423).
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="btn btn-secondary" style="flex: 1; border-color: #f59e0b; color: #fde68a; font-weight: 700; font-size: 11px; padding: 8px 6px;" onclick="exportYouTubeBannerPNG('transparent')" title="Скачать 2560x1440 PNG с прозрачным фоном">
+              ✨ Баннер (Alpha)
+            </button>
+            <button class="btn btn-secondary" style="flex: 1; border-color: #f59e0b; color: #fde68a; font-weight: 700; font-size: 11px; padding: 8px 6px;" onclick="exportYouTubeBannerPNG('black')" title="Скачать 2560x1440 PNG с тёмным фоном студии">
+              ⬛ Баннер (Тёмный)
+            </button>
+          </div>
+        </div>
+
         <button class="btn btn-secondary" style="border-color: #818cf8; color: #c7d2fe;" onclick="exportPendantOBJ()">
           📦 Скачать 3D Модель (.OBJ для Blender)
         </button>
@@ -1102,6 +1284,28 @@
       </div>
     </div>
 
+    <!-- YouTube Banner Frame Guide Overlay (2560×1440 Canvas, 2560×423 Desktop, 1546×423 Mobile Safe Area) -->
+    <div id="frameGuideYT" class="frame-guide-yt" style="display: none;">
+      <div class="yt-banner-canvas">
+        <div class="yt-tv-shade-top">📺 ЗОНА ТОЛЬКО ДЛЯ ТВ (2560 × 1440)</div>
+        <div class="yt-tv-shade-bottom">📺 ЗОНА ТОЛЬКО ДЛЯ ТВ (2560 × 1440)</div>
+        <div class="yt-desktop-band">
+          <div class="yt-desktop-wing-left">💻 ТОЛЬКО ПК</div>
+          <div class="yt-desktop-wing-right">💻 ТОЛЬКО ПК</div>
+          <div class="yt-safe-area">
+            <div class="yt-corner top-left"></div>
+            <div class="yt-corner top-right"></div>
+            <div class="yt-corner bottom-left"></div>
+            <div class="yt-corner bottom-right"></div>
+            <div class="yt-center-cross" style="position: absolute; color: rgba(16, 185, 129, 0.4); font-size: 20px;">+</div>
+            <div class="yt-safe-badge">📱 ВСЕ УСТРОЙСТВА / MOBILE (1546 × 423) — ГЛАВНАЯ ЗОНА</div>
+          </div>
+          <div class="yt-desktop-badge">💻 ДЕСКТОП (2560 × 423)</div>
+        </div>
+        <div class="yt-tv-badge">📺 ВЕСЬ ХОЛСТ / TV (2560 × 1440)</div>
+      </div>
+    </div>
+
     <!-- Mode 2: Liquid Metal WebGL Shader -->
     <canvas id="gl-liquid-canvas"></canvas>
 
@@ -1114,6 +1318,9 @@
     <div class="viewport-hud">
       <button class="hud-badge" id="hudFrame169Btn" style="cursor: pointer; color: #38bdf8; border-color: rgba(56,189,248,0.4); display: flex; align-items: center; gap: 4px;" onclick="toggle169FrameGuide()" title="Включить / Выключить кино-рамку 16:9">
         🎬 16:9 Рамка
+      </button>
+      <button class="hud-badge" id="hudFrameYTBtn" style="cursor: pointer; color: #94a3b8; border-color: rgba(255,255,255,0.15); display: flex; align-items: center; gap: 4px;" onclick="toggleYTFrameGuide()" title="Включить / Выключить сетку баннера YouTube (2560×1440)">
+        📺 YouTube Баннер
       </button>
       <button class="hud-badge" style="cursor: pointer; color: #38bdf8; border-color: rgba(56,189,248,0.4); display: flex; align-items: center; gap: 4px;" onclick="resetCameraFront()" title="Выровнять камеру строго по центру лица кулона">
         🎥 Фронт
@@ -1741,6 +1948,11 @@
         if (distEl) distEl.value = 340;
         if (offYEl) offYEl.value = 0;
         if (offXEl) offXEl.value = 0;
+      } else if (type === 'yt_banner') {
+        if (distEl) distEl.value = 320;
+        if (offYEl) offYEl.value = 0;
+        if (offXEl) offXEl.value = 0;
+        toggleYTFrameGuide(true);
       }
       updateCameraFraming();
       document.querySelectorAll('#cameraFramingSection .preset-btn').forEach(b => b.classList.remove('active'));
@@ -1749,18 +1961,37 @@
       }
     }
 
-    function toggle169FrameGuide() {
+    function toggle169FrameGuide(forcedState = null) {
       const chk = document.getElementById('frame169Toggle');
       const guide = document.getElementById('frameGuide169');
       const hudBtn = document.getElementById('hudFrame169Btn');
       if (guide) {
         const isShown = guide.style.display !== 'none';
-        const nextState = (chk ? chk.checked : !isShown);
+        const nextState = (forcedState !== null) ? forcedState : (chk ? chk.checked : !isShown);
         guide.style.display = nextState ? 'flex' : 'none';
         if (chk) chk.checked = nextState;
         if (hudBtn) {
           hudBtn.style.color = nextState ? '#38bdf8' : '#94a3b8';
           hudBtn.style.borderColor = nextState ? 'rgba(56,189,248,0.4)' : 'rgba(255,255,255,0.15)';
+        }
+      }
+    }
+
+    function toggleYTFrameGuide(forcedState = null) {
+      const chk = document.getElementById('frameYTToggle');
+      const guide = document.getElementById('frameGuideYT');
+      const hudBtn = document.getElementById('hudFrameYTBtn');
+      if (guide) {
+        const isShown = guide.style.display !== 'none';
+        const nextState = (forcedState !== null) ? forcedState : (chk ? chk.checked : !isShown);
+        guide.style.display = nextState ? 'flex' : 'none';
+        if (chk) chk.checked = nextState;
+        if (hudBtn) {
+          hudBtn.style.color = nextState ? '#f59e0b' : '#94a3b8';
+          hudBtn.style.borderColor = nextState ? 'rgba(245,158,11,0.5)' : 'rgba(255,255,255,0.15)';
+        }
+        if (nextState) {
+          showToast('📺 Сетка баннера YouTube (2560×1440): Safe Area 1546×423');
         }
       }
     }
@@ -3304,7 +3535,8 @@
         camDistance: parseFloat(document.getElementById('camDistanceSlider')?.value || 240),
         camOffsetY: parseFloat(document.getElementById('camOffsetYSlider')?.value || 0),
         camOffsetX: parseFloat(document.getElementById('camOffsetXSlider')?.value || 0),
-        frame169Enabled: document.getElementById('frame169Toggle')?.checked ?? true
+        frame169Enabled: document.getElementById('frame169Toggle')?.checked ?? true,
+        frameYTEnabled: document.getElementById('frameYTToggle')?.checked ?? false
       };
     }
 
@@ -3556,6 +3788,10 @@
         document.getElementById('frame169Toggle').checked = d.frame169Enabled;
         toggle169FrameGuide();
       }
+      if (d.frameYTEnabled !== undefined && document.getElementById('frameYTToggle')) {
+        document.getElementById('frameYTToggle').checked = d.frameYTEnabled;
+        toggleYTFrameGuide();
+      }
 
       // 11. Rebuild 3D Model / Text & Lateral Chain
       if (d.source === 'text') {
@@ -3703,9 +3939,13 @@
         threeRenderer.setClearColor(0x000000, 0.0);
       }
 
-      // Hide frame guide during video recording so guide lines are not captured
-      const guide = document.getElementById('frameGuide169');
-      if (guide) guide.style.opacity = '0';
+      // Hide frame guides during video recording so guide lines are not captured
+      const guide169 = document.getElementById('frameGuide169');
+      const guideYT = document.getElementById('frameGuideYT');
+      const prev169Op = guide169 ? guide169.style.opacity : '1';
+      const prevYTOp = guideYT ? guideYT.style.opacity : '1';
+      if (guide169) guide169.style.opacity = '0';
+      if (guideYT) guideYT.style.opacity = '0';
 
       // Reset camera and trigger intro transition
       startTransition('swoop_lift');
@@ -3740,7 +3980,8 @@
       introMediaRecorder.onstop = function() {
         isIntroRecording = false;
         threeScene.background = null; // Always restore transparent background
-        if (guide) guide.style.opacity = '1';
+        if (guide169) guide169.style.opacity = prev169Op;
+        if (guideYT) guideYT.style.opacity = prevYTOp;
 
         const blob = new Blob(introRecordedChunks, { type: mimeType });
         const url = URL.createObjectURL(blob);
@@ -3807,10 +4048,13 @@
       if (framesStat) framesStat.innerText = `0 / ...`;
       if (etaStat) etaStat.innerText = '--:--';
 
-      // 2. Hide 16:9 overlay guide during render so guide graphics are not captured
-      const guide = document.getElementById('frameGuide169');
-      const prevGuideOpacity = guide ? guide.style.opacity : '1';
-      if (guide) guide.style.opacity = '0';
+      // 2. Hide overlay guides during render so guide graphics are not captured
+      const guide169 = document.getElementById('frameGuide169');
+      const guideYT = document.getElementById('frameGuideYT');
+      const prevGuide169Op = guide169 ? guide169.style.opacity : '1';
+      const prevGuideYTOp = guideYT ? guideYT.style.opacity : '1';
+      if (guide169) guide169.style.opacity = '0';
+      if (guideYT) guideYT.style.opacity = '0';
 
       // 3. Save original renderer state
       const area = document.getElementById('viewportArea');
@@ -3995,7 +4239,8 @@
         threeCamera.aspect = origAspect;
         threeCamera.updateProjectionMatrix();
 
-        if (guide) guide.style.opacity = prevGuideOpacity;
+        if (guide169) guide169.style.opacity = prevGuide169Op;
+        if (guideYT) guideYT.style.opacity = prevGuideYTOp;
         if (modal) modal.style.display = 'none';
 
         isStudioRendering = false;
@@ -4017,6 +4262,71 @@
       link.download = `kirtsoy-3d-logo-${activeMode}-${Date.now()}.png`;
       link.href = activeCanvas.toDataURL('image/png', 1.0);
       link.click();
+    }
+
+    function exportYouTubeBannerPNG(bgMode = 'transparent') {
+      if (!threeRenderer || !threeScene || !threeCamera) {
+        showToast('❌ Ошибка: Three.js сцена не инициализирована');
+        return;
+      }
+
+      // Hide frame guides while capturing snapshot
+      const guide169 = document.getElementById('frameGuide169');
+      const guideYT = document.getElementById('frameGuideYT');
+      const prev169 = guide169 ? guide169.style.opacity : '1';
+      const prevYT = guideYT ? guideYT.style.opacity : '1';
+      if (guide169) guide169.style.opacity = '0';
+      if (guideYT) guideYT.style.opacity = '0';
+
+      const area = document.getElementById('viewportArea');
+      const origWidth = area ? area.clientWidth : window.innerWidth;
+      const origHeight = area ? area.clientHeight : window.innerHeight;
+      const origPixelRatio = threeRenderer.getPixelRatio();
+      const origAspect = threeCamera.aspect;
+      const prevBg = threeScene.background;
+
+      try {
+        // Set background if requested
+        if (bgMode === 'black') {
+          threeScene.background = new THREE.Color(0x06070a);
+        } else {
+          threeScene.background = null;
+          threeRenderer.setClearColor(0x000000, 0.0);
+        }
+
+        // Set exact official YouTube banner dimensions: 2560 x 1440
+        threeRenderer.setPixelRatio(1);
+        threeRenderer.setSize(2560, 1440, false);
+        threeCamera.aspect = 2560 / 1440;
+        threeCamera.updateProjectionMatrix();
+
+        // Render current 3D position
+        threeRenderer.render(threeScene, threeCamera);
+
+        const canvas = threeRenderer.domElement;
+        const link = document.createElement('a');
+        const bgSuffix = (bgMode === 'transparent') ? 'alpha_transparent' : 'studio_dark';
+        link.download = `kirtsoy_youtube_banner_2560x1440_${bgSuffix}_${Date.now()}.png`;
+        link.href = canvas.toDataURL('image/png', 1.0);
+        document.body.appendChild(link);
+        link.click();
+        setTimeout(() => link.remove(), 1000);
+
+        showToast('🎉 Баннер YouTube (2560×1440 PNG) успешно сохранён в Ultra HD!');
+      } catch (err) {
+        console.error(err);
+        showToast('❌ Ошибка экспорта баннера: ' + err.message);
+      } finally {
+        // Restore renderer
+        threeScene.background = prevBg;
+        threeRenderer.setPixelRatio(origPixelRatio);
+        threeRenderer.setSize(origWidth, origHeight);
+        threeCamera.aspect = origAspect;
+        threeCamera.updateProjectionMatrix();
+
+        if (guide169) guide169.style.opacity = prev169;
+        if (guideYT) guideYT.style.opacity = prevYT;
+      }
     }
 
     function openRendersFolder() {
