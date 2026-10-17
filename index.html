@@ -1153,11 +1153,57 @@
         </div>
       </div>
 
+      <div class="form-group" style="padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.08);">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 110px; color: #facc15; font-weight: 700;">🌟 Brighten Boost</label>
+          <input type="range" id="brightenBoostSlider" min="0.8" max="2.8" step="0.05" value="1.4" oninput="updateLightingBoost()">
+          <span class="slider-val" id="valBrightenBoost" style="color: #facc15;">1.4x</span>
+        </div>
+        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+          Дефолт: 1.4x. Компенсирует тусклость на YouTube и даёт сочный хром
+        </div>
+      </div>
+
       <div class="form-group">
         <div class="slider-row">
-          <label style="margin: 0; min-width: 110px;">Частота волн</label>
-          <input type="range" id="rippleSpeed" min="0" max="3" step="0.1" value="1.2" oninput="updateRipple()">
-          <span class="slider-val" id="valSpeed">1.2x</span>
+          <label style="margin: 0; min-width: 110px; color: #38bdf8;">⚡ Rim Light Pop</label>
+          <input type="range" id="rimLightSlider" min="1.0" max="6.0" step="0.2" value="3.0" oninput="updateLightingBoost()">
+          <span class="slider-val" id="valRimLight">3.0x</span>
+        </div>
+        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+          Яркость неоновых контурных фасок и глубина световых граней
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. DYNAMIC LIQUID & STUDIO BACKGROUNDS -->
+    <div class="control-section" id="backgroundControlSection">
+      <div class="section-title">
+        <span>6. ФОН СТУДИИ И ЖИДКИЙ LIQUID FX</span>
+        <span class="preset-item-badge" style="color: #a855f7;">BACKGROUND</span>
+      </div>
+
+      <div class="form-group">
+        <label>Крутые пресеты фона (Liquid Metal & Cyber Glow):</label>
+        <div class="presets-grid" id="bgPresetsGrid" style="grid-template-columns: repeat(2, 1fr); gap: 6px;">
+          <button type="button" class="preset-btn active" onclick="setStudioBackgroundPreset('deep_black')">
+            ⬛ Deep Cosmos (Чистый)
+          </button>
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('liquid_mercury')">
+            🌊 Liquid Mercury (Ртуть)
+          </button>
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('liquid_gold')">
+            🟡 Molten Gold (Золото)
+          </button>
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('cyber_abyss')">
+            🟣 Cyber Abyss (Неон)
+          </button>
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('dark_iridescent')">
+            🌈 Iridescent Oil (Бензин)
+          </button>
+          <button type="button" class="preset-btn" onclick="setStudioBackgroundPreset('studio_vignette')">
+            🎯 Cinema Vignette (Фокус)
+          </button>
         </div>
       </div>
     </div>
@@ -1248,12 +1294,15 @@
           <div style="font-size: 10px; color: #94a3b8; margin-bottom: 8px; line-height: 1.35;">
             Рендерит точный кадр в официальном разрешении YouTube (2560×1440) со 100% центрированием в Safe Area (1546×423).
           </div>
-          <div style="display: flex; gap: 6px;">
-            <button class="btn btn-secondary" style="flex: 1; border-color: #f59e0b; color: #fde68a; font-weight: 700; font-size: 11px; padding: 8px 6px;" onclick="exportYouTubeBannerPNG('transparent')" title="Скачать 2560x1440 PNG с прозрачным фоном">
-              ✨ Баннер (Alpha)
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
+            <button class="btn btn-secondary" style="border-color: #f59e0b; color: #fde68a; font-weight: 700; font-size: 10px; padding: 8px 4px;" onclick="exportYouTubeBannerPNG('transparent')" title="Скачать 2560x1440 PNG с прозрачным фоном">
+              ✨ Alpha
             </button>
-            <button class="btn btn-secondary" style="flex: 1; border-color: #f59e0b; color: #fde68a; font-weight: 700; font-size: 11px; padding: 8px 6px;" onclick="exportYouTubeBannerPNG('black')" title="Скачать 2560x1440 PNG с тёмным фоном студии">
-              ⬛ Баннер (Тёмный)
+            <button class="btn btn-secondary" style="border-color: #a855f7; color: #e9d5ff; font-weight: 700; font-size: 10px; padding: 8px 4px;" onclick="exportYouTubeBannerPNG('liquid')" title="Скачать 2560x1440 PNG с выбранным Liquid/Студийным фоном">
+              🌊 С фоном
+            </button>
+            <button class="btn btn-secondary" style="border-color: #64748b; color: #cbd5e1; font-weight: 700; font-size: 10px; padding: 8px 4px;" onclick="exportYouTubeBannerPNG('black')" title="Скачать 2560x1440 PNG с тёмным фоном студии">
+              ⬛ Тёмный
             </button>
           </div>
         </div>
@@ -1453,6 +1502,7 @@
     // --- THREE.JS REAL 3D SCENE SETUP ---
     const threeContainer = document.getElementById('three-3d-canvas');
     let threeScene, threeCamera, threeRenderer, threeCurrentMesh, threeControls;
+    let threeAmbLight = null, threeMainLight = null, threeBlueRim = null, threePinkRim = null;
     let envTexture = null;
 
     function initThree3D() {
@@ -1490,20 +1540,20 @@
       });
 
       // Studio Lighting
-      const ambLight = new THREE.AmbientLight(0xffffff, 1.2);
-      threeScene.add(ambLight);
+      threeAmbLight = new THREE.AmbientLight(0xffffff, 1.2);
+      threeScene.add(threeAmbLight);
 
-      const mainLight = new THREE.DirectionalLight(0xffffff, 3.5);
-      mainLight.position.set(120, 160, 150);
-      threeScene.add(mainLight);
+      threeMainLight = new THREE.DirectionalLight(0xffffff, 3.5);
+      threeMainLight.position.set(120, 160, 150);
+      threeScene.add(threeMainLight);
 
-      const blueRim = new THREE.DirectionalLight(0x6366f1, 3.0);
-      blueRim.position.set(-160, -100, 80);
-      threeScene.add(blueRim);
+      threeBlueRim = new THREE.DirectionalLight(0x6366f1, 3.0);
+      threeBlueRim.position.set(-160, -100, 80);
+      threeScene.add(threeBlueRim);
 
-      const pinkRim = new THREE.DirectionalLight(0xec4899, 3.0);
-      pinkRim.position.set(160, -120, -100);
-      threeScene.add(pinkRim);
+      threePinkRim = new THREE.DirectionalLight(0xec4899, 3.0);
+      threePinkRim.position.set(160, -120, -100);
+      threeScene.add(threePinkRim);
 
       createProceduralEnvMap();
       load3DFonts();
@@ -2570,6 +2620,108 @@
     function updateSparkleGlide() {
       const spd = parseFloat(document.getElementById('sparkleGlideSpeed').value);
       document.getElementById('valSparkleGlide').innerText = spd + 'x';
+    }
+
+    // --- 🌟 BRIGHTEN BOOST & LIGHTING POP SYSTEM ---
+    function updateLightingBoost() {
+      const expEl = document.getElementById('brightenBoostSlider');
+      const rimEl = document.getElementById('rimLightSlider');
+      const exp = expEl ? parseFloat(expEl.value) : 1.4;
+      const rim = rimEl ? parseFloat(rimEl.value) : 3.0;
+
+      const valExp = document.getElementById('valBrightenBoost');
+      const valRim = document.getElementById('valRimLight');
+      if (valExp) valExp.innerText = exp.toFixed(2) + 'x';
+      if (valRim) valRim.innerText = rim.toFixed(1) + 'x';
+
+      if (threeRenderer) {
+        threeRenderer.toneMappingExposure = exp;
+      }
+      if (threeMainLight) {
+        threeMainLight.intensity = 2.5 * (exp / 1.4);
+      }
+      if (threeAmbLight) {
+        threeAmbLight.intensity = 1.0 * (exp / 1.4);
+      }
+      if (threeBlueRim) {
+        threeBlueRim.intensity = rim;
+      }
+      if (threePinkRim) {
+        threePinkRim.intensity = rim;
+      }
+    }
+
+    // --- 🌊 DYNAMIC STUDIO BACKGROUND SYSTEM (HIGH-SPEED 2D PROCEDURAL CANVAS) ---
+    let activeBgPreset = 'deep_black';
+    const bgGradients = {
+      deep_black: { name: '⬛ Deep Cosmos (Чистый)', bg: '#000000', center: '#030508', edge: '#000000', accent: 'none' },
+      liquid_mercury: { name: '🌊 Liquid Mercury (Ртуть)', bg: '#05070c', center: '#222f3e', edge: '#04060a', accent: 'rgba(255,255,255,0.06)' },
+      liquid_gold: { name: '🟡 Molten Gold (Золото)', bg: '#080501', center: '#3b2204', edge: '#050301', accent: 'rgba(245,158,11,0.08)' },
+      cyber_abyss: { name: '🟣 Cyber Abyss (Неон)', bg: '#06030b', center: '#2d0f4d', edge: '#040207', accent: 'rgba(168,85,247,0.08)' },
+      dark_iridescent: { name: '🌈 Iridescent Oil (Бензин)', bg: '#04080a', center: '#133535', edge: '#020508', accent: 'rgba(56,189,248,0.07)' },
+      studio_vignette: { name: '🎯 Cinema Vignette (Фокус)', bg: '#020305', center: '#182030', edge: '#010203', accent: 'none' }
+    };
+
+    function drawStudioBackground(targetCanvas, width, height, presetKey = activeBgPreset) {
+      if (!targetCanvas) return;
+      const ctx = targetCanvas.getContext('2d');
+      if (!ctx) return;
+      const cfg = bgGradients[presetKey] || bgGradients.deep_black;
+
+      ctx.save();
+      ctx.fillStyle = cfg.bg;
+      ctx.fillRect(0, 0, width, height);
+
+      const cx = width / 2;
+      const cy = height / 2;
+      const radius = Math.max(width, height) * 0.7;
+
+      const grad = ctx.createRadialGradient(cx, cy, 40, cx, cy, radius);
+      grad.addColorStop(0, cfg.center);
+      grad.addColorStop(0.55, cfg.bg);
+      grad.addColorStop(1, cfg.edge);
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, width, height);
+
+      if (cfg.accent !== 'none') {
+        ctx.fillStyle = cfg.accent;
+        // Soft organic liquid glow caustics in background
+        for (let i = 0; i < 24; i++) {
+          ctx.beginPath();
+          const angle = (i / 24) * Math.PI * 2;
+          const rDist = 200 + (i % 3) * 80;
+          ctx.ellipse(cx + Math.cos(angle) * rDist, cy + Math.sin(angle) * (rDist * 0.55), 140, 50, angle + 0.3, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      ctx.restore();
+    }
+
+    function setStudioBackgroundPreset(presetKey) {
+      activeBgPreset = presetKey;
+      document.querySelectorAll('#bgPresetsGrid .preset-btn').forEach(b => b.classList.remove('active'));
+      if (typeof event !== 'undefined' && event && event.target) {
+        event.target.classList.add('active');
+      }
+
+      const viewport = document.getElementById('viewportArea');
+      if (viewport) {
+        const cfg = bgGradients[presetKey] || bgGradients.deep_black;
+        if (presetKey === 'deep_black') {
+          viewport.style.background = '#000000';
+        } else if (presetKey === 'liquid_mercury') {
+          viewport.style.background = 'radial-gradient(circle at center, #1e293b 0%, #0f172a 45%, #020617 80%, #000000 100%)';
+        } else if (presetKey === 'liquid_gold') {
+          viewport.style.background = 'radial-gradient(circle at center, #351f04 0%, #1a0e02 45%, #080401 80%, #000000 100%)';
+        } else if (presetKey === 'cyber_abyss') {
+          viewport.style.background = 'radial-gradient(circle at center, #2e1050 0%, #130624 45%, #05010a 80%, #000000 100%)';
+        } else if (presetKey === 'dark_iridescent') {
+          viewport.style.background = 'radial-gradient(circle at center, #10332f 0%, #0f162e 45%, #040612 80%, #000000 100%)';
+        } else if (presetKey === 'studio_vignette') {
+          viewport.style.background = 'radial-gradient(circle at center, #1b253b 0%, #090e18 45%, #020408 80%, #000000 100%)';
+        }
+        showToast('🎨 Фон студии: ' + cfg.name);
+      }
     }
 
     // --- MODE SWITCHER ---
@@ -4380,11 +4532,22 @@
         // Render current 3D position
         threeRenderer.render(threeScene, threeCamera);
 
-        const canvas = threeRenderer.domElement;
+        let finalCanvas = threeRenderer.domElement;
+
+        if (bgMode === 'liquid') {
+          const comp = document.createElement('canvas');
+          comp.width = 2560;
+          comp.height = 1440;
+          drawStudioBackground(comp, 2560, 1440, activeBgPreset);
+          const compCtx = comp.getContext('2d');
+          compCtx.drawImage(threeRenderer.domElement, 0, 0, 2560, 1440);
+          finalCanvas = comp;
+        }
+
         const link = document.createElement('a');
-        const bgSuffix = (bgMode === 'transparent') ? 'alpha_transparent' : 'studio_dark';
+        const bgSuffix = (bgMode === 'transparent') ? 'alpha_transparent' : (bgMode === 'liquid' ? `liquid_${activeBgPreset}` : 'studio_dark');
         link.download = `kirtsoy_youtube_banner_2560x1440_${bgSuffix}_${Date.now()}.png`;
-        link.href = canvas.toDataURL('image/png', 1.0);
+        link.href = finalCanvas.toDataURL('image/png', 1.0);
         document.body.appendChild(link);
         link.click();
         setTimeout(() => link.remove(), 1000);
