@@ -908,19 +908,25 @@
 
       <!-- Cinematic Transitions Controls -->
       <div class="form-group" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--card-border);">
-        <label style="color: #cbd5e1; font-weight: 700; margin-bottom: 8px;">🎬 Кинематографичные транзишены (Интро):</label>
+        <label style="color: #cbd5e1; font-weight: 700; margin-bottom: 8px;">🎬 РЕЖИССЁРСКИЙ ПУЛЬТ АНИМАЦИИ (ТВИЧ-ШКАЛА):</label>
         <div style="display: flex; flex-direction: column; gap: 6px;">
-          <button class="btn btn-primary" style="font-size: 11px; padding: 10px;" onclick="startTransition('swoop_lift')">
-            🚀 1. Круг 360° + синхронный влёт цепи -> унос ВВЕРХ
+          <button class="btn btn-primary" style="font-size: 11px; padding: 10px; background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%); border-color: #a855f7; font-weight: 800;" onclick="startTransition('swoop_lift')" title="Цель достигнута: Доворот к нам -> 360° -> Влёт цепи в 't' -> Унос ВВЕРХ">
+            🚀 1. Апофеоз цели: Доворот -> 360° -> Цепь -> Унос ВВЕРХ
+          </button>
+          <button class="btn btn-primary" style="font-size: 11px; padding: 10px; background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); border-color: #f59e0b; color: #fff; font-weight: 800;" onclick="startTransition('slam_return')" title="Возврат кулона: Слэм с неба -> Джиггл -> Уход цепи -> Возврат в ракурс">
+            ⚡ 2. Возврат цели: Слэм с неба -> Джиггл -> Уход цепи -> Ракурс
+          </button>
+          <button class="btn btn-secondary" style="font-size: 11px; padding: 8px; border-color: #38bdf8; color: #bae6fd; font-weight: 700; background: rgba(56,189,248,0.12);" onclick="startTransition('idle_wobble_loop')" title="Пассивное ожидание донатов: Бесшовный 4.0-сек цикл воббла (частота 1x)">
+            🌊 3. Пассивный луп: Бесшовный воббл пресета (4 сек, частота 1x)
           </button>
           <div style="display: flex; gap: 6px;">
-            <button class="btn btn-secondary" style="font-size: 11px; padding: 8px; flex: 1.2;" onclick="startTransition('thread_snake')">
-              🧵 2. Вдеть сквозь "t"
+            <button class="btn btn-secondary" style="font-size: 10px; padding: 6px; flex: 1.2;" onclick="startTransition('thread_snake')">
+              🧵 Тест влёта "t"
             </button>
-            <button class="btn btn-secondary" style="font-size: 11px; padding: 8px; flex: 1;" onclick="startTransition('hanging_swing')">
-              🕺 3. На шее
+            <button class="btn btn-secondary" style="font-size: 10px; padding: 6px; flex: 1;" onclick="startTransition('hanging_swing')">
+              🕺 Качание
             </button>
-            <button class="btn btn-secondary" style="font-size: 11px; padding: 8px; flex: 0.8;" onclick="stopTransition()">
+            <button class="btn btn-secondary" style="font-size: 10px; padding: 6px; flex: 0.8; color: #ef4444; border-color: rgba(239,68,68,0.4);" onclick="stopTransition()">
               ⏹️ Стоп
             </button>
           </div>
@@ -1379,6 +1385,16 @@
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Animation Selection for Export -->
+        <div class="form-group" style="margin-bottom: 8px;">
+          <label style="font-size: 11px; color: #cbd5e1; font-weight: 700; margin-bottom: 4px; display: block;">🎯 Выбор анимации для экспорта:</label>
+          <select id="exportAnimationSelect" class="form-control" style="font-size: 11px; font-weight: 700; background: rgba(15, 23, 42, 0.9); border-color: #6366f1; color: #f8fafc; padding: 6px 8px;">
+            <option value="swoop_lift" selected>🚀 1. Апофеоз цели (Доворот -> 360° -> Цепь -> Унос ВВЕРХ)</option>
+            <option value="slam_return">⚡ 2. Возврат цели (Слэм с неба -> Джиггл -> Уход цепи -> Ракурс)</option>
+            <option value="idle_wobble_loop">🌊 3. Пассивный бесшовный луп (4.0s, ракурс YouTube Banner)</option>
+          </select>
+        </div>
+
         <!-- Studio Zero-Loss Exporter -->
         <div style="padding: 10px; background: rgba(56, 189, 248, 0.08); border: 1px solid rgba(56, 189, 248, 0.35); border-radius: 10px;">
           <div style="font-size: 11px; font-weight: 800; color: #38bdf8; margin-bottom: 4px; display: flex; align-items: center; justify-content: space-between;">
@@ -1525,8 +1541,14 @@
       <button type="button" class="hud-badge" style="color: #38bdf8; border-color: rgba(56,189,248,0.4); display: flex; align-items: center; gap: 4px;" onclick="resetCameraFront()" title="Выровнять камеру строго по центру лица кулона">
         🎥 Фронт
       </button>
-      <button type="button" class="hud-badge" style="color: #a855f7; border-color: rgba(168,85,247,0.5); font-weight: 700; display: flex; align-items: center; gap: 4px;" onclick="startTransition('swoop_lift')" title="Запустить полное интро: 360° + непрерывный влёт цепи в 't' -> унос ВВЕРХ">
-        🚀 360° + Унос ВВЕРХ
+      <button type="button" class="hud-badge" style="color: #a855f7; border-color: rgba(168,85,247,0.5); font-weight: 700; display: flex; align-items: center; gap: 4px;" onclick="startTransition('swoop_lift')" title="1. Апофеоз цели: Доворот -> 360° -> Цепь -> Унос ВВЕРХ">
+        🚀 1. Апофеоз
+      </button>
+      <button type="button" class="hud-badge" style="color: #f59e0b; border-color: rgba(245,158,11,0.5); font-weight: 700; display: flex; align-items: center; gap: 4px;" onclick="startTransition('slam_return')" title="2. Возврат цели: Слэм с неба -> Джиггл -> Уход цепи -> Возврат в ракурс">
+        ⚡ 2. Слэм-возврат
+      </button>
+      <button type="button" class="hud-badge" style="color: #38bdf8; border-color: rgba(56,189,248,0.5); font-weight: 700; display: flex; align-items: center; gap: 4px;" onclick="startTransition('idle_wobble_loop')" title="3. Пассивный бесшовный луп 4.0 сек">
+        🌊 3. Пассивный луп
       </button>
       <button type="button" class="hud-badge" style="color: #94a3b8; border-color: rgba(255,255,255,0.15); display: flex; align-items: center; gap: 4px;" onclick="stopTransition()" title="Остановить и вернуть кулон в центр">
         ⏹️ Сброс
@@ -1847,6 +1869,17 @@
         }
       }
       return (low + high) / 2;
+    }
+
+    // Unified harmonic wobble: exactly 4.0s integer period at 1.0x speed with 0 displacement at t=0 and t=4.0s
+    function getHarmonicWobble(tSec, rSpeed = 1.0, ripple = 0.35) {
+      if (ripple <= 0) return { y: 0, rotX: 0, rotZ: 0 };
+      const omega = 1.57079632679 * rSpeed; // 2*PI / 4.0
+      return {
+        y: Math.sin(2.0 * omega * tSec) * (3.0 * ripple),
+        rotZ: Math.sin(omega * tSec) * (0.04 * ripple),
+        rotX: (Math.cos(omega * tSec) - 1.0) * (0.02 * ripple)
+      };
     }
 
     function toggleThreadedChain() {
@@ -2365,18 +2398,14 @@
         chainEnabled = true;
         const chk = document.getElementById('chainToggle');
         if (chk) chk.checked = true;
-        if (!threeChainMesh) {
-          rebuildThreadedChain();
-        }
-        if (threeChainMesh) {
-          threeChainMesh.visible = false;
-        }
+        if (!threeChainMesh) rebuildThreadedChain();
+        if (threeChainMesh) threeChainMesh.visible = false;
         updateChainThreading(0.0);
+
         const alignToggle = document.getElementById('introAlignToggle');
         const alignEnabled = alignToggle ? alignToggle.checked : true;
 
         if (alignEnabled) {
-          // Capture current angles if introStartPose not initialized
           if (introStartPose.rotX === 0 && introStartPose.rotY === 0 && introStartPose.rotZ === 0) {
             if (baseMeshRot && (baseMeshRot.x !== 0 || baseMeshRot.y !== 0 || baseMeshRot.z !== 0)) {
               introStartPose.rotX = baseMeshRot.x;
@@ -2385,17 +2414,8 @@
               introStartPose.posX = baseMeshPos ? baseMeshPos.x : 0;
               introStartPose.posY = baseMeshPos ? baseMeshPos.y : 0;
               introStartPose.posZ = baseMeshPos ? baseMeshPos.z : 0;
-            } else if (threeCurrentMesh) {
-              introStartPose.rotX = threeCurrentMesh.rotation.x;
-              introStartPose.rotY = threeCurrentMesh.rotation.y;
-              introStartPose.rotZ = threeCurrentMesh.rotation.z;
-              introStartPose.posX = threeCurrentMesh.position.x;
-              introStartPose.posY = threeCurrentMesh.position.y;
-              introStartPose.posZ = threeCurrentMesh.position.z;
             }
           }
-
-          // Set initial frame 0 pose without any visual pop
           if (threeCurrentMesh) {
             threeCurrentMesh.position.set(introStartPose.posX, introStartPose.posY, introStartPose.posZ);
             threeCurrentMesh.rotation.set(introStartPose.rotX, introStartPose.rotY, introStartPose.rotZ);
@@ -2412,7 +2432,7 @@
               threeControls.update();
             }
           }
-          showToast('🚀 Интро: Ракурс пресета -> Доворот к нам -> Вращение 360° -> Влёт цепи в "t" -> Унос ВВЕРХ!');
+          showToast('🚀 Анимация 1: Доворот к нам -> 360° -> Влёт цепи в "t" -> Унос ВВЕРХ!');
         } else {
           resetCameraFront();
           if (threeCurrentMesh) {
@@ -2423,8 +2443,20 @@
             threeChainMesh.position.set(0, 0, 0);
             threeChainMesh.rotation.set(0, 0, 0);
           }
-          showToast('🚀 Интро: 360° Turntable -> Влёт цепи в "t" -> Плавный Фрифолл + Джиггл -> Унос ВВЕРХ!');
+          showToast('🚀 Анимация 1: 360° Turntable -> Влёт цепи в "t" -> Фрифолл -> Унос ВВЕРХ!');
         }
+      } else if (mode === 'slam_return') {
+        chainEnabled = true;
+        const chk = document.getElementById('chainToggle');
+        if (chk) chk.checked = true;
+        if (!threeChainMesh) rebuildThreadedChain();
+        if (threeChainMesh) threeChainMesh.visible = true;
+        updateChainThreading(1.0, 0, 0);
+        showToast('⚡ Анимация 2: Слэм с неба -> Джиггл -> Уход цепи -> Возврат в ракурс');
+      } else if (mode === 'idle_wobble_loop') {
+        if (threeChainMesh) threeChainMesh.visible = false;
+        updateChainThreading(0.0);
+        showToast('🌊 Анимация 0: Пассивный бесшовный 4.0s воббл в ракурсе пресета (частота 1x)');
       } else if (mode === 'thread_snake') {
         updateChainThreading(0.0);
         showToast('🧵 Режим: Влёт одного конца цепи и продёргивание сквозь букву "t"');
@@ -3699,14 +3731,16 @@
           ? 4.0 * prog * prog * prog 
           : 1.0 - Math.pow(-2.0 * prog + 2.0, 3) / 2.0;
 
-        // Smoothly rotate mesh from preset rotation to strict front (0, 0, 0)
-        const curRotX = introStartPose.rotX * (1.0 - ease);
-        const curRotY = introStartPose.rotY * (1.0 - ease);
-        const curRotZ = introStartPose.rotZ * (1.0 - ease);
+        const wobble = getHarmonicWobble(loopTime, rSpeed, ripple);
 
-        // Position stays on its exact place in the same scale!
+        // Smoothly rotate mesh from preset rotation to strict front (0, 0, 0)
+        const curRotX = introStartPose.rotX * (1.0 - ease) + wobble.rotX;
+        const curRotY = introStartPose.rotY * (1.0 - ease);
+        const curRotZ = introStartPose.rotZ * (1.0 - ease) + wobble.rotZ;
+
+        // Position stays on its exact place with continuous harmonic wave breathing!
         const curPosX = introStartPose.posX;
-        const curPosY = introStartPose.posY;
+        const curPosY = introStartPose.posY + wobble.y;
         const curPosZ = introStartPose.posZ;
 
         if (threeCurrentMesh) {
@@ -3766,13 +3800,14 @@
         chainP = 1.0;
       }
 
-      // Living bob & tilt during front and rotation phases
+      // Living bob & tilt during front and rotation phases (continuous seamless harmonic wave!)
       const blendSettle = (loopTime >= t.tHoleTarget && loopTime < t.tAnchorEnd)
         ? Math.max(0.0, (t.tAnchorEnd - loopTime) / Math.max(0.001, t.tAnchorEnd - t.tHoleTarget))
         : 1.0;
-      const bobY = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple) * blendSettle;
-      const tiltZ = Math.sin(timeSec * rSpeed) * (0.04 * ripple) * blendSettle;
-      const tiltX = Math.cos(timeSec * rSpeed * 1.5) * (0.02 * ripple) * blendSettle;
+      const wobble = getHarmonicWobble(loopTime, rSpeed, ripple);
+      const bobY = wobble.y * blendSettle;
+      const tiltZ = wobble.rotZ * blendSettle;
+      const tiltX = wobble.rotX * blendSettle;
 
       if (loopTime < t.tAnchorEnd) {
         // Stage 0, 1 & 2: 360° Velvet spin and chain threading into hole & right anchor
@@ -3856,6 +3891,178 @@
       }
     }
 
+    // --- ANIMATION 2: SLAM DROP, CATENARY REBOUND & RETURN TO PRESET (5.0s SEQUENCE) ---
+    function applySlamReturnFrame(loopTime, timeSec = loopTime) {
+      const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
+      const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
+
+      const dist = parseFloat(document.getElementById('camDistanceSlider')?.value || 240);
+      const offY = parseFloat(document.getElementById('camOffsetYSlider')?.value || 0);
+      const offX = parseFloat(document.getElementById('camOffsetXSlider')?.value || 0);
+
+      // Stage 1: High-Gravity Plunge from Sky (0.0 to 0.55s)
+      if (loopTime < 0.55) {
+        const s = loopTime / 0.55;
+        const plungeY = 880.0 * (1.0 - s * s);
+        const plungeTiltX = -0.35 * (1.0 - s);
+
+        if (threeCurrentMesh) {
+          threeCurrentMesh.position.set(0, plungeY, 0);
+          threeCurrentMesh.rotation.set(plungeTiltX, 0, 0);
+        }
+        if (threeChainMesh) {
+          threeChainMesh.position.set(0, plungeY, 0);
+          threeChainMesh.rotation.set(plungeTiltX * 0.8, 0, 0);
+          threeChainMesh.visible = true;
+        }
+        updateChainThreading(1.0, 0, 0);
+
+        if (threeCamera && threeControls) {
+          threeCamera.position.set(offX, offY, dist);
+          threeControls.target.set(offX, offY, 0);
+          threeCamera.lookAt(offX, offY, 0);
+          threeControls.update();
+        }
+        return;
+      }
+
+      // Stage 2: Heavy Gold Viscoelastic Rebound, Overshoot & Catenary Jiggle (0.55 to 2.2s)
+      if (loopTime < 2.2) {
+        const tau = loopTime - 0.55;
+        const gammaY = 3.4;
+        const omegaY = 7.6;
+        const Ay = -26.0;
+        const By = -130.0 / omegaY;
+        const decayY = Math.exp(-gammaY * tau);
+        const bounceY = decayY * (Ay * Math.cos(omegaY * tau) + By * Math.sin(omegaY * tau));
+
+        const swayX = 14.0 * Math.exp(-2.2 * tau) * Math.sin(5.6 * tau);
+        const rotZ = (swayX / 140.0) - 0.045 * decayY * Math.sin(7.6 * tau);
+        const rotX = 0.028 * Math.exp(-3.0 * tau) * (Math.cos(6.5 * tau) - 1.0);
+
+        updateChainThreading(1.0, bounceY, swayX);
+
+        if (threeCurrentMesh) {
+          threeCurrentMesh.position.set(swayX, bounceY, 0);
+          threeCurrentMesh.rotation.set(rotX, 0, rotZ);
+        }
+        if (threeChainMesh) {
+          threeChainMesh.position.set(0, 0, 0);
+          threeChainMesh.rotation.set(0, 0, 0);
+          threeChainMesh.visible = true;
+        }
+
+        if (threeCamera && threeControls) {
+          threeCamera.position.set(offX, offY, dist);
+          threeControls.target.set(offX, offY, 0);
+          threeCamera.lookAt(offX, offY, 0);
+          threeControls.update();
+        }
+        return;
+      }
+
+      // Stage 3: Chain Ascent & Departure Upward (2.2 to 3.4s)
+      if (loopTime < 3.4) {
+        const liftT = (loopTime - 2.2) / 1.2;
+        const liftEase = liftT * liftT * (3.0 - 2.0 * liftT);
+        const chainY = liftEase * 940.0;
+
+        if (threeChainMesh) {
+          threeChainMesh.position.set(0, chainY, 0);
+          threeChainMesh.rotation.set(0, 0, 0);
+          threeChainMesh.visible = (liftT < 0.96);
+        }
+        updateChainThreading(1.0, 0, 0);
+
+        const wobble = getHarmonicWobble(loopTime - 2.2, rSpeed, ripple);
+        if (threeCurrentMesh) {
+          threeCurrentMesh.position.set(0, wobble.y, 0);
+          threeCurrentMesh.rotation.set(wobble.rotX, 0, wobble.rotZ);
+        }
+
+        if (threeCamera && threeControls) {
+          threeCamera.position.set(offX, offY, dist);
+          threeControls.target.set(offX, offY, 0);
+          threeCamera.lookAt(offX, offY, 0);
+          threeControls.update();
+        }
+        return;
+      }
+
+      // Stage 4: Smooth Rotation from Front (0, 0, 0) back to Preset Angle (3.4 to 4.8s)
+      if (threeChainMesh) {
+        threeChainMesh.visible = false;
+      }
+      updateChainThreading(0.0);
+
+      const turnProg = Math.min(1.0, Math.max(0.0, (loopTime - 3.4) / 1.4));
+      const ease = (turnProg < 0.5)
+        ? 4.0 * turnProg * turnProg * turnProg
+        : 1.0 - Math.pow(-2.0 * turnProg + 2.0, 3) / 2.0;
+
+      const wobble = getHarmonicWobble(loopTime - 2.2, rSpeed, ripple);
+      // Soft landing dampener as we reach 5.0s so it lands seamlessly on Frame 0 of Idle Loop
+      const landingDamp = (loopTime >= 4.8) ? Math.max(0.0, (5.0 - loopTime) / 0.2) : 1.0;
+
+      const curRotX = introStartPose.rotX * ease + wobble.rotX * landingDamp;
+      const curRotY = introStartPose.rotY * ease;
+      const curRotZ = introStartPose.rotZ * ease + wobble.rotZ * landingDamp;
+
+      const curPosX = introStartPose.posX * ease;
+      const curPosY = introStartPose.posY * ease + wobble.y * landingDamp;
+      const curPosZ = introStartPose.posZ * ease;
+
+      if (threeCurrentMesh) {
+        threeCurrentMesh.position.set(curPosX, curPosY, curPosZ);
+        threeCurrentMesh.rotation.set(curRotX, curRotY, curRotZ);
+      }
+
+      // Camera glides back to preset framing
+      if (threeCamera && introStartPose.camZ) {
+        const curCamX = offX + (introStartPose.camX - offX) * ease;
+        const curCamY = offY + (introStartPose.camY - offY) * ease;
+        const curCamZ = dist + (introStartPose.camZ - dist) * ease;
+        threeCamera.position.set(curCamX, curCamY, curCamZ);
+
+        const curTgtX = offX + (introStartPose.camTargetX - offX) * ease;
+        const curTgtY = offY + (introStartPose.camTargetY - offY) * ease;
+        const curTgtZ = 0.0 + (introStartPose.camTargetZ - 0.0) * ease;
+        if (threeControls) {
+          threeControls.target.set(curTgtX, curTgtY, curTgtZ);
+          threeCamera.lookAt(threeControls.target);
+          threeControls.update();
+        }
+      }
+    }
+
+    // --- ANIMATION 0: PASSIVE SEAMLESS IDLE WOBBLE LOOP (4.0s CYCLE) ---
+    function applyIdleWobbleFrame(loopTime, timeSec = loopTime) {
+      const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
+      const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
+
+      if (threeChainMesh) {
+        threeChainMesh.visible = false;
+      }
+      updateChainThreading(0.0);
+
+      // Camera locked to preset framing
+      if (threeCamera && introStartPose.camZ) {
+        threeCamera.position.set(introStartPose.camX, introStartPose.camY, introStartPose.camZ);
+        if (threeControls) {
+          threeControls.target.set(introStartPose.camTargetX, introStartPose.camTargetY, introStartPose.camTargetZ);
+          threeCamera.lookAt(threeControls.target);
+          threeControls.update();
+        }
+      }
+
+      // Continuous 4.0-second seamless harmonic wave loop! (Frame 0 == Frame 4.0s == clean preset pose)
+      const wobble = getHarmonicWobble(loopTime, rSpeed, ripple);
+      if (threeCurrentMesh) {
+        threeCurrentMesh.position.set(introStartPose.posX, introStartPose.posY + wobble.y, introStartPose.posZ);
+        threeCurrentMesh.rotation.set(introStartPose.rotX + wobble.rotX, introStartPose.rotY, introStartPose.rotZ + wobble.rotZ);
+      }
+    }
+
     let startTime = performance.now();
     let lastFpsTime = startTime;
     let frames = 0;
@@ -3886,6 +4093,14 @@
           const timing = getIntroTimingInfo();
           const loopTime = elapsed % timing.loopDuration;
           applyIntroSwoopFrame(loopTime, timeSec, timing);
+        } else if (transitionMode === 'slam_return') {
+          const elapsed = (now - transitionStartTime) * 0.001;
+          const loopTime = elapsed % 5.0; // 5.0s loop
+          applySlamReturnFrame(loopTime, timeSec);
+        } else if (transitionMode === 'idle_wobble_loop') {
+          const elapsed = (now - transitionStartTime) * 0.001;
+          const loopTime = elapsed % 4.0; // 4.0s perfect seamless loop
+          applyIdleWobbleFrame(loopTime, timeSec);
         } else if (transitionMode === 'thread_snake') {
           // Dedicated threading inspection with dynamic rotation and chain timing
           const elapsed = (now - transitionStartTime) * 0.001;
@@ -3975,24 +4190,16 @@
             threeChainMesh.position.y = -bobY * 0.5;
           }
         } else {
-          // Default Turntable & Gentle Ripple
+          // Default Turntable & Continuous Harmonic Ripple
           const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
-          const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.2);
+          const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
 
           if (threeCurrentMesh) {
             const curBasePos = baseMeshPos || { x: 0, y: 0, z: 0 };
             const curBaseRot = baseMeshRot || { x: 0, y: 0, z: 0 };
-            if (ripple > 0) {
-              threeCurrentMesh.position.y = curBasePos.y + Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
-              threeCurrentMesh.rotation.z = curBaseRot.z + Math.sin(timeSec * rSpeed) * (0.04 * ripple);
-            } else {
-              threeCurrentMesh.position.y = curBasePos.y;
-              threeCurrentMesh.rotation.z = curBaseRot.z;
-            }
-            threeCurrentMesh.position.x = curBasePos.x;
-            threeCurrentMesh.position.z = curBasePos.z;
-            threeCurrentMesh.rotation.x = curBaseRot.x;
-            threeCurrentMesh.rotation.y = curBaseRot.y;
+            const wobble = getHarmonicWobble(timeSec, rSpeed, ripple);
+            threeCurrentMesh.position.set(curBasePos.x, curBasePos.y + wobble.y, curBasePos.z);
+            threeCurrentMesh.rotation.set(curBaseRot.x + wobble.rotX, curBaseRot.y, curBaseRot.z + wobble.rotZ);
           }
           if (threeChainMesh && ripple > 0) {
             threeChainMesh.position.y = Math.sin(timeSec * rSpeed * 2.0) * (3.0 * ripple);
@@ -5511,8 +5718,24 @@
       if (guide169) guide169.style.opacity = '0';
       if (guideYT) guideYT.style.opacity = '0';
 
-      // Reset camera and trigger intro transition
-      startTransition('swoop_lift');
+      // Detect target animation to record
+      const animType = document.getElementById('exportAnimationSelect')?.value || 'swoop_lift';
+      let animDuration = 5.9;
+      let animPrefix = 'intro';
+
+      const timing = getIntroTimingInfo();
+      if (animType === 'swoop_lift') {
+        animDuration = timing.tLiftEnd + 0.1;
+        animPrefix = 'apotheosis_intro';
+      } else if (animType === 'slam_return') {
+        animDuration = 5.0;
+        animPrefix = 'slam_return_outro';
+      } else if (animType === 'idle_wobble_loop') {
+        animDuration = 4.0;
+        animPrefix = 'idle_wobble_loop';
+      }
+
+      startTransition(animType);
 
       const canvas = threeRenderer.domElement;
       const stream = canvas.captureStream ? canvas.captureStream(60) : canvas.mozCaptureStream(60);
@@ -5553,7 +5776,7 @@
         a.style.display = 'none';
         a.href = url;
         const bgSuffix = (bgMode === 'transparent') ? 'alpha_transparent' : 'black_bg';
-        a.download = `kirtsoy_intro_${bgSuffix}_${Date.now()}.webm`;
+        a.download = `kirtsoy_${animPrefix}_${bgSuffix}_${Date.now()}.webm`;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => {
@@ -5566,15 +5789,12 @@
       introMediaRecorder.start(100);
       showToast('🔴 Идёт запись интро (60 FPS, ' + ((bgMode === 'transparent') ? 'Прозрачный Alpha-фон' : 'Чёрный фон') + ')...');
 
-      // Calculate total duration until swoop lift is completed:
-      const timing = getIntroTimingInfo();
-
-      // Auto-stop exactly when the pendant and chain swoop off-screen upward!
+      // Auto-stop exactly when the selected animation finishes
       setTimeout(() => {
         if (introMediaRecorder && introMediaRecorder.state === 'recording') {
           introMediaRecorder.stop();
         }
-      }, Math.round((timing.tLiftEnd + 0.1) * 1000));
+      }, Math.round(animDuration * 1000));
     }
 
     // --- 100% ZERO-LOSS STUDIO OFFLINE RENDERER (PNG SEQUENCE & VIDEO COMPILER) ---
@@ -5640,11 +5860,23 @@
       // Position camera according to user's configured zoom & XY offset
       resetCameraFront();
 
-      // 5. Calculate total frames needed for complete animation
-      const timing = getIntroTimingInfo();
+      // 5. Detect target animation & calculate total frames
+      const animType = document.getElementById('exportAnimationSelect')?.value || 'swoop_lift';
       const fps = 60;
-      // Render until the pendant and chain swoop completely off-screen (+0.1s margin)
-      const totalDuration = timing.tLiftEnd + 0.1;
+      let totalDuration = 0;
+      let animPrefix = 'intro';
+
+      const timing = getIntroTimingInfo();
+      if (animType === 'swoop_lift') {
+        totalDuration = timing.tLiftEnd + 0.1;
+        animPrefix = 'apotheosis_intro';
+      } else if (animType === 'slam_return') {
+        totalDuration = 5.0;
+        animPrefix = 'slam_return_outro';
+      } else if (animType === 'idle_wobble_loop') {
+        totalDuration = 4.0;
+        animPrefix = 'idle_wobble_loop';
+      }
       const totalFrames = Math.ceil(totalDuration * fps);
 
       const zip = new JSZip();
@@ -5659,8 +5891,14 @@
 
           const loopTime = frameIdx / fps;
 
-          // Mathematical precision frame state setup
-          applyIntroSwoopFrame(loopTime, loopTime, timing);
+          // Mathematical precision frame state setup for selected sequence
+          if (animType === 'swoop_lift') {
+            applyIntroSwoopFrame(loopTime, loopTime, timing);
+          } else if (animType === 'slam_return') {
+            applySlamReturnFrame(loopTime, loopTime);
+          } else if (animType === 'idle_wobble_loop') {
+            applyIdleWobbleFrame(loopTime, loopTime);
+          }
 
           // Render Three.js frame
           threeRenderer.render(threeScene, threeCamera);
@@ -5670,7 +5908,7 @@
           const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
           if (!blob) throw new Error('Не удалось захватить PNG буфер кадра');
 
-          const frameFilename = `kirtsoy_intro_${String(frameIdx).padStart(5, '0')}.png`;
+          const frameFilename = `kirtsoy_${animPrefix}_${String(frameIdx).padStart(5, '0')}.png`;
           zip.file(frameFilename, blob);
 
           // Update thumbnail preview every 3 frames
