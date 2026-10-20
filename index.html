@@ -1822,6 +1822,32 @@
     let activeChainLinkLen = 3.6;
     let chainThreadingProgress = 1.0; // 0.0 to 1.0 (1.0 = fully threaded settled necklace)
     let chainThreadingDirection = 'ltr'; // 'ltr' (left to right) or 'rtl' (right to left)
+    let activeCurveSettledStart = 0.236;
+    let activeCurveSettledEnd = 0.764;
+    let activeCurveHalfSpan = 0.264;
+    let activeCurveHoleT = 0.500;
+
+    function getCurveParamForPt(curv, targetPt) {
+      if (!curv || !targetPt) return 0.5;
+      let bestT = 0, bestDist = Infinity;
+      const samples = 120;
+      for (let s = 0; s <= samples; s++) {
+        const t = s / samples;
+        const d = curv.getPointAt(t).distanceToSquared(targetPt);
+        if (d < bestDist) { bestDist = d; bestT = t; }
+      }
+      let low = Math.max(0, bestT - 0.015), high = Math.min(1, bestT + 0.015);
+      for (let s = 0; s < 12; s++) {
+        const mid1 = low + (high - low) / 3;
+        const mid2 = high - (high - low) / 3;
+        if (curv.getPointAt(mid1).distanceToSquared(targetPt) < curv.getPointAt(mid2).distanceToSquared(targetPt)) {
+          high = mid2;
+        } else {
+          low = mid1;
+        }
+      }
+      return (low + high) / 2;
+    }
 
     function toggleThreadedChain() {
       const chk = document.getElementById('chainToggle');
@@ -1918,7 +1944,8 @@
 
       // 11-point extended catenary trajectory:
       // Offscreen top-left -> descent -> align to crossbar -> through hole in 't' -> exit -> ascent -> offscreen top-right
-      const p_start = new THREE.Vector3(coords.xCenter - 140, coords.yBail + 110 * sag, -50);
+      // Deep offscreen start & end ensures zero premature pop-in across any tilted/wide camera angle!
+      const p_start = new THREE.Vector3(coords.xCenter - 220, coords.yBail + 165 * sag, -70);
       const p0 = new THREE.Vector3(coords.xCenter - 75, coords.yBail + 55 * sag, -26);
       const p1 = new THREE.Vector3(coords.xCenter - 38, coords.yBail + 22 * sag, -12);
       const p2 = new THREE.Vector3(coords.xLeft - 10, coords.yBail + 2.5 * sag, -2);
@@ -1928,16 +1955,21 @@
       const p6 = new THREE.Vector3(coords.xRight + 10, coords.yBail + 2.5 * sag, -2);
       const p7 = new THREE.Vector3(coords.xCenter + 38, coords.yBail + 22 * sag, -12);
       const p8 = new THREE.Vector3(coords.xCenter + 75, coords.yBail + 55 * sag, -26);
-      const p_end = new THREE.Vector3(coords.xCenter + 140, coords.yBail + 110 * sag, -50);
+      const p_end = new THREE.Vector3(coords.xCenter + 220, coords.yBail + 165 * sag, -70);
 
       const curve = new THREE.CatmullRomCurve3([p_start, p0, p1, p2, p3, p4, p5, p6, p7, p8, p_end]);
       const curveLength = curve.getLength();
 
+      activeCurveSettledStart = getCurveParamForPt(curve, p0);
+      activeCurveSettledEnd = getCurveParamForPt(curve, p8);
+      activeCurveHalfSpan = (activeCurveSettledEnd - activeCurveSettledStart) / 2;
+      activeCurveHoleT = getCurveParamForPt(curve, p4);
+
       // Authentic Miami Cuban curb link sizing & tight interlocking pitch
       const linkLen = 3.6 * linkScale;
       const pitch = linkLen * 0.486; // Overlapping curb pitch
-      // Settled span covers 0.528 of the full extended curve
-      const settledLength = curveLength * 0.528;
+      // Settled span dynamically covers the exact necklace curve between p0 and p8:
+      const settledLength = curveLength * (activeCurveSettledEnd - activeCurveSettledStart);
       const linkCount = Math.max(30, Math.floor(settledLength / pitch));
 
       let baseLinkGeo;
@@ -1977,23 +2009,36 @@
       const dummy = new THREE.Object3D();
       const defaultDir = new THREE.Vector3(1, 0, 0);
 
-      // On our 11-point curve:
-      // t = 0.00: Far top-left offscreen
-      // t = 0.236: Settled left anchor (p0)
-      // t = 0.485: Hole entrance in letter 't'
-      // t = 0.500: Hole center inside 't'
-      // t = 0.515: Hole exit in letter 't'
-      // t = 0.764: Settled right anchor (p8)
-      // t = 1.00: Far top-right offscreen
+      // Strict Zero-Visibility Clamp:
+      // If threading progress is 0 (or chain is disabled), completely hide the mesh and collapse all links!
+      if (chainThreadingProgress <= 0.0001 || !chainEnabled) {
+        for (let i = 0; i < activeChainLinkCount; i++) {
+          dummy.position.set(0, -99999, 0);
+          dummy.scale.set(0, 0, 0);
+          dummy.updateMatrix();
+          threeChainMesh.setMatrixAt(i, dummy.matrix);
+        }
+        threeChainMesh.instanceMatrix.needsUpdate = true;
+        threeChainMesh.visible = false;
 
-      const tSettledStart = 0.236;
-      const tSettledEnd = 0.764;
-      const span = tSettledEnd - tSettledStart; // 0.528
+        const scrubEl = document.getElementById('threadScrubSlider');
+        const valEl = document.getElementById('valThreadProgress');
+        if (scrubEl && document.activeElement !== scrubEl) scrubEl.value = 0;
+        if (valEl) valEl.innerText = '0% (Цепь скрыта / готов к влёту)';
+        return;
+      }
+
+      threeChainMesh.visible = true;
+
+      const tSettledStart = activeCurveSettledStart || 0.236;
+      const tSettledEnd = activeCurveSettledEnd || 0.764;
+      const span = tSettledEnd - tSettledStart;
       const deltaT = span / (activeChainLinkCount - 1);
-      const halfSpan = 0.264;
+      const halfSpan = activeCurveHalfSpan || (span / 2);
+      const holeT = activeCurveHoleT || ((tSettledStart + tSettledEnd) / 2);
 
-      // In 'ltr': head enters at t=0.03 (offscreen top-left) and travels to tSettledEnd (0.764)
-      const headT = 0.03 + chainThreadingProgress * (tSettledEnd - 0.03);
+      // In 'ltr': head enters from far offscreen (t = 0.0) and travels to tSettledEnd
+      const headT = chainThreadingProgress * tSettledEnd;
 
       for (let i = 0; i < activeChainLinkCount; i++) {
         // Link index i: i = activeChainLinkCount - 1 is HEAD (the leading tip that threads first!)
@@ -2006,11 +2051,11 @@
 
         // Hide links that haven't entered the scene yet or passed offscreen
         const isVisible = (chainThreadingDirection === 'ltr') 
-          ? (t_link >= 0.03 && t_link <= 0.98)
-          : (t_link >= 0.02 && t_link <= 0.97);
+          ? (t_link >= (tSettledStart * 0.15) && t_link <= 0.98)
+          : (t_link >= 0.02 && t_link <= (1.0 - tSettledStart * 0.15));
 
         if (!isVisible) {
-          dummy.position.set(0, -9999, 0);
+          dummy.position.set(0, -99999, 0);
           dummy.scale.set(0, 0, 0);
           dummy.updateMatrix();
           threeChainMesh.setMatrixAt(i, dummy.matrix);
@@ -2024,11 +2069,11 @@
         // Dynamic Catenary Sag and Lateral Sway Deformation when pendant drops and sways:
         if (dynamicSagY !== 0 || dynamicSwayX !== 0) {
           if (clampedT >= tSettledStart && clampedT <= tSettledEnd) {
-            const norm = (clampedT - 0.500) / halfSpan;
+            const norm = (clampedT - holeT) / halfSpan;
             const w = Math.max(0, 1.0 - norm * norm);
             pos.y += dynamicSagY * w;
             pos.x += dynamicSwayX * w;
-            const dw_dt = -2.0 * (clampedT - 0.500) / (halfSpan * halfSpan);
+            const dw_dt = -2.0 * (clampedT - holeT) / (halfSpan * halfSpan);
             tangent.x += dynamicSwayX * dw_dt * 0.04;
             tangent.y += dynamicSagY * dw_dt * 0.04;
             tangent.normalize();
@@ -2317,6 +2362,15 @@
       transitionStartTime = performance.now();
 
       if (mode === 'swoop_lift') {
+        chainEnabled = true;
+        const chk = document.getElementById('chainToggle');
+        if (chk) chk.checked = true;
+        if (!threeChainMesh) {
+          rebuildThreadedChain();
+        }
+        if (threeChainMesh) {
+          threeChainMesh.visible = false;
+        }
         updateChainThreading(0.0);
         const alignToggle = document.getElementById('introAlignToggle');
         const alignEnabled = alignToggle ? alignToggle.checked : true;
@@ -3662,6 +3716,7 @@
         if (threeChainMesh) {
           threeChainMesh.position.set(curPosX, curPosY, curPosZ);
           threeChainMesh.rotation.set(curRotX, 0, curRotZ);
+          threeChainMesh.visible = false;
         }
 
         // Smoothly glide camera from preset orbit angle to front level view
@@ -3699,7 +3754,9 @@
       let chainP = 0.0;
       if (loopTime < t.tChainLaunch) {
         chainP = 0.0;
+        if (threeChainMesh) threeChainMesh.visible = false;
       } else if (loopTime < t.tHoleTarget) {
+        if (threeChainMesh) threeChainMesh.visible = chainEnabled;
         const s = (loopTime - t.tChainLaunch) / Math.max(0.001, t.tHoleTarget - t.tChainLaunch);
         chainP = 0.78 * Math.pow(Math.min(1.0, Math.max(0.0, s)), 1.2);
       } else if (loopTime < t.tAnchorEnd) {
@@ -3785,6 +3842,7 @@
         if (threeChainMesh) {
           threeChainMesh.position.set(0, 9999, 0);
           threeChainMesh.rotation.set(0, 0, 0);
+          threeChainMesh.visible = false;
         }
       }
 
@@ -5055,6 +5113,9 @@
         chk.checked = (d.chainEnabled !== undefined) ? d.chainEnabled : true;
         chainEnabled = chk.checked;
       }
+      if (threeChainMesh) {
+        threeChainMesh.visible = chainEnabled;
+      }
       const cMat = document.getElementById('chainMaterialSelect');
       if (cMat && d.chainMaterial) cMat.value = d.chainMaterial;
 
@@ -5313,7 +5374,10 @@
           threeControls.enabled = true;
           threeControls.update();
         }
-        updateChainThreading(chainThreadingProgress);
+        if (threeChainMesh) {
+          threeChainMesh.visible = chainEnabled;
+        }
+        updateChainThreading(chainEnabled ? chainThreadingProgress : 0.0);
       }
 
       renderPresetList();
