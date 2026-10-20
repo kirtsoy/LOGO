@@ -3768,9 +3768,9 @@
         const curRotZ = introStartPose.rotZ * (1.0 - ease) + wobble.rotZ;
 
         // Position stays on its exact place with continuous harmonic wave breathing!
-        const curPosX = introStartPose.posX;
-        const curPosY = introStartPose.posY + wobble.y;
-        const curPosZ = introStartPose.posZ;
+        const curPosX = (introStartPose.posX || 0.0) * (1.0 - ease);
+        const curPosY = (introStartPose.posY || 0.0) * (1.0 - ease) + wobble.y;
+        const curPosZ = (introStartPose.posZ || 0.0) * (1.0 - ease);
 
         if (threeCurrentMesh) {
           threeCurrentMesh.position.set(curPosX, curPosY, curPosZ);
@@ -3792,10 +3792,9 @@
           const curTgtX = introStartPose.camTargetX + (offX - introStartPose.camTargetX) * ease;
           const curTgtY = introStartPose.camTargetY + (offY - introStartPose.camTargetY) * ease;
           const curTgtZ = introStartPose.camTargetZ + (0.0 - introStartPose.camTargetZ) * ease;
+          threeCamera.lookAt(curTgtX, curTgtY, curTgtZ);
           if (threeControls) {
             threeControls.target.set(curTgtX, curTgtY, curTgtZ);
-            threeCamera.lookAt(threeControls.target);
-            threeControls.update();
           }
         }
 
@@ -3805,11 +3804,12 @@
 
       // Ensure camera is locked to front level view after alignment
       if (t.alignEnabled && t.alignDuration > 0.001 && loopTime >= t.alignDuration && loopTime < t.tStartSpin) {
-        if (threeCamera && threeControls) {
+        if (threeCamera) {
           threeCamera.position.set(offX, offY, dist);
-          threeControls.target.set(offX, offY, 0);
           threeCamera.lookAt(offX, offY, 0);
-          threeControls.update();
+          if (threeControls) {
+            threeControls.target.set(offX, offY, 0);
+          }
         }
       }
 
@@ -4107,10 +4107,9 @@
         const curTgtX = offX + (introStartPose.camTargetX - offX) * ease;
         const curTgtY = offY + (introStartPose.camTargetY - offY) * ease;
         const curTgtZ = 0.0 + (introStartPose.camTargetZ - 0.0) * ease;
+        threeCamera.lookAt(curTgtX, curTgtY, curTgtZ);
         if (threeControls) {
           threeControls.target.set(curTgtX, curTgtY, curTgtZ);
-          threeCamera.lookAt(threeControls.target);
-          threeControls.update();
         }
       }
     }
@@ -4165,7 +4164,7 @@
 
       if (activeMode === '3d') {
         renderLiveStudioBackground(timeSec);
-        if (threeControls) threeControls.update();
+        if (threeControls && transitionMode === 'none') threeControls.update();
 
         // Handle Cinematic Transitions
         if (transitionMode === 'swoop_lift') {
@@ -5939,6 +5938,9 @@
       threeScene.background = null;
       threeRenderer.setClearColor(0x000000, 0.0);
 
+      // Ensure OrbitControls inertia damping never fights frame-by-frame animation
+      if (threeControls) threeControls.enabled = false;
+
       // Position camera according to user's configured zoom & XY offset
       resetCameraFront();
 
@@ -6129,6 +6131,10 @@
         if (modal) modal.style.display = 'none';
 
         isStudioRendering = false;
+        if (threeControls) {
+          threeControls.enabled = true;
+          threeControls.update();
+        }
         resetCameraFront();
         stopTransition();
       }
