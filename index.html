@@ -941,6 +941,17 @@
               <input type="range" id="threadScrubSlider" min="0" max="100" step="1" value="100" oninput="onScrubThreading(this.value)">
             </div>
 
+            <!-- Slam Return Chain Departure Control -->
+            <div style="margin-top: 6px; margin-bottom: 6px; padding: 6px 8px; background: rgba(245, 158, 11, 0.08); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 6px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                <span style="font-size: 10px; color: #fbbf24; font-weight: 700;">⚡ Выход цепи при слэм-возврате:</span>
+              </div>
+              <select id="slamChainExitStyle" class="form-control" style="font-size: 10px; padding: 4px 6px; background: rgba(15, 23, 42, 0.85); color: #fef3c7; border-color: rgba(245, 158, 11, 0.4);">
+                <option value="reverse" selected>🧵 Выскальзывание назад сквозь "t" (влево-вверх, как приходила)</option>
+                <option value="forward">🚀 Протяжка насквозь сквозь "t" (вправо-вверх)</option>
+              </select>
+            </div>
+
             <!-- Intro 360° & Chain Timing Admin Controls -->
             <div style="margin: 6px 0 8px 0; padding: 8px; background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.22); border-radius: 8px;">
               <!-- 0. Alignment from Preset Angle (Поворот строго прямо к нам) -->
@@ -1390,7 +1401,7 @@
           <label style="font-size: 11px; color: #cbd5e1; font-weight: 700; margin-bottom: 4px; display: block;">🎯 Выбор анимации для экспорта:</label>
           <select id="exportAnimationSelect" class="form-control" style="font-size: 11px; font-weight: 700; background: rgba(15, 23, 42, 0.9); border-color: #6366f1; color: #f8fafc; padding: 6px 8px;">
             <option value="swoop_lift" selected>🚀 1. Апофеоз цели (Доворот -> 360° -> Цепь -> Унос ВВЕРХ)</option>
-            <option value="slam_return">⚡ 2. Возврат цели (Слэм с неба -> Джиггл -> Уход цепи -> Ракурс)</option>
+            <option value="slam_return">⚡ 2. Возврат цели (Слэм с неба -> Джиггл -> Выскальзывание цепи сквозь "t" -> Ракурс)</option>
             <option value="idle_wobble_loop">🌊 3. Пассивный бесшовный луп (4.0s, ракурс YouTube Banner)</option>
           </select>
         </div>
@@ -1544,7 +1555,7 @@
       <button type="button" class="hud-badge" style="color: #a855f7; border-color: rgba(168,85,247,0.5); font-weight: 700; display: flex; align-items: center; gap: 4px;" onclick="startTransition('swoop_lift')" title="1. Апофеоз цели: Доворот -> 360° -> Цепь -> Унос ВВЕРХ">
         🚀 1. Апофеоз
       </button>
-      <button type="button" class="hud-badge" style="color: #f59e0b; border-color: rgba(245,158,11,0.5); font-weight: 700; display: flex; align-items: center; gap: 4px;" onclick="startTransition('slam_return')" title="2. Возврат цели: Слэм с неба -> Джиггл -> Уход цепи -> Возврат в ракурс">
+      <button type="button" class="hud-badge" style="color: #f59e0b; border-color: rgba(245,158,11,0.5); font-weight: 700; display: flex; align-items: center; gap: 4px;" onclick="startTransition('slam_return')" title="2. Возврат цели: Слэм с неба -> Джиггл -> Выскальзывание цепи сквозь 't' -> Ракурс">
         ⚡ 2. Слэм-возврат
       </button>
       <button type="button" class="hud-badge" style="color: #38bdf8; border-color: rgba(56,189,248,0.5); font-weight: 700; display: flex; align-items: center; gap: 4px;" onclick="startTransition('idle_wobble_loop')" title="3. Пассивный бесшовный луп 4.0 сек">
@@ -2037,14 +2048,14 @@
 
     function updateChainThreading(progress, dynamicSagY = 0, dynamicSwayX = 0) {
       if (!threeChainMesh || !activeChainCurve || activeChainLinkCount <= 0) return;
-      chainThreadingProgress = Math.max(0, Math.min(1.0, progress));
+      chainThreadingProgress = Math.max(0, Math.min(2.2, progress));
 
       const dummy = new THREE.Object3D();
       const defaultDir = new THREE.Vector3(1, 0, 0);
 
       // Strict Zero-Visibility Clamp:
-      // If threading progress is 0 (or chain is disabled), completely hide the mesh and collapse all links!
-      if (chainThreadingProgress <= 0.0001 || !chainEnabled) {
+      // If threading progress is 0 (or cleared through/disabled), completely hide the mesh and collapse all links!
+      if (chainThreadingProgress <= 0.0001 || chainThreadingProgress >= 2.05 || !chainEnabled) {
         for (let i = 0; i < activeChainLinkCount; i++) {
           dummy.position.set(0, -99999, 0);
           dummy.scale.set(0, 0, 0);
@@ -2452,7 +2463,7 @@
         if (!threeChainMesh) rebuildThreadedChain();
         if (threeChainMesh) threeChainMesh.visible = true;
         updateChainThreading(1.0, 0, 0);
-        showToast('⚡ Анимация 2: Слэм с неба -> Джиггл -> Уход цепи -> Возврат в ракурс');
+        showToast('⚡ Анимация 2: Слэм с неба -> Джиггл -> Выскальзывание цепи сквозь "t" -> Ракурс');
       } else if (mode === 'idle_wobble_loop') {
         if (threeChainMesh) threeChainMesh.visible = false;
         updateChainThreading(0.0);
@@ -3961,23 +3972,46 @@
         return;
       }
 
-      // Stage 3: Chain Ascent & Departure Upward (2.2 to 3.4s)
+      // Stage 3: Dynamic Chain Unthreading & Departure through letter "t" (2.2 to 3.4s)
       if (loopTime < 3.4) {
-        const liftT = (loopTime - 2.2) / 1.2;
-        const liftEase = liftT * liftT * (3.0 - 2.0 * liftT);
-        const chainY = liftEase * 940.0;
+        const unthreadT = (loopTime - 2.2) / 1.2; // 0.0 to 1.0
+        const unthreadEase = unthreadT * unthreadT * (3.0 - 2.0 * unthreadT);
+
+        const departureMode = document.getElementById('slamChainExitStyle')?.value || 'reverse';
+        let chainP = 1.0;
+        let tactileTugX = 0;
+        let tactileTugRotZ = 0;
+
+        if (departureMode === 'forward') {
+          // Pull forward through letter "t" towards top-right
+          chainP = 1.0 + unthreadEase * 1.05; // 1.0 -> 2.05
+          if (chainP > 1.15 && chainP < 1.7) {
+            const tugNorm = Math.sin((chainP - 1.15) / 0.55 * Math.PI);
+            tactileTugX = 1.8 * tugNorm; // gentle pull towards right
+            tactileTugRotZ = 0.015 * tugNorm;
+          }
+        } else {
+          // Reverse unthread back through letter "t" towards top-left (mirror of entry - "уходит так же как приходила")
+          chainP = 1.0 - unthreadEase; // 1.0 -> 0.0
+          if (chainP > 0.3 && chainP < 0.85) {
+            const tugNorm = Math.sin((chainP - 0.3) / 0.55 * Math.PI);
+            tactileTugX = -1.8 * tugNorm; // gentle pull towards left
+            tactileTugRotZ = -0.015 * tugNorm;
+          }
+        }
 
         if (threeChainMesh) {
-          threeChainMesh.position.set(0, chainY, 0);
+          threeChainMesh.position.set(0, 0, 0);
           threeChainMesh.rotation.set(0, 0, 0);
-          threeChainMesh.visible = (liftT < 0.96);
+          threeChainMesh.visible = (departureMode === 'forward') ? (chainP < 2.0) : (chainP > 0.001);
         }
-        updateChainThreading(1.0, 0, 0);
+
+        updateChainThreading(chainP, 0, tactileTugX * 0.4);
 
         const wobble = getHarmonicWobble(loopTime - 2.2, rSpeed, ripple);
         if (threeCurrentMesh) {
-          threeCurrentMesh.position.set(0, wobble.y, 0);
-          threeCurrentMesh.rotation.set(wobble.rotX, 0, wobble.rotZ);
+          threeCurrentMesh.position.set(tactileTugX, wobble.y, 0);
+          threeCurrentMesh.rotation.set(wobble.rotX, 0, wobble.rotZ + tactileTugRotZ);
         }
 
         if (threeCamera && threeControls) {
