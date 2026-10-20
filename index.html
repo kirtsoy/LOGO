@@ -937,6 +937,35 @@
 
             <!-- Intro 360° & Chain Timing Admin Controls -->
             <div style="margin: 6px 0 8px 0; padding: 8px; background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.22); border-radius: 8px;">
+              <!-- 0. Alignment from Preset Angle (Поворот строго прямо к нам) -->
+              <div style="margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                  <span style="font-size: 11px; color: #f43f5e; font-weight: 700;">📐 Старт из ракурса пресета:</span>
+                  <label class="toggle-switch" style="transform: scale(0.85); margin: 0;">
+                    <input type="checkbox" id="introAlignToggle" checked onchange="updateIntroTimingReadouts()">
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <span style="font-size: 10px; color: #94a3b8;">Время доворота к зрителю:</span>
+                  <span style="font-size: 10px; color: #fda4af; font-family: monospace; font-weight: 700;" id="valIntroAlignDuration">1.2с</span>
+                </div>
+                <div class="slider-row" style="margin: 2px 0;">
+                  <input type="range" id="introAlignDuration" min="0.3" max="3.0" step="0.1" value="1.2" oninput="updateIntroTimingReadouts()">
+                </div>
+                <div style="display: flex; gap: 4px; margin-top: 4px;">
+                  <button type="button" class="btn btn-secondary" style="font-size: 9px; padding: 3px 6px; flex: 1;" onclick="captureCurrentAngleAsIntroStart()" title="Запомнить текущий угол и наклон логотипа на экране как стартовый ракурс">
+                    📍 Зафиксировать угол
+                  </button>
+                  <button type="button" class="btn btn-secondary" style="font-size: 9px; padding: 3px 6px; flex: 1;" onclick="resetIntroStartPose()" title="Сбросить стартовый угол на строгий фронт (0, 0, 0)">
+                    🔄 Сброс на фронт
+                  </button>
+                </div>
+                <div style="font-size: 9px; color: #cbd5e1; margin-top: 4px; font-family: monospace;" id="lblIntroStartPoseInfo">
+                  Исходный угол: X: -12.6° | Y: 2.3° | Z: 0.0°
+                </div>
+              </div>
+
               <!-- 1. Rotation Speed -->
               <div style="margin-bottom: 8px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
@@ -1770,6 +1799,22 @@
     // --- THREADED CUBAN CHAIN & PENDANT SYSTEM ---
     let threeChainMesh = null;
     let chainEnabled = true;
+    // Preset starting pose state (for smooth alignment into front before spin & swoop)
+    let introStartPose = {
+      rotX: -0.22,
+      rotY: 0.04,
+      rotZ: 0.0,
+      posX: 0.0,
+      posY: 0.0,
+      posZ: 0.0,
+      camX: 0.0,
+      camY: 15.0,
+      camZ: 250.0,
+      camTargetX: 0.0,
+      camTargetY: 0.0,
+      camTargetZ: 0.0,
+      active: true
+    };
     let transitionMode = 'none'; // 'none', 'swoop_lift', 'thread_snake', 'hanging_swing'
     let transitionStartTime = 0;
     let activeChainCurve = null;
@@ -2082,6 +2127,69 @@
           valPreSpins.innerText = `${preSpins} оборотов (${preSpins * 360}°)`;
         }
       }
+
+      const alignToggle = document.getElementById('introAlignToggle');
+      const alignDuration = parseFloat(document.getElementById('introAlignDuration')?.value || 1.2);
+      const valAlign = document.getElementById('valIntroAlignDuration');
+      if (valAlign) {
+        valAlign.innerText = (alignToggle && !alignToggle.checked) ? 'Выкл (0.0с)' : `${alignDuration.toFixed(1)}с`;
+      }
+      updateIntroPoseLabel();
+    }
+
+    function updateIntroPoseLabel() {
+      const lbl = document.getElementById('lblIntroStartPoseInfo');
+      if (!lbl) return;
+      const degX = (introStartPose.rotX * (180 / Math.PI)).toFixed(1);
+      const degY = (introStartPose.rotY * (180 / Math.PI)).toFixed(1);
+      const degZ = (introStartPose.rotZ * (180 / Math.PI)).toFixed(1);
+      lbl.innerText = `Исходный угол: X: ${degX}° | Y: ${degY}° | Z: ${degZ}°`;
+    }
+
+    function captureCurrentAngleAsIntroStart() {
+      if (threeCurrentMesh) {
+        introStartPose.rotX = threeCurrentMesh.rotation.x;
+        introStartPose.rotY = threeCurrentMesh.rotation.y;
+        introStartPose.rotZ = threeCurrentMesh.rotation.z;
+        introStartPose.posX = threeCurrentMesh.position.x;
+        introStartPose.posY = threeCurrentMesh.position.y;
+        introStartPose.posZ = threeCurrentMesh.position.z;
+      }
+      if (threeCamera) {
+        introStartPose.camX = threeCamera.position.x;
+        introStartPose.camY = threeCamera.position.y;
+        introStartPose.camZ = threeCamera.position.z;
+      }
+      if (threeControls) {
+        introStartPose.camTargetX = threeControls.target.x;
+        introStartPose.camTargetY = threeControls.target.y;
+        introStartPose.camTargetZ = threeControls.target.z;
+      }
+      introStartPose.active = true;
+      const toggle = document.getElementById('introAlignToggle');
+      if (toggle) toggle.checked = true;
+      updateIntroTimingReadouts();
+      showToast('📍 Текущий ракурс кулона зафиксирован как начальный кадр интро!');
+    }
+
+    function resetIntroStartPose() {
+      introStartPose.rotX = 0;
+      introStartPose.rotY = 0;
+      introStartPose.rotZ = 0;
+      introStartPose.posX = 0;
+      introStartPose.posY = 0;
+      introStartPose.posZ = 0;
+      const dist = parseFloat(document.getElementById('camDistanceSlider')?.value || 240);
+      const offY = parseFloat(document.getElementById('camOffsetYSlider')?.value || 0);
+      const offX = parseFloat(document.getElementById('camOffsetXSlider')?.value || 0);
+      introStartPose.camX = offX;
+      introStartPose.camY = offY;
+      introStartPose.camZ = dist;
+      introStartPose.camTargetX = offX;
+      introStartPose.camTargetY = offY;
+      introStartPose.camTargetZ = 0;
+      updateIntroTimingReadouts();
+      showToast('🔄 Исходный ракурс сброшен на строгий фронт');
     }
     const updateIntroSpinSpeed = updateIntroTimingReadouts;
 
@@ -2210,7 +2318,59 @@
 
       if (mode === 'swoop_lift') {
         updateChainThreading(0.0);
-        showToast('🚀 Интро: 360° Turntable -> Влёт цепи в "t" -> Плавный Фрифолл + Джиггл -> Унос ВВЕРХ!');
+        const alignToggle = document.getElementById('introAlignToggle');
+        const alignEnabled = alignToggle ? alignToggle.checked : true;
+
+        if (alignEnabled) {
+          // Capture current angles if introStartPose not initialized
+          if (introStartPose.rotX === 0 && introStartPose.rotY === 0 && introStartPose.rotZ === 0) {
+            if (baseMeshRot && (baseMeshRot.x !== 0 || baseMeshRot.y !== 0 || baseMeshRot.z !== 0)) {
+              introStartPose.rotX = baseMeshRot.x;
+              introStartPose.rotY = baseMeshRot.y;
+              introStartPose.rotZ = baseMeshRot.z;
+              introStartPose.posX = baseMeshPos ? baseMeshPos.x : 0;
+              introStartPose.posY = baseMeshPos ? baseMeshPos.y : 0;
+              introStartPose.posZ = baseMeshPos ? baseMeshPos.z : 0;
+            } else if (threeCurrentMesh) {
+              introStartPose.rotX = threeCurrentMesh.rotation.x;
+              introStartPose.rotY = threeCurrentMesh.rotation.y;
+              introStartPose.rotZ = threeCurrentMesh.rotation.z;
+              introStartPose.posX = threeCurrentMesh.position.x;
+              introStartPose.posY = threeCurrentMesh.position.y;
+              introStartPose.posZ = threeCurrentMesh.position.z;
+            }
+          }
+
+          // Set initial frame 0 pose without any visual pop
+          if (threeCurrentMesh) {
+            threeCurrentMesh.position.set(introStartPose.posX, introStartPose.posY, introStartPose.posZ);
+            threeCurrentMesh.rotation.set(introStartPose.rotX, introStartPose.rotY, introStartPose.rotZ);
+          }
+          if (threeChainMesh) {
+            threeChainMesh.position.set(introStartPose.posX, introStartPose.posY, introStartPose.posZ);
+            threeChainMesh.rotation.set(introStartPose.rotX, 0, introStartPose.rotZ);
+          }
+          if (threeCamera && introStartPose.camZ) {
+            threeCamera.position.set(introStartPose.camX, introStartPose.camY, introStartPose.camZ);
+            if (threeControls) {
+              threeControls.target.set(introStartPose.camTargetX, introStartPose.camTargetY, introStartPose.camTargetZ);
+              threeCamera.lookAt(threeControls.target);
+              threeControls.update();
+            }
+          }
+          showToast('🚀 Интро: Ракурс пресета -> Доворот к нам -> Вращение 360° -> Влёт цепи в "t" -> Унос ВВЕРХ!');
+        } else {
+          resetCameraFront();
+          if (threeCurrentMesh) {
+            threeCurrentMesh.position.set(0, 0, 0);
+            threeCurrentMesh.rotation.set(0, 0, 0);
+          }
+          if (threeChainMesh) {
+            threeChainMesh.position.set(0, 0, 0);
+            threeChainMesh.rotation.set(0, 0, 0);
+          }
+          showToast('🚀 Интро: 360° Turntable -> Влёт цепи в "t" -> Плавный Фрифолл + Джиггл -> Унос ВВЕРХ!');
+        }
       } else if (mode === 'thread_snake') {
         updateChainThreading(0.0);
         showToast('🧵 Режим: Влёт одного конца цепи и продёргивание сквозь букву "t"');
@@ -3413,13 +3573,18 @@
     let studioRenderCancelled = false;
 
     function getIntroTimingInfo() {
+      const alignToggle = document.getElementById('introAlignToggle');
+      const alignEnabled = alignToggle ? alignToggle.checked : true;
+      const alignDuration = alignEnabled ? parseFloat(document.getElementById('introAlignDuration')?.value || 1.2) : 0.0;
+      const tPrePause = alignEnabled ? 0.25 : 0.0; // Clean breath pause right after turning front
+
       const spinSpeedMult = parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0);
       const spinDuration = 3.4 / Math.max(0.1, spinSpeedMult); // Only affects 360° rotation!
       const chainSpeedMult = parseFloat(document.getElementById('introChainSpeed')?.value || 1.0);
       const holeTimingMult = parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0);
       const preSpins = Math.max(0, parseInt(document.getElementById('introPreSpins')?.value ?? 1));
 
-      const tStartSpin = 0.4;
+      const tStartSpin = alignDuration + tPrePause + 0.2;
       const preSpinDuration = preSpins * spinDuration;
       const tMainSpinStart = tStartSpin + preSpinDuration;
       const tSpinEnd = tMainSpinStart + spinDuration;
@@ -3440,6 +3605,9 @@
       const loopDuration = tLiftEnd + 0.4; // 0.4s clean off-screen pause
 
       return {
+        alignEnabled,
+        alignDuration,
+        tPrePause,
         spinSpeedMult,
         spinDuration,
         chainSpeedMult,
@@ -3464,6 +3632,68 @@
       const t = timing || getIntroTimingInfo();
       const ripple = parseFloat(document.getElementById('rippleIntensity')?.value || 0.35);
       const rSpeed = parseFloat(document.getElementById('rippleSpeed')?.value || 1.0);
+
+      const dist = parseFloat(document.getElementById('camDistanceSlider')?.value || 240);
+      const offY = parseFloat(document.getElementById('camOffsetYSlider')?.value || 0);
+      const offX = parseFloat(document.getElementById('camOffsetXSlider')?.value || 0);
+
+      // --- PHASE 0: POSE ALIGNMENT FROM PRESET ANGLE TO FRONT-FACING ---
+      if (t.alignEnabled && t.alignDuration > 0.001 && loopTime < t.alignDuration) {
+        const prog = Math.min(1.0, Math.max(0.0, loopTime / t.alignDuration));
+        // Silky smooth cubic ease in-out
+        const ease = (prog < 0.5) 
+          ? 4.0 * prog * prog * prog 
+          : 1.0 - Math.pow(-2.0 * prog + 2.0, 3) / 2.0;
+
+        // Smoothly rotate mesh from preset rotation to strict front (0, 0, 0)
+        const curRotX = introStartPose.rotX * (1.0 - ease);
+        const curRotY = introStartPose.rotY * (1.0 - ease);
+        const curRotZ = introStartPose.rotZ * (1.0 - ease);
+
+        // Position stays on its exact place in the same scale!
+        const curPosX = introStartPose.posX;
+        const curPosY = introStartPose.posY;
+        const curPosZ = introStartPose.posZ;
+
+        if (threeCurrentMesh) {
+          threeCurrentMesh.position.set(curPosX, curPosY, curPosZ);
+          threeCurrentMesh.rotation.set(curRotX, curRotY, curRotZ);
+        }
+        if (threeChainMesh) {
+          threeChainMesh.position.set(curPosX, curPosY, curPosZ);
+          threeChainMesh.rotation.set(curRotX, 0, curRotZ);
+        }
+
+        // Smoothly glide camera from preset orbit angle to front level view
+        if (threeCamera && introStartPose.camZ) {
+          const curCamX = introStartPose.camX + (offX - introStartPose.camX) * ease;
+          const curCamY = introStartPose.camY + (offY - introStartPose.camY) * ease;
+          const curCamZ = introStartPose.camZ + (dist - introStartPose.camZ) * ease;
+          threeCamera.position.set(curCamX, curCamY, curCamZ);
+
+          const curTgtX = introStartPose.camTargetX + (offX - introStartPose.camTargetX) * ease;
+          const curTgtY = introStartPose.camTargetY + (offY - introStartPose.camTargetY) * ease;
+          const curTgtZ = introStartPose.camTargetZ + (0.0 - introStartPose.camTargetZ) * ease;
+          if (threeControls) {
+            threeControls.target.set(curTgtX, curTgtY, curTgtZ);
+            threeCamera.lookAt(threeControls.target);
+            threeControls.update();
+          }
+        }
+
+        updateChainThreading(0.0);
+        return;
+      }
+
+      // Ensure camera is locked to front level view after alignment
+      if (t.alignEnabled && t.alignDuration > 0.001 && loopTime >= t.alignDuration && loopTime < t.tStartSpin) {
+        if (threeCamera && threeControls) {
+          threeCamera.position.set(offX, offY, dist);
+          threeControls.target.set(offX, offY, 0);
+          threeCamera.lookAt(offX, offY, 0);
+          threeControls.update();
+        }
+      }
 
       // Calculate current chain progress p:
       let chainP = 0.0;
@@ -3755,6 +3985,56 @@
     // --- PRESETS & STYLES SYSTEM ---
     // =========================================================================
     const FACTORY_PRESETS = [
+      {
+        id: 'factory_yt_banner_final',
+        name: '📺 YouTube Banner Final (Ракурс Баннера)',
+        isFactory: true,
+        data: {
+          activeMode: '3d',
+          source: 'text',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 18,
+          bevel: 3.2,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: false,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
+          chainThreadingProgress: 1.0,
+          chainThreadingDirection: 'ltr',
+          transitionMode: 'none',
+          matType: 'liquid_matcap',
+          matcap: 'iced_aniso',
+          rotateSpeed: 1.2,
+          autoRotate: false,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.35,
+          rippleSpeed: 1.2,
+          brightenBoost: 1.4,
+          rimLight: 3.2,
+          cameraPosition: { x: 0, y: 15, z: 250 },
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: -0.22, y: 0.04, z: 0.0 },
+          camDistance: 250,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: true,
+          bgPreset: 'liquid_mercury',
+          bgIntensity: 1.0,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.0,
+          bgHaloIntensity: 0.0,
+          bgHaloColor: 'white'
+        }
+      },
       {
         id: 'factory_yt_banner_resize_full',
         name: '📺 YouTube Banner Resize Full (Mercury Caustics)',
@@ -4876,6 +5156,23 @@
       // 10. Spatial Angles & Mesh/Camera Transform Restore
       baseMeshRot = d.meshRotation ? { ...d.meshRotation } : { x: 0, y: 0, z: 0 };
       baseMeshPos = d.meshPosition ? { ...d.meshPosition } : { x: 0, y: 0, z: 0 };
+      introStartPose.rotX = baseMeshRot.x;
+      introStartPose.rotY = baseMeshRot.y;
+      introStartPose.rotZ = baseMeshRot.z;
+      introStartPose.posX = baseMeshPos.x;
+      introStartPose.posY = baseMeshPos.y;
+      introStartPose.posZ = baseMeshPos.z;
+      if (d.cameraPosition) {
+        introStartPose.camX = d.cameraPosition.x;
+        introStartPose.camY = d.cameraPosition.y;
+        introStartPose.camZ = d.cameraPosition.z;
+      }
+      if (d.cameraTarget) {
+        introStartPose.camTargetX = d.cameraTarget.x;
+        introStartPose.camTargetY = d.cameraTarget.y;
+        introStartPose.camTargetZ = d.cameraTarget.z;
+      }
+      updateIntroPoseLabel();
       if (threeCurrentMesh) {
         threeCurrentMesh.rotation.set(baseMeshRot.x, baseMeshRot.y, baseMeshRot.z);
         threeCurrentMesh.position.set(baseMeshPos.x, baseMeshPos.y, baseMeshPos.z);
