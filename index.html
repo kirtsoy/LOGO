@@ -947,6 +947,28 @@
         </div>
       </div>
 
+      <div class="form-group">
+        <label>Длина и вылет цепи (Формат проекта)</label>
+        <select id="chainReachSelect" onchange="onChainReachChange()">
+          <option value="classic" selected>💎 Классическое колье (YouTube / Короткий подвес)</option>
+          <option value="stream_ceiling">📡 Стрим-оверлей (Выход за экран ВВЕРХ / До потолка OBS)</option>
+          <option value="stream_v">⚡ Стрим-оверлей: Широкий V-подвес (В верхние углы)</option>
+          <option value="stream_vertical">⛓️ Стрим-оверлей: Вертикальный подвес (Прямо в потолок)</option>
+          <option value="custom">⚙️ Пользовательская высота подвеса...</option>
+        </select>
+        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+          Режим "Стрим-оверлей" удлиняет цепь вверх за границы экрана, идеально для целей стрима и виджетов OBS
+        </div>
+      </div>
+
+      <div class="form-group" id="chainHeightGroup">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 125px;">Высота цепи вверх</label>
+          <input type="range" id="chainHeightSlider" min="40" max="320" step="5" value="55" oninput="updateChainSettings()">
+          <span class="slider-val" id="valChainHeight">55px (Шея)</span>
+        </div>
+      </div>
+
       <!-- Cinematic Transitions Controls -->
       <div class="form-group" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--card-border);">
         <label style="color: #cbd5e1; font-weight: 700; margin-bottom: 8px;">🎬 РЕЖИССЁРСКИЙ ПУЛЬТ АНИМАЦИИ (ТВИЧ-ШКАЛА):</label>
@@ -1957,11 +1979,40 @@
       rebuildThreadedChain();
     }
 
+    function onChainReachChange() {
+      const reach = document.getElementById('chainReachSelect')?.value || 'classic';
+      const hSlider = document.getElementById('chainHeightSlider');
+      const valEl = document.getElementById('valChainHeight');
+      if (hSlider) {
+        if (reach === 'classic') {
+          hSlider.value = 55;
+          if (valEl) valEl.innerText = '55px (Шея)';
+        } else if (reach === 'stream_ceiling') {
+          hSlider.value = 210;
+          if (valEl) valEl.innerText = '210px (За экран)';
+        } else if (reach === 'stream_v') {
+          hSlider.value = 210;
+          if (valEl) valEl.innerText = '210px (Углы)';
+        } else if (reach === 'stream_vertical') {
+          hSlider.value = 230;
+          if (valEl) valEl.innerText = '230px (Потолок)';
+        }
+      }
+      rebuildThreadedChain();
+    }
+
     function updateChainSettings() {
       const scaleEl = document.getElementById('chainScaleSlider');
       const sagEl = document.getElementById('chainSagSlider');
+      const hEl = document.getElementById('chainHeightSlider');
       if (scaleEl) document.getElementById('valChainScale').innerText = scaleEl.value + 'x';
       if (sagEl) document.getElementById('valChainSag').innerText = sagEl.value + 'x';
+      if (hEl) {
+        const hVal = parseInt(hEl.value);
+        const lbl = hVal <= 70 ? `${hVal}px (Шея)` : `${hVal}px (За экран)`;
+        const valEl = document.getElementById('valChainHeight');
+        if (valEl) valEl.innerText = lbl;
+      }
       rebuildThreadedChain();
     }
 
@@ -2043,29 +2094,64 @@
       const coords = getPendantHole3DCoords();
       const sag = parseFloat(document.getElementById('chainSagSlider')?.value || 1.0);
       const linkScale = parseFloat(document.getElementById('chainScaleSlider')?.value || 1.0);
+      const reachMode = document.getElementById('chainReachSelect')?.value || 'classic';
+      const heightVal = parseFloat(document.getElementById('chainHeightSlider')?.value || (reachMode === 'classic' ? 55 : 210));
 
-      // 11-point extended catenary trajectory:
-      // Offscreen top-left -> descent -> align to crossbar -> through hole in 't' -> exit -> ascent -> offscreen top-right
-      // Deep offscreen start & end ensures zero premature pop-in across any tilted/wide camera angle!
-      const p_start = new THREE.Vector3(coords.xCenter - 220, coords.yBail + 165 * sag, -70);
-      const p0 = new THREE.Vector3(coords.xCenter - 75, coords.yBail + 55 * sag, -26);
-      const p1 = new THREE.Vector3(coords.xCenter - 38, coords.yBail + 22 * sag, -12);
-      const p2 = new THREE.Vector3(coords.xLeft - 10, coords.yBail + 2.5 * sag, -2);
-      const p3 = new THREE.Vector3(coords.xLeft, coords.yBail, 0); // EXACT LEFT SIDE HOLE ENTRANCE
-      const p4 = new THREE.Vector3(coords.xCenter, coords.yBail, 0); // INSIDE LATERAL TUNNEL
-      const p5 = new THREE.Vector3(coords.xRight, coords.yBail, 0); // EXACT RIGHT SIDE HOLE EXIT
-      const p6 = new THREE.Vector3(coords.xRight + 10, coords.yBail + 2.5 * sag, -2);
-      const p7 = new THREE.Vector3(coords.xCenter + 38, coords.yBail + 22 * sag, -12);
-      const p8 = new THREE.Vector3(coords.xCenter + 75, coords.yBail + 55 * sag, -26);
-      const p_end = new THREE.Vector3(coords.xCenter + 220, coords.yBail + 165 * sag, -70);
+      let curve, settledStartPt, settledEndPt, holePt;
 
-      const curve = new THREE.CatmullRomCurve3([p_start, p0, p1, p2, p3, p4, p5, p6, p7, p8, p_end]);
+      if (reachMode === 'classic') {
+        // EXACT 100% LEGACY TRAJECTORY (ZERO BREAKING CHANGES FOR PAST PRESETS)
+        const p_start = new THREE.Vector3(coords.xCenter - 220, coords.yBail + 165 * sag, -70);
+        const p0 = new THREE.Vector3(coords.xCenter - 75, coords.yBail + heightVal * sag, -26);
+        const p1 = new THREE.Vector3(coords.xCenter - 38, coords.yBail + 22 * sag, -12);
+        const p2 = new THREE.Vector3(coords.xLeft - 10, coords.yBail + 2.5 * sag, -2);
+        const p3 = new THREE.Vector3(coords.xLeft, coords.yBail, 0); // EXACT LEFT SIDE HOLE ENTRANCE
+        const p4 = new THREE.Vector3(coords.xCenter, coords.yBail, 0); // INSIDE LATERAL TUNNEL
+        const p5 = new THREE.Vector3(coords.xRight, coords.yBail, 0); // EXACT RIGHT SIDE HOLE EXIT
+        const p6 = new THREE.Vector3(coords.xRight + 10, coords.yBail + 2.5 * sag, -2);
+        const p7 = new THREE.Vector3(coords.xCenter + 38, coords.yBail + 22 * sag, -12);
+        const p8 = new THREE.Vector3(coords.xCenter + 75, coords.yBail + heightVal * sag, -26);
+        const p_end = new THREE.Vector3(coords.xCenter + 220, coords.yBail + 165 * sag, -70);
+
+        curve = new THREE.CatmullRomCurve3([p_start, p0, p1, p2, p3, p4, p5, p6, p7, p8, p_end]);
+        settledStartPt = p0;
+        settledEndPt = p8;
+        holePt = p4;
+      } else {
+        // STREAM OVERLAY EXTENDED REACH (GOES BEYOND TOP OF SCREEN / INTO CEILING)
+        let topX = 140;
+        if (reachMode === 'stream_v') topX = 210;
+        if (reachMode === 'stream_vertical') topX = 45;
+
+        const topY = coords.yBail + heightVal * sag;
+        const p_far_start = new THREE.Vector3(coords.xCenter - topX * 1.5, topY + 120, -70);
+        const p_top_left = new THREE.Vector3(coords.xCenter - topX, topY, -26);
+        const p0 = new THREE.Vector3(coords.xCenter - (topX * 0.5), coords.yBail + (heightVal * 0.32) * sag, -20);
+        const p1 = new THREE.Vector3(coords.xCenter - 38, coords.yBail + 22 * sag, -12);
+        const p2 = new THREE.Vector3(coords.xLeft - 10, coords.yBail + 2.5 * sag, -2);
+        const p3 = new THREE.Vector3(coords.xLeft, coords.yBail, 0);
+        const p4 = new THREE.Vector3(coords.xCenter, coords.yBail, 0);
+        const p5 = new THREE.Vector3(coords.xRight, coords.yBail, 0);
+        const p6 = new THREE.Vector3(coords.xRight + 10, coords.yBail + 2.5 * sag, -2);
+        const p7 = new THREE.Vector3(coords.xCenter + 38, coords.yBail + 22 * sag, -12);
+        const p8 = new THREE.Vector3(coords.xCenter + (topX * 0.5), coords.yBail + (heightVal * 0.32) * sag, -20);
+        const p_top_right = new THREE.Vector3(coords.xCenter + topX, topY, -26);
+        const p_far_end = new THREE.Vector3(coords.xCenter + topX * 1.5, topY + 120, -70);
+
+        curve = new THREE.CatmullRomCurve3([
+          p_far_start, p_top_left, p0, p1, p2, p3, p4, p5, p6, p7, p8, p_top_right, p_far_end
+        ]);
+        settledStartPt = p_top_left;
+        settledEndPt = p_top_right;
+        holePt = p4;
+      }
+
       const curveLength = curve.getLength();
 
-      activeCurveSettledStart = getCurveParamForPt(curve, p0);
-      activeCurveSettledEnd = getCurveParamForPt(curve, p8);
+      activeCurveSettledStart = getCurveParamForPt(curve, settledStartPt);
+      activeCurveSettledEnd = getCurveParamForPt(curve, settledEndPt);
       activeCurveHalfSpan = (activeCurveSettledEnd - activeCurveSettledStart) / 2;
-      activeCurveHoleT = getCurveParamForPt(curve, p4);
+      activeCurveHoleT = getCurveParamForPt(curve, holePt);
 
       // Authentic Miami Cuban curb link sizing & tight interlocking pitch
       const linkLen = 3.6 * linkScale;
@@ -4627,6 +4713,59 @@
     // =========================================================================
     const FACTORY_PRESETS = [
       {
+        id: 'factory_obs_stream_goal',
+        name: '📡 OBS Stream Overlay (Цепь в потолок / Сбор цели)',
+        isFactory: true,
+        data: {
+          activeMode: '3d',
+          source: 'pendant_real_hole',
+          text: 'kirtsoy',
+          textCase: 'lower',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          depth: 18,
+          bevel: 3.2,
+          bevelSegments: 8,
+          letterOverlap: 15,
+          backplateEnabled: false,
+          backplateDepth: 4,
+          chainEnabled: true,
+          chainMaterial: 'same',
+          chainScale: 1.0,
+          chainSag: 1.0,
+          chainReach: 'stream_ceiling',
+          chainHeight: 210,
+          chainThreadingProgress: 1.0,
+          chainThreadingDirection: 'ltr',
+          transitionMode: 'none',
+          matType: 'liquid_matcap',
+          matcap: 'iced_diamond',
+          rotateSpeed: 1.2,
+          autoRotate: false,
+          sparkleGlideSpeed: 0.8,
+          rippleIntensity: 0.25,
+          rippleSpeed: 1.0,
+          brightenBoost: 1.4,
+          rimLight: 3.2,
+          cameraPosition: { x: 0, y: 0, z: 240 },
+          cameraTarget: { x: 0, y: 0, z: 0 },
+          meshPosition: { x: 0, y: 0, z: 0 },
+          meshRotation: { x: 0, y: 0, z: 0 },
+          camDistance: 240,
+          camOffsetY: 0,
+          camOffsetX: 0,
+          frame169Enabled: true,
+          frameYTEnabled: false,
+          bgPreset: 'obs_alpha_black',
+          bgIntensity: 1.0,
+          bgAnimSpeed: 0.0,
+          bgScale: 1.0,
+          bgHaloIntensity: 0.0,
+          bgHaloColor: 'white'
+        }
+      },
+
+      {
         id: 'factory_yt_banner_final',
         name: '📺 YouTube Banner Final (Ракурс Баннера)',
         isFactory: true,
@@ -5506,6 +5645,8 @@
         chainMaterial: document.getElementById('chainMaterialSelect')?.value || 'same',
         chainScale: parseFloat(document.getElementById('chainScaleSlider')?.value || 1.0),
         chainSag: parseFloat(document.getElementById('chainSagSlider')?.value || 1.0),
+        chainReach: document.getElementById('chainReachSelect')?.value || 'classic',
+        chainHeight: parseFloat(document.getElementById('chainHeightSlider')?.value || 55),
         bezelRimEnabled: document.getElementById('bezelRimToggle')?.checked || false,
         chainThreadingProgress: chainThreadingProgress,
         chainThreadingDirection: chainThreadingDirection,
@@ -5734,6 +5875,20 @@
         if (vEl) vEl.innerText = d.chainSag + 'x';
       }
 
+      const cReach = document.getElementById('chainReachSelect');
+      if (cReach) {
+        cReach.value = d.chainReach || 'classic';
+      }
+      const cHeight = document.getElementById('chainHeightSlider');
+      if (cHeight) {
+        cHeight.value = (d.chainHeight !== undefined) ? d.chainHeight : (d.chainReach === 'stream_ceiling' ? 210 : 55);
+        const vEl = document.getElementById('valChainHeight');
+        if (vEl) {
+          const hVal = parseInt(cHeight.value);
+          vEl.innerText = hVal <= 70 ? `${hVal}px (Шея)` : `${hVal}px (За экран)`;
+        }
+      }
+
       const bezelToggle = document.getElementById('bezelRimToggle');
       if (bezelToggle && d.bezelRimEnabled !== undefined) {
         bezelToggle.checked = d.bezelRimEnabled;
@@ -5876,12 +6031,10 @@
         document.getElementById('valCamOffsetX').innerText = d.camOffsetX;
       }
       if (d.frame169Enabled !== undefined && document.getElementById('frame169Toggle')) {
-        document.getElementById('frame169Toggle').checked = d.frame169Enabled;
-        toggle169FrameGuide();
+        toggle169FrameGuide(d.frame169Enabled);
       }
       if (d.frameYTEnabled !== undefined && document.getElementById('frameYTToggle')) {
-        document.getElementById('frameYTToggle').checked = d.frameYTEnabled;
-        toggleYTFrameGuide();
+        toggleYTFrameGuide(d.frameYTEnabled);
       }
 
       // 10.5 Background Parameters Restore (Strict Protection: never overwrite if preset has no bg or toggle is disabled)
