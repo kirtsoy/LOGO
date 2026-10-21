@@ -839,8 +839,8 @@
       <div class="form-group" id="lineSpacingGroup">
         <div class="slider-row">
           <label style="margin: 0; min-width: 125px;">Межстрочный шаг</label>
-          <input type="range" id="lineSpacingSlider" min="0.4" max="1.8" step="0.05" value="0.88" oninput="updateLineSpacingVal()">
-          <span class="slider-val" id="valLineSpacing">0.88x</span>
+          <input type="range" id="lineSpacingSlider" min="0.4" max="1.8" step="0.05" value="1.15" oninput="updateLineSpacingVal()">
+          <span class="slider-val" id="valLineSpacing">1.15x</span>
         </div>
         <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
           Общий базовый интервал между строками
@@ -851,8 +851,8 @@
       <div class="form-group" id="descenderGroup">
         <div class="slider-row">
           <label style="margin: 0; min-width: 125px;">Хвостик "y" / "g"</label>
-          <input type="range" id="descenderScaleSlider" min="0.2" max="1.0" step="0.05" value="0.65" oninput="updateDescenderScaleVal()">
-          <span class="slider-val" id="valDescenderScale">0.65x</span>
+          <input type="range" id="descenderScaleSlider" min="0.2" max="1.0" step="0.05" value="1.0" oninput="updateDescenderScaleVal()">
+          <span class="slider-val" id="valDescenderScale">1.00x</span>
         </div>
         <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
           Подтяжка нижнего хвоста "y", чтобы аккуратно входить в нижнюю строку
@@ -2729,19 +2729,19 @@
     window.multilineConfig = {
       shiftsX: {},
       gapsY: {},
-      descenderScale: 0.65
+      descenderScale: 1.0
     };
 
     function updateLineSpacingVal() {
       const el = document.getElementById('lineSpacingSlider');
-      const val = el ? parseFloat(el.value) : 0.88;
+      const val = el ? parseFloat(el.value) : 1.15;
       if (document.getElementById('valLineSpacing')) document.getElementById('valLineSpacing').innerText = val.toFixed(2) + 'x';
       trigger3DRebuild();
     }
 
     function updateDescenderScaleVal() {
       const el = document.getElementById('descenderScaleSlider');
-      const val = el ? parseFloat(el.value) : 0.65;
+      const val = el ? parseFloat(el.value) : 1.0;
       if (document.getElementById('valDescenderScale')) document.getElementById('valDescenderScale').innerText = val.toFixed(2) + 'x';
       window.multilineConfig.descenderScale = val;
       trigger3DRebuild();
@@ -2762,21 +2762,7 @@
       container.style.display = 'block';
 
       if (!window.multilineConfig) {
-        window.multilineConfig = { shiftsX: {}, gapsY: {}, descenderScale: 0.65 };
-      }
-
-      // Smart Defaults for 3-line Day / 307 / vlog puzzle lock if untouched
-      const isDay307Vlog = rawLines.length === 3 && 
-                           rawLines[0].toLowerCase().includes('day') && 
-                           (rawLines[1].includes('307') || rawLines[1].includes('308'));
-      if (isDay307Vlog && Object.keys(window.multilineConfig.shiftsX).length === 0) {
-        window.multilineConfig.shiftsX = { 0: 6, 1: 0, 2: 8 };
-        window.multilineConfig.gapsY = { 0: 0.88, 1: 0.76 };
-        window.multilineConfig.descenderScale = 0.65;
-        if (document.getElementById('descenderScaleSlider')) {
-          document.getElementById('descenderScaleSlider').value = 0.65;
-          if (document.getElementById('valDescenderScale')) document.getElementById('valDescenderScale').innerText = '0.65x';
-        }
+        window.multilineConfig = { shiftsX: {}, gapsY: {}, descenderScale: 1.0 };
       }
 
       const expectedCount = rawLines.length + (rawLines.length - 1);
@@ -2806,7 +2792,7 @@
         slidersBox.appendChild(rowX);
 
         if (i < rawLines.length - 1) {
-          const baseGap = parseFloat(document.getElementById('lineSpacingSlider')?.value) || 0.88;
+          const baseGap = parseFloat(document.getElementById('lineSpacingSlider')?.value) || 1.15;
           const curGap = window.multilineConfig.gapsY[i] !== undefined ? window.multilineConfig.gapsY[i] : baseGap;
 
           const rowGap = document.createElement('div');
@@ -2859,6 +2845,10 @@
 
     function onLogoTextInput() {
       autoResizeLogoText();
+      const val = document.getElementById('logoText')?.value || '';
+      if (currentCase === 'lower' && /[A-ZА-ЯЁ]/.test(val)) {
+        setTextCase('as_is');
+      }
       if (activeSource !== 'text') {
         activeSource = 'text';
         const sel = document.getElementById('objectSourceSelect');
@@ -2904,9 +2894,9 @@
 
       const baseLineSpacingRatio = customLineSpacing !== null 
         ? customLineSpacing 
-        : (parseFloat(document.getElementById('lineSpacingSlider')?.value) || 0.88);
+        : (parseFloat(document.getElementById('lineSpacingSlider')?.value) || 1.15);
 
-      const descenderScale = parseFloat(document.getElementById('descenderScaleSlider')?.value || (window.multilineConfig?.descenderScale || 0.65));
+      const descenderScale = parseFloat(document.getElementById('descenderScaleSlider')?.value || (window.multilineConfig?.descenderScale || 1.0));
 
       const totalLines = lines.length;
 
@@ -5660,8 +5650,8 @@
 
         // 2. Text, Casing & Font
         text: document.getElementById('logoText')?.value || 'kirtsoy',
-        lineSpacing: parseFloat(document.getElementById('lineSpacingSlider')?.value || 0.88),
-        descenderScale: parseFloat(document.getElementById('descenderScaleSlider')?.value || 0.65),
+        lineSpacing: parseFloat(document.getElementById('lineSpacingSlider')?.value || 1.15),
+        descenderScale: parseFloat(document.getElementById('descenderScaleSlider')?.value || 1.0),
         multilineConfig: window.multilineConfig ? JSON.parse(JSON.stringify(window.multilineConfig)) : null,
         textCase: currentCase,
         font: document.getElementById('font3DSelect')?.value || 'UnifrakturCook_PrintedK',
