@@ -2190,7 +2190,7 @@
       threeScene.add(threeChainMesh);
     }
 
-    function updateChainThreading(progress, dynamicSagY = 0, dynamicSwayX = 0) {
+    function updateChainThreading(progress, dynamicSagY = 0, dynamicSwayX = 0, dynamicSagZ = 0) {
       if (!threeChainMesh || !activeChainCurve || activeChainLinkCount <= 0) return;
       chainThreadingProgress = Math.max(0, Math.min(2.2, progress));
 
@@ -2255,15 +2255,17 @@
         const tangent = activeChainCurve.getTangentAt(clampedT).clone();
 
         // Dynamic Catenary Sag and Lateral Sway Deformation when pendant drops and sways:
-        if (dynamicSagY !== 0 || dynamicSwayX !== 0) {
+        if (dynamicSagY !== 0 || dynamicSwayX !== 0 || dynamicSagZ !== 0) {
           if (clampedT >= tSettledStart && clampedT <= tSettledEnd) {
             const norm = (clampedT - holeT) / halfSpan;
             const w = Math.max(0, 1.0 - norm * norm);
             pos.y += dynamicSagY * w;
             pos.x += dynamicSwayX * w;
+            pos.z += dynamicSagZ * w;
             const dw_dt = -2.0 * (clampedT - holeT) / (halfSpan * halfSpan);
             tangent.x += dynamicSwayX * dw_dt * 0.04;
             tangent.y += dynamicSagY * dw_dt * 0.04;
+            tangent.z += dynamicSagZ * dw_dt * 0.04;
             tangent.normalize();
           }
         }
@@ -4333,6 +4335,21 @@
       const offY = parseFloat(document.getElementById('camOffsetYSlider')?.value || 0);
       const offX = parseFloat(document.getElementById('camOffsetXSlider')?.value || 0);
 
+      const coords = getPendantHole3DCoords();
+      const localHole = new THREE.Vector3(coords.xCenter, coords.yBail, 0);
+      const reachMode = document.getElementById('chainReachSelect')?.value || 'classic';
+
+      // Helper to compute exact hole offset in world coordinates so chain NEVER disconnects from the hole!
+      function syncChainToHole(progressVal = 1.0) {
+        if (!threeCurrentMesh) return;
+        threeCurrentMesh.updateMatrixWorld(true);
+        const worldHole = threeCurrentMesh.localToWorld(localHole.clone());
+        const holeDispX = worldHole.x - coords.xCenter;
+        const holeDispY = worldHole.y - coords.yBail;
+        const holeDispZ = worldHole.z - 0;
+        updateChainThreading(progressVal, holeDispY, holeDispX, holeDispZ);
+      }
+
       // Stage 1: Cinematic High-Gravity Plunge from Sky (0.0 to tFallEnd)
       if (loopTime < t.tFallEnd) {
         const s = loopTime / t.tFallEnd;
@@ -4340,19 +4357,31 @@
         const plungeY = t.startHeight * (1.0 - s * s);
         // Aerodynamic backward tilt during flight that straightens up just before impact
         const plungeTiltX = -0.32 * Math.sin(s * Math.PI * 0.5) * (1.0 - s * 0.4);
-        // Dynamic wind resistance sag on Cuban chain while falling
-        const dragSagY = -16.0 * s * (1.0 - s * 0.3);
 
         if (threeCurrentMesh) {
           threeCurrentMesh.position.set(0, plungeY, 0);
           threeCurrentMesh.rotation.set(plungeTiltX, 0, 0);
+          threeCurrentMesh.updateMatrixWorld(true);
         }
-        if (threeChainMesh) {
-          threeChainMesh.position.set(0, plungeY, 0);
-          threeChainMesh.rotation.set(plungeTiltX * 0.85, 0, 0);
-          threeChainMesh.visible = true;
+
+        if (reachMode === 'classic') {
+          // Classic necklace: whole chain plunges down together with the pendant
+          if (threeChainMesh) {
+            threeChainMesh.position.set(0, plungeY, 0);
+            threeChainMesh.rotation.set(plungeTiltX * 0.85, 0, 0);
+            threeChainMesh.visible = true;
+          }
+          const dragSagY = -6.0 * s * (1.0 - s * 0.4);
+          updateChainThreading(1.0, dragSagY, 0, 0);
+        } else {
+          // Stream ceiling reach: chain anchors are pinned to ceiling; loop follows pendant hole seamlessly
+          if (threeChainMesh) {
+            threeChainMesh.position.set(0, 0, 0);
+            threeChainMesh.rotation.set(0, 0, 0);
+            threeChainMesh.visible = true;
+          }
+          syncChainToHole(1.0);
         }
-        updateChainThreading(1.0, dragSagY, 0);
 
         if (threeCamera && threeControls) {
           threeCamera.position.set(offX, offY, dist);
@@ -4377,19 +4406,19 @@
         const rotZ = (swayX / 140.0) - 0.04 * decayY * Math.sin(omegaY * tau);
         const rotX = 0.03 * Math.exp(-3.5 * tau) * (Math.cos(7.0 * tau) - 1.0);
 
-        // Chain dynamic catenary deformation with realistic lag
-        const bounceChainSag = bounceY * 1.3 - 14.0 * Math.exp(-4.5 * tau) * Math.sin(10.0 * tau);
-        updateChainThreading(1.0, bounceChainSag, swayX);
-
         if (threeCurrentMesh) {
           threeCurrentMesh.position.set(swayX, bounceY, 0);
           threeCurrentMesh.rotation.set(rotX, 0, rotZ);
+          threeCurrentMesh.updateMatrixWorld(true);
         }
         if (threeChainMesh) {
           threeChainMesh.position.set(0, 0, 0);
           threeChainMesh.rotation.set(0, 0, 0);
           threeChainMesh.visible = true;
         }
+
+        // Chain is strictly locked inside the hole of 't' at all times (never drops or penetrates letters!)
+        syncChainToHole(1.0);
 
         if (threeCamera && threeControls) {
           threeCamera.position.set(offX, offY, dist);
@@ -4428,19 +4457,20 @@
           }
         }
 
+        const wobble = getHarmonicWobble(loopTime - t.tBounceEnd, rSpeed, ripple);
+        if (threeCurrentMesh) {
+          threeCurrentMesh.position.set(tactileTugX, wobble.y, 0);
+          threeCurrentMesh.rotation.set(wobble.rotX, 0, wobble.rotZ + tactileTugRotZ);
+          threeCurrentMesh.updateMatrixWorld(true);
+        }
+
         if (threeChainMesh) {
           threeChainMesh.position.set(0, 0, 0);
           threeChainMesh.rotation.set(0, 0, 0);
           threeChainMesh.visible = (departureMode === 'forward') ? (chainP < 2.0) : (chainP > 0.001);
         }
 
-        updateChainThreading(chainP, 0, tactileTugX * 0.4);
-
-        const wobble = getHarmonicWobble(loopTime - t.tBounceEnd, rSpeed, ripple);
-        if (threeCurrentMesh) {
-          threeCurrentMesh.position.set(tactileTugX, wobble.y, 0);
-          threeCurrentMesh.rotation.set(wobble.rotX, 0, wobble.rotZ + tactileTugRotZ);
-        }
+        syncChainToHole(chainP);
 
         if (threeCamera && threeControls) {
           threeCamera.position.set(offX, offY, dist);
