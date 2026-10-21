@@ -5366,13 +5366,14 @@
       // 2. Text, Word Shape & Case
       if (d.text !== undefined && document.getElementById('logoText')) {
         document.getElementById('logoText').value = d.text;
-      }
         if (typeof autoResizeLogoText === 'function') autoResizeLogoText();
       }
+
       if (d.lineSpacing !== undefined && document.getElementById('lineSpacingSlider')) {
         document.getElementById('lineSpacingSlider').value = d.lineSpacing;
         const v = document.getElementById('valLineSpacing');
         if (v) v.innerText = parseFloat(d.lineSpacing).toFixed(2) + 'x';
+      }
       currentCase = d.textCase || 'lower';
       document.querySelectorAll('#typographySection .preset-btn').forEach(b => {
         b.classList.remove('active');
