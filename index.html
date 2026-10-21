@@ -784,8 +784,11 @@
       </div>
       
       <div class="form-group">
-        <label>Текст логотипа</label>
-        <input type="text" id="logoText" class="input-text" value="kirtsoy" oninput="trigger3DRebuild()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <label style="margin: 0;">Текст логотипа (многострочный)</label>
+          <span style="font-size: 10px; color: #38bdf8; font-family: monospace;">Shift+Enter — новая строка</span>
+        </div>
+        <textarea id="logoText" class="input-text" rows="2" placeholder="kirtsoy" style="resize: vertical; min-height: 48px; line-height: 1.4; font-family: inherit;" oninput="autoResizeLogoText(); trigger3DRebuild();" onkeydown="handleLogoTextKeydown(event)">kirtsoy</textarea>
       </div>
 
       <div class="form-group">
@@ -827,6 +830,18 @@
         </div>
         <div style="font-size: 11px; color: #a5b4fc; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
           <span>🔗</span> <span>Буквы соприкасаются и спаяны в монолитный кулон (Baked in)</span>
+        </div>
+      </div>
+
+      <!-- Line Spacing for Multi-line Text -->
+      <div class="form-group" id="lineSpacingGroup">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 125px;">Межстрочный шаг</label>
+          <input type="range" id="lineSpacingSlider" min="0.6" max="1.8" step="0.05" value="1.15" oninput="updateLineSpacingVal()">
+          <span class="slider-val" id="valLineSpacing">1.15x</span>
+        </div>
+        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+          Расстояние между строками при вводе через Shift+Enter
         </div>
       </div>
 
@@ -5124,7 +5139,7 @@
       container.innerHTML = all.map(p => {
         const isActive = (p.id === currentActivePresetId);
         const d = p.data || {};
-        const wordBadge = d.text ? `«${d.text}»` : '';
+        const wordBadge = d.text ? `«${d.text.replace(/\n/g, ' ')}»` : '';
         const fontName = (d.font || '').replace('UnifrakturCook_', '').replace('.json', '');
         const bgLabel = d.bgPreset 
           ? (bgPresetNames[d.bgPreset] ? bgPresetNames[d.bgPreset].split(' ')[1] || d.bgPreset : d.bgPreset) 
@@ -5190,6 +5205,7 @@
 
         // 2. Text, Casing & Font
         text: document.getElementById('logoText')?.value || 'kirtsoy',
+        lineSpacing: parseFloat(document.getElementById('lineSpacingSlider')?.value || 1.15),
         textCase: currentCase,
         font: document.getElementById('font3DSelect')?.value || 'UnifrakturCook_PrintedK',
         fontSize: parseFloat(document.getElementById('fontSize3D')?.value || 38),
@@ -5261,7 +5277,7 @@
 
     function saveCurrentAsPreset() {
       const nameInput = document.getElementById('customPresetName');
-      const curWord = document.getElementById('logoText').value || 'kirtsoy';
+      const curWord = (document.getElementById('logoText').value || 'kirtsoy').replace(/\n/g, ' ');
       const name = (nameInput.value || '').trim() || `💎 ${curWord} (${activeMatcapName})`;
       
       const newPreset = {
@@ -5351,6 +5367,12 @@
       if (d.text !== undefined && document.getElementById('logoText')) {
         document.getElementById('logoText').value = d.text;
       }
+        if (typeof autoResizeLogoText === 'function') autoResizeLogoText();
+      }
+      if (d.lineSpacing !== undefined && document.getElementById('lineSpacingSlider')) {
+        document.getElementById('lineSpacingSlider').value = d.lineSpacing;
+        const v = document.getElementById('valLineSpacing');
+        if (v) v.innerText = parseFloat(d.lineSpacing).toFixed(2) + 'x';
       currentCase = d.textCase || 'lower';
       document.querySelectorAll('#typographySection .preset-btn').forEach(b => {
         b.classList.remove('active');
@@ -5727,10 +5749,13 @@
 
     // --- HELPERS ---
     function getFormattedText() {
-      let t = document.getElementById('logoText').value || 'kirtsoy';
+      let t = document.getElementById('logoText')?.value;
+      if (t === undefined || t === null || t === '') t = 'kirtsoy';
       if (currentCase === 'upper') return t.toUpperCase();
       if (currentCase === 'lower') return t.toLowerCase();
-      if (currentCase === 'title') return t.charAt(0).toUpperCase() + t.slice(1);
+      if (currentCase === 'title') {
+        return t.split('\n').map(line => line.replace(/\b\w/g, l => l.toUpperCase())).join('\n');
+      }
       return t;
     }
 
