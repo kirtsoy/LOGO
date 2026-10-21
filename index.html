@@ -951,7 +951,8 @@
         <label>Длина и вылет цепи (Формат проекта)</label>
         <select id="chainReachSelect" onchange="onChainReachChange()">
           <option value="classic" selected>💎 Классическое колье (YouTube / Короткий подвес)</option>
-          <option value="stream_ceiling">📡 Стрим-оверлей (Выход за экран ВВЕРХ / До потолка OBS)</option>
+          <option value="stream_ceiling">📡 Стрим-оверлей (Выход за экран ВВЕРХ / 210px)</option>
+          <option value="stream_ultra">🚀 Стрим-оверлей: Ультра-подвес (Высота 400px / Дальний потолок)</option>
           <option value="stream_v">⚡ Стрим-оверлей: Широкий V-подвес (В верхние углы)</option>
           <option value="stream_vertical">⛓️ Стрим-оверлей: Вертикальный подвес (Прямо в потолок)</option>
           <option value="custom">⚙️ Пользовательская высота подвеса...</option>
@@ -964,7 +965,7 @@
       <div class="form-group" id="chainHeightGroup">
         <div class="slider-row">
           <label style="margin: 0; min-width: 125px;">Высота цепи вверх</label>
-          <input type="range" id="chainHeightSlider" min="40" max="320" step="5" value="55" oninput="updateChainSettings()">
+          <input type="range" id="chainHeightSlider" min="40" max="500" step="5" value="55" oninput="updateChainSettings()">
           <span class="slider-val" id="valChainHeight">55px (Шея)</span>
         </div>
       </div>
@@ -1990,6 +1991,9 @@
         } else if (reach === 'stream_ceiling') {
           hSlider.value = 210;
           if (valEl) valEl.innerText = '210px (За экран)';
+        } else if (reach === 'stream_ultra') {
+          hSlider.value = 400;
+          if (valEl) valEl.innerText = '400px (Ультра)';
         } else if (reach === 'stream_v') {
           hSlider.value = 210;
           if (valEl) valEl.innerText = '210px (Углы)';
@@ -2121,6 +2125,7 @@
         // STREAM OVERLAY EXTENDED REACH (GOES BEYOND TOP OF SCREEN / INTO CEILING)
         let topX = 140;
         if (reachMode === 'stream_v') topX = 210;
+        if (reachMode === 'stream_ultra') topX = 180;
         if (reachMode === 'stream_vertical') topX = 45;
 
         const topY = coords.yBail + heightVal * sag;
@@ -5911,7 +5916,7 @@
       }
       const cHeight = document.getElementById('chainHeightSlider');
       if (cHeight) {
-        cHeight.value = (d.chainHeight !== undefined) ? d.chainHeight : (d.chainReach === 'stream_ceiling' ? 210 : 55);
+        cHeight.value = (d.chainHeight !== undefined) ? d.chainHeight : (d.chainReach === 'stream_ultra' ? 400 : (d.chainReach === 'stream_ceiling' ? 210 : 55));
         const vEl = document.getElementById('valChainHeight');
         if (vEl) {
           const hVal = parseInt(cHeight.value);
