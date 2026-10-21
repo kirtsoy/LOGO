@@ -839,12 +839,35 @@
       <div class="form-group" id="lineSpacingGroup">
         <div class="slider-row">
           <label style="margin: 0; min-width: 125px;">Межстрочный шаг</label>
-          <input type="range" id="lineSpacingSlider" min="0.6" max="1.8" step="0.05" value="1.15" oninput="updateLineSpacingVal()">
-          <span class="slider-val" id="valLineSpacing">1.15x</span>
+          <input type="range" id="lineSpacingSlider" min="0.4" max="1.8" step="0.05" value="0.88" oninput="updateLineSpacingVal()">
+          <span class="slider-val" id="valLineSpacing">0.88x</span>
         </div>
         <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
-          Расстояние между строками при вводе через Shift+Enter
+          Общий базовый интервал между строками
         </div>
+      </div>
+
+      <!-- Descender Tail Shortening for 'y' / 'g' -->
+      <div class="form-group" id="descenderGroup">
+        <div class="slider-row">
+          <label style="margin: 0; min-width: 125px;">Хвостик "y" / "g"</label>
+          <input type="range" id="descenderScaleSlider" min="0.2" max="1.0" step="0.05" value="0.65" oninput="updateDescenderScaleVal()">
+          <span class="slider-val" id="valDescenderScale">0.65x</span>
+        </div>
+        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+          Подтяжка нижнего хвоста "y", чтобы аккуратно входить в нижнюю строку
+        </div>
+      </div>
+
+      <!-- Dynamic Multiline Interlocking Puzzle Controls -->
+      <div id="dynamicMultilineControls" style="display: none; background: rgba(0,0,0,0.3); border: 1px solid rgba(56,189,248,0.25); border-radius: 8px; padding: 10px 12px; margin-top: 8px; margin-bottom: 8px;">
+        <div style="font-size: 11px; font-weight: 700; color: #38bdf8; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+          <span style="display: flex; align-items: center; gap: 6px;">
+            <span>🧩</span> <span>ТОЧНАЯ СТЫКОВКА СТРОК (PUZZLE LOCK)</span>
+          </span>
+          <span style="font-size: 9px; color: #94a3b8; font-weight: normal;">микросдвиги X и шаги Y</span>
+        </div>
+        <div id="dynamicMultilineSliders"></div>
       </div>
 
       <!-- Solid Jewelry Backplate / Undercarriage Toggle -->
@@ -867,10 +890,11 @@
       </div>
 
       <div class="form-group">
-        <div style="display: flex; gap: 6px;">
-          <button class="preset-btn" style="flex: 1;" onclick="setTextCase('lower')">lowercase</button>
-          <button class="preset-btn" style="flex: 1;" onclick="setTextCase('upper')">UPPERCASE</button>
-          <button class="preset-btn" style="flex: 1;" onclick="setTextCase('title')">Capitalize</button>
+        <div style="display: flex; gap: 4px;">
+          <button class="preset-btn active" id="caseBtnAsIs" style="flex: 1; padding: 6px 4px; font-size: 11px;" onclick="setTextCase('as_is')">Как есть</button>
+          <button class="preset-btn" id="caseBtnLower" style="flex: 1; padding: 6px 4px; font-size: 11px;" onclick="setTextCase('lower')">lower</button>
+          <button class="preset-btn" id="caseBtnUpper" style="flex: 1; padding: 6px 4px; font-size: 11px;" onclick="setTextCase('upper')">UPPER</button>
+          <button class="preset-btn" id="caseBtnTitle" style="flex: 1; padding: 6px 4px; font-size: 11px;" onclick="setTextCase('title')">Title</button>
         </div>
       </div>
     </div>
@@ -1672,7 +1696,7 @@
   <script>
     // --- STATE MANAGEMENT ---
     let activeMode = '3d';
-    let currentCase = 'lower';
+    let currentCase = 'as_is';
     let loadedFonts = {};
     let threeFont = null;
     let activeSource = 'pendant_real_hole'; // 'pendant_real_hole', 'text', 'cuban_chain', 'sample_emblem', 'custom_model'
@@ -2609,10 +2633,127 @@
       trigger3DRebuild();
     }
 
+    window.multilineConfig = {
+      shiftsX: {},
+      gapsY: {},
+      descenderScale: 0.65
+    };
+
     function updateLineSpacingVal() {
       const el = document.getElementById('lineSpacingSlider');
-      const val = el ? parseFloat(el.value) : 1.15;
+      const val = el ? parseFloat(el.value) : 0.88;
       if (document.getElementById('valLineSpacing')) document.getElementById('valLineSpacing').innerText = val.toFixed(2) + 'x';
+      trigger3DRebuild();
+    }
+
+    function updateDescenderScaleVal() {
+      const el = document.getElementById('descenderScaleSlider');
+      const val = el ? parseFloat(el.value) : 0.65;
+      if (document.getElementById('valDescenderScale')) document.getElementById('valDescenderScale').innerText = val.toFixed(2) + 'x';
+      window.multilineConfig.descenderScale = val;
+      trigger3DRebuild();
+    }
+
+    function updateDynamicMultilineUI() {
+      const container = document.getElementById('dynamicMultilineControls');
+      const slidersBox = document.getElementById('dynamicMultilineSliders');
+      if (!container || !slidersBox) return;
+
+      const textVal = getFormattedText();
+      const rawLines = textVal.split('\n');
+      if (rawLines.length <= 1) {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'block';
+
+      if (!window.multilineConfig) {
+        window.multilineConfig = { shiftsX: {}, gapsY: {}, descenderScale: 0.65 };
+      }
+
+      // Smart Defaults for 3-line Day / 307 / vlog puzzle lock if untouched
+      const isDay307Vlog = rawLines.length === 3 && 
+                           rawLines[0].toLowerCase().includes('day') && 
+                           (rawLines[1].includes('307') || rawLines[1].includes('308'));
+      if (isDay307Vlog && Object.keys(window.multilineConfig.shiftsX).length === 0) {
+        window.multilineConfig.shiftsX = { 0: 6, 1: 0, 2: 8 };
+        window.multilineConfig.gapsY = { 0: 0.88, 1: 0.76 };
+        window.multilineConfig.descenderScale = 0.65;
+        if (document.getElementById('descenderScaleSlider')) {
+          document.getElementById('descenderScaleSlider').value = 0.65;
+          if (document.getElementById('valDescenderScale')) document.getElementById('valDescenderScale').innerText = '0.65x';
+        }
+      }
+
+      const expectedCount = rawLines.length + (rawLines.length - 1);
+      const existingInputs = slidersBox.querySelectorAll('input');
+      if (existingInputs.length === expectedCount) {
+        return; // Already populated cleanly, avoid focus loss
+      }
+
+      slidersBox.innerHTML = '';
+
+      for (let i = 0; i < rawLines.length; i++) {
+        const lineStr = (rawLines[i] || `Стр.${i+1}`).trim();
+        const curShift = window.multilineConfig.shiftsX[i] || 0;
+
+        const rowX = document.createElement('div');
+        rowX.className = 'form-group';
+        rowX.style.margin = '4px 0 6px 0';
+        rowX.innerHTML = `
+          <div class="slider-row">
+            <label style="margin:0; font-size:11px; min-width:145px; color:#cbd5e1; display:flex; align-items:center; gap:4px;">
+              <span>↔</span> <b>Стр.${i+1}</b> ("${lineStr.substring(0, 8)}") сдвиг:
+            </label>
+            <input type="range" min="-60" max="60" step="1" value="${curShift}" data-line="${i}" oninput="onMultilineShiftXInput(this)">
+            <span class="slider-val" id="valShiftX_${i}" style="min-width:40px; font-size:11px;">${curShift > 0 ? '+' : ''}${curShift}px</span>
+          </div>
+        `;
+        slidersBox.appendChild(rowX);
+
+        if (i < rawLines.length - 1) {
+          const baseGap = parseFloat(document.getElementById('lineSpacingSlider')?.value) || 0.88;
+          const curGap = window.multilineConfig.gapsY[i] !== undefined ? window.multilineConfig.gapsY[i] : baseGap;
+
+          const rowGap = document.createElement('div');
+          rowGap.className = 'form-group';
+          rowGap.style.margin = '4px 0 10px 0';
+          rowGap.style.paddingBottom = '6px';
+          rowGap.style.borderBottom = '1px dashed rgba(255,255,255,0.08)';
+          rowGap.innerHTML = `
+            <div class="slider-row">
+              <label style="margin:0; font-size:11px; min-width:145px; color:#f59e0b; display:flex; align-items:center; gap:4px;">
+                <span>↕</span> <b>Шаг</b> Стр.${i+1} ➔ Стр.${i+2}:
+              </label>
+              <input type="range" min="0.40" max="1.50" step="0.02" value="${curGap}" data-gap="${i}" oninput="onMultilineGapYInput(this)">
+              <span class="slider-val" id="valGapY_${i}" style="min-width:40px; font-size:11px;">${parseFloat(curGap).toFixed(2)}x</span>
+            </div>
+          `;
+          slidersBox.appendChild(rowGap);
+        }
+      }
+    }
+
+    function onMultilineShiftXInput(el) {
+      const idx = parseInt(el.getAttribute('data-line'));
+      const val = parseInt(el.value);
+      if (!window.multilineConfig) window.multilineConfig = { shiftsX: {}, gapsY: {} };
+      if (!window.multilineConfig.shiftsX) window.multilineConfig.shiftsX = {};
+      window.multilineConfig.shiftsX[idx] = val;
+      const vEl = document.getElementById(`valShiftX_${idx}`);
+      if (vEl) vEl.innerText = (val > 0 ? '+' : '') + val + 'px';
+      trigger3DRebuild();
+    }
+
+    function onMultilineGapYInput(el) {
+      const idx = parseInt(el.getAttribute('data-gap'));
+      const val = parseFloat(el.value);
+      if (!window.multilineConfig) window.multilineConfig = { shiftsX: {}, gapsY: {} };
+      if (!window.multilineConfig.gapsY) window.multilineConfig.gapsY = {};
+      window.multilineConfig.gapsY[idx] = val;
+      const vEl = document.getElementById(`valGapY_${idx}`);
+      if (vEl) vEl.innerText = val.toFixed(2) + 'x';
       trigger3DRebuild();
     }
 
@@ -2638,6 +2779,7 @@
         const bevelRow = document.getElementById('bevelControlRow');
         if (bevelRow) bevelRow.style.display = 'block';
       }
+      updateDynamicMultilineUI();
       trigger3DRebuild();
     }
 
@@ -2650,7 +2792,8 @@
     }
 
     function buildInterlockingPendantMesh(textVal, font, size, depth, bevel, bevelSegs, overlapRatio, backplateOn, bpDepth, customLineSpacing = null) {
-      const rawLines = (textVal || 'kirtsoy').split('\n');
+      const normalizedText = (textVal || 'kirtsoy').replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+      const rawLines = normalizedText.split('\n');
       const lines = rawLines.length > 0 ? rawLines : ['kirtsoy'];
       const scale = size / font.data.resolution;
       const geometries = [];
@@ -2666,12 +2809,33 @@
         bevelSegments: bevelSegs
       };
 
-      const lineSpacingRatio = customLineSpacing !== null 
+      const baseLineSpacingRatio = customLineSpacing !== null 
         ? customLineSpacing 
-        : (parseFloat(document.getElementById('lineSpacingSlider')?.value) || 1.15);
-      const lineSpacingPx = size * lineSpacingRatio;
+        : (parseFloat(document.getElementById('lineSpacingSlider')?.value) || 0.88);
+
+      const descenderScale = parseFloat(document.getElementById('descenderScaleSlider')?.value || (window.multilineConfig?.descenderScale || 0.65));
+
       const totalLines = lines.length;
-      const yCenterOffset = ((totalLines - 1) * lineSpacingPx) / 2;
+
+      // Calculate per-gap heights
+      const gapsY = window.multilineConfig?.gapsY || {};
+      const lineGaps = [];
+      for (let i = 0; i < totalLines - 1; i++) {
+        const gapVal = (gapsY[i] !== undefined && gapsY[i] !== null) ? gapsY[i] : baseLineSpacingRatio;
+        lineGaps.push(gapVal);
+      }
+
+      let totalSpanY = 0;
+      for (let g of lineGaps) totalSpanY += size * g;
+      let curY = totalSpanY / 2;
+
+      const lineYs = [curY];
+      for (let i = 0; i < lineGaps.length; i++) {
+        curY -= size * lineGaps[i];
+        lineYs.push(curY);
+      }
+
+      const shiftsX = window.multilineConfig?.shiftsX || {};
 
       for (let lineIndex = 0; lineIndex < totalLines; lineIndex++) {
         const lineStr = lines[lineIndex];
@@ -2682,25 +2846,38 @@
         let lineWidth = 0;
         for (let i = 0; i < lineChars.length; i++) {
           const char = lineChars[i];
-          if (char === '\r') continue;
           const glyph = font.data.glyphs[char] || font.data.glyphs['?'];
           if (!glyph) continue;
           const advance = (glyph.ha !== undefined ? glyph.ha : 500) * scale;
           lineWidth += (char === ' ') ? advance : (advance * (1.0 - overlapRatio));
         }
 
-        let currentX = -lineWidth / 2;
-        const lineY = yCenterOffset - (lineIndex * lineSpacingPx);
+        const shiftX = (shiftsX[lineIndex] !== undefined) ? shiftsX[lineIndex] : 0;
+        let currentX = -lineWidth / 2 + shiftX;
+        const lineY = lineYs[lineIndex];
 
         for (let i = 0; i < lineChars.length; i++) {
           const char = lineChars[i];
-          if (char === '\r') continue;
           const glyph = font.data.glyphs[char] || font.data.glyphs['?'];
           if (!glyph) continue;
 
           const shapes = font.generateShapes(char, size);
           if (shapes && shapes.length > 0) {
             const charGeo = new THREE.ExtrudeGeometry(shapes, extrudeSettings);
+
+            // Descender shortening for 'y', 'g', 'p', 'q', 'j'
+            if (['y', 'g', 'p', 'q', 'j'].includes(char.toLowerCase()) && descenderScale < 1.0) {
+              const pos = charGeo.attributes.position;
+              for (let v = 0; v < pos.count; v++) {
+                const vy = pos.getY(v);
+                if (vy < 0) {
+                  pos.setY(v, vy * descenderScale);
+                }
+              }
+              pos.needsUpdate = true;
+              charGeo.computeVertexNormals();
+            }
+
             charGeo.translate(currentX, lineY, 0);
             charGeo.computeBoundingBox();
 
@@ -3096,6 +3273,10 @@
       if (document.getElementById('valLineSpacing') && document.getElementById('lineSpacingSlider')) {
         document.getElementById('valLineSpacing').innerText = parseFloat(document.getElementById('lineSpacingSlider').value).toFixed(2) + 'x';
       }
+      if (document.getElementById('valDescenderScale') && document.getElementById('descenderScaleSlider')) {
+        document.getElementById('valDescenderScale').innerText = parseFloat(document.getElementById('descenderScaleSlider').value).toFixed(2) + 'x';
+      }
+      if (typeof updateDynamicMultilineUI === 'function') updateDynamicMultilineUI();
       rebuildCurrent3DObject();
       renderLogoMask();
     }
@@ -5305,7 +5486,9 @@
 
         // 2. Text, Casing & Font
         text: document.getElementById('logoText')?.value || 'kirtsoy',
-        lineSpacing: parseFloat(document.getElementById('lineSpacingSlider')?.value || 1.15),
+        lineSpacing: parseFloat(document.getElementById('lineSpacingSlider')?.value || 0.88),
+        descenderScale: parseFloat(document.getElementById('descenderScaleSlider')?.value || 0.65),
+        multilineConfig: window.multilineConfig ? JSON.parse(JSON.stringify(window.multilineConfig)) : null,
         textCase: currentCase,
         font: document.getElementById('font3DSelect')?.value || 'UnifrakturCook_PrintedK',
         fontSize: parseFloat(document.getElementById('fontSize3D')?.value || 38),
@@ -5474,7 +5657,15 @@
         const v = document.getElementById('valLineSpacing');
         if (v) v.innerText = parseFloat(d.lineSpacing).toFixed(2) + 'x';
       }
-      currentCase = d.textCase || 'lower';
+      if (d.descenderScale !== undefined && document.getElementById('descenderScaleSlider')) {
+        document.getElementById('descenderScaleSlider').value = d.descenderScale;
+        const v = document.getElementById('valDescenderScale');
+        if (v) v.innerText = parseFloat(d.descenderScale).toFixed(2) + 'x';
+      }
+      if (d.multilineConfig) {
+        window.multilineConfig = JSON.parse(JSON.stringify(d.multilineConfig));
+      }
+      currentCase = d.textCase || 'as_is';
       document.querySelectorAll('#typographySection .preset-btn').forEach(b => {
         b.classList.remove('active');
         const oc = b.getAttribute('onclick') || '';
