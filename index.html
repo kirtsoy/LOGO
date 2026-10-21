@@ -402,10 +402,12 @@
       z-index: 1;
     }
 
-    #gl-liquid-canvas, #video-loop-container { display: none; }
+    #gl-liquid-canvas {
+      display: none;
+    }
 
     #video-loop-container {
-      display: flex;
+      display: none;
       align-items: center;
       justify-content: center;
       background: #000;
@@ -788,7 +790,7 @@
           <label style="margin: 0;">Текст логотипа (многострочный)</label>
           <span style="font-size: 10px; color: #38bdf8; font-family: monospace;">Shift+Enter — новая строка</span>
         </div>
-        <textarea id="logoText" class="input-text" rows="2" placeholder="kirtsoy" style="resize: vertical; min-height: 48px; line-height: 1.4; font-family: inherit;" oninput="autoResizeLogoText(); trigger3DRebuild();" onkeydown="handleLogoTextKeydown(event)">kirtsoy</textarea>
+        <textarea id="logoText" class="input-text" rows="2" placeholder="kirtsoy" style="resize: vertical; min-height: 48px; line-height: 1.4; font-family: inherit;" oninput="onLogoTextInput()" onkeydown="handleLogoTextKeydown(event)">kirtsoy</textarea>
       </div>
 
       <div class="form-group">
@@ -2607,11 +2609,51 @@
       trigger3DRebuild();
     }
 
-    function buildInterlockingPendantMesh(textVal, font, size, depth, bevel, bevelSegs, overlapRatio, backplateOn, bpDepth) {
-      const chars = Array.from(textVal);
+    function updateLineSpacingVal() {
+      const el = document.getElementById('lineSpacingSlider');
+      const val = el ? parseFloat(el.value) : 1.15;
+      if (document.getElementById('valLineSpacing')) document.getElementById('valLineSpacing').innerText = val.toFixed(2) + 'x';
+      trigger3DRebuild();
+    }
+
+    function autoResizeLogoText() {
+      const el = document.getElementById('logoText');
+      if (!el) return;
+      el.style.height = 'auto';
+      el.style.height = Math.min(240, Math.max(52, el.scrollHeight)) + 'px';
+    }
+
+    function onLogoTextInput() {
+      autoResizeLogoText();
+      if (activeSource !== 'text') {
+        activeSource = 'text';
+        const sel = document.getElementById('objectSourceSelect');
+        if (sel) sel.value = 'text';
+        const typoSec = document.getElementById('typographySection');
+        if (typoSec) typoSec.style.display = 'block';
+        const uploadGrp = document.getElementById('fileUploadGroup');
+        if (uploadGrp) uploadGrp.style.display = 'none';
+        const depthRow = document.getElementById('depthControlRow');
+        if (depthRow) depthRow.style.display = 'block';
+        const bevelRow = document.getElementById('bevelControlRow');
+        if (bevelRow) bevelRow.style.display = 'block';
+      }
+      trigger3DRebuild();
+    }
+
+    function handleLogoTextKeydown(e) {
+      if (e.key === 'Enter') {
+        setTimeout(() => {
+          onLogoTextInput();
+        }, 0);
+      }
+    }
+
+    function buildInterlockingPendantMesh(textVal, font, size, depth, bevel, bevelSegs, overlapRatio, backplateOn, bpDepth, customLineSpacing = null) {
+      const rawLines = (textVal || 'kirtsoy').split('\n');
+      const lines = rawLines.length > 0 ? rawLines : ['kirtsoy'];
       const scale = size / font.data.resolution;
       const geometries = [];
-      let currentX = 0;
       let tLetterBounds = null;
 
       const extrudeSettings = {
@@ -2624,34 +2666,68 @@
         bevelSegments: bevelSegs
       };
 
-      for (let i = 0; i < chars.length; i++) {
-        const char = chars[i];
-        const glyph = font.data.glyphs[char] || font.data.glyphs['?'];
-        if (!glyph) continue;
+      const lineSpacingRatio = customLineSpacing !== null 
+        ? customLineSpacing 
+        : (parseFloat(document.getElementById('lineSpacingSlider')?.value) || 1.15);
+      const lineSpacingPx = size * lineSpacingRatio;
+      const totalLines = lines.length;
+      const yCenterOffset = ((totalLines - 1) * lineSpacingPx) / 2;
 
-        const shapes = font.generateShapes(char, size);
-        if (shapes && shapes.length > 0) {
-          const charGeo = new THREE.ExtrudeGeometry(shapes, extrudeSettings);
-          charGeo.translate(currentX, 0, 0);
-          charGeo.computeBoundingBox();
+      for (let lineIndex = 0; lineIndex < totalLines; lineIndex++) {
+        const lineStr = lines[lineIndex];
+        const lineChars = Array.from(lineStr);
+        if (lineChars.length === 0) continue;
 
-          // Capture letter 't' for precise chain catenary curve threading
-          if (char.toLowerCase() === 't' && !tLetterBounds) {
-            const b = charGeo.boundingBox;
-            tLetterBounds = {
-              minX: b.min.x,
-              maxX: b.max.x,
-              xCenter: (b.min.x + b.max.x) / 2,
-              yBail: b.min.y + (b.max.y - b.min.y) * 0.84
-            };
-          }
-
-          geometries.push(charGeo);
+        // Calculate line width to center each line horizontally
+        let lineWidth = 0;
+        for (let i = 0; i < lineChars.length; i++) {
+          const char = lineChars[i];
+          if (char === '\r') continue;
+          const glyph = font.data.glyphs[char] || font.data.glyphs['?'];
+          if (!glyph) continue;
+          const advance = (glyph.ha !== undefined ? glyph.ha : 500) * scale;
+          lineWidth += (char === ' ') ? advance : (advance * (1.0 - overlapRatio));
         }
 
-        // Advance cursor with overlap so every letter touches and merges!
-        const advance = (glyph.ha !== undefined ? glyph.ha : 500) * scale;
-        currentX += advance * (1.0 - overlapRatio);
+        let currentX = -lineWidth / 2;
+        const lineY = yCenterOffset - (lineIndex * lineSpacingPx);
+
+        for (let i = 0; i < lineChars.length; i++) {
+          const char = lineChars[i];
+          if (char === '\r') continue;
+          const glyph = font.data.glyphs[char] || font.data.glyphs['?'];
+          if (!glyph) continue;
+
+          const shapes = font.generateShapes(char, size);
+          if (shapes && shapes.length > 0) {
+            const charGeo = new THREE.ExtrudeGeometry(shapes, extrudeSettings);
+            charGeo.translate(currentX, lineY, 0);
+            charGeo.computeBoundingBox();
+
+            // Capture letter 't' for precise chain catenary curve threading
+            if (char.toLowerCase() === 't' && !tLetterBounds) {
+              const b = charGeo.boundingBox;
+              tLetterBounds = {
+                minX: b.min.x,
+                maxX: b.max.x,
+                xCenter: (b.min.x + b.max.x) / 2,
+                yBail: b.min.y + (b.max.y - b.min.y) * 0.84
+              };
+            }
+
+            geometries.push(charGeo);
+          }
+
+          const advance = (glyph.ha !== undefined ? glyph.ha : 500) * scale;
+          currentX += (char === ' ') ? advance : (advance * (1.0 - overlapRatio));
+        }
+      }
+
+      if (geometries.length === 0) {
+        const shapes = font.generateShapes('?', size);
+        if (shapes && shapes.length > 0) {
+          geometries.push(new THREE.ExtrudeGeometry(shapes, extrudeSettings));
+        }
       }
 
       // Optional: Solid Jewelry Backplate (Литая золотая подложка)
@@ -2663,7 +2739,7 @@
           minY = Math.min(minY, g.boundingBox.min.y);
           maxY = Math.max(maxY, g.boundingBox.max.y);
         });
-        const pad = 3.0;
+        const pad = 4.0;
         const w = (maxX - minX) + pad * 2;
         const h = (maxY - minY) + pad * 2;
         const cx = (minX + maxX) / 2;
@@ -2691,6 +2767,7 @@
         });
         // Position directly behind the letters (overlap 0.5px for watertight fusion)
         bpGeo.translate(cx, cy, -bpDepth + 0.5);
+        bpGeo.computeBoundingBox();
         geometries.push(bpGeo);
       }
 
@@ -2712,6 +2789,15 @@
           xLeft: tLetterBounds.minX - meshCenter.x,
           xRight: tLetterBounds.maxX - meshCenter.x,
           yBail: tLetterBounds.yBail - meshCenter.y,
+          z: 0
+        };
+      } else {
+        // Fallback for custom words without letter 't': anchor chain at top-center of pendant
+        window.dynamicHoleCoords = {
+          xCenter: 0,
+          xLeft: -6,
+          xRight: 6,
+          yBail: (merged.boundingBox ? merged.boundingBox.max.y : 20) * 0.88,
           z: 0
         };
       }
@@ -2738,7 +2824,8 @@
         const backplateOn = document.getElementById('backplateToggle')?.checked || false;
         const bpDepth = parseFloat(document.getElementById('backplateDepth')?.value || 4);
 
-        const meshGeo = buildInterlockingPendantMesh(textVal, threeFont, size, depth, bevel, bevelSegs, overlapRatio, backplateOn, bpDepth);
+        const lineSpacing = parseFloat(document.getElementById('lineSpacingSlider')?.value || 1.15);
+        const meshGeo = buildInterlockingPendantMesh(textVal, threeFont, size, depth, bevel, bevelSegs, overlapRatio, backplateOn, bpDepth, lineSpacing);
         const mat = getActiveChromeMaterial();
         threeCurrentMesh = new THREE.Mesh(meshGeo, mat);
         if (baseMeshRot) threeCurrentMesh.rotation.set(baseMeshRot.x, baseMeshRot.y, baseMeshRot.z);
@@ -3005,6 +3092,9 @@
       }
       if (document.getElementById('valBackplateDepth') && document.getElementById('backplateDepth')) {
         document.getElementById('valBackplateDepth').innerText = document.getElementById('backplateDepth').value + 'px';
+      }
+      if (document.getElementById('valLineSpacing') && document.getElementById('lineSpacingSlider')) {
+        document.getElementById('valLineSpacing').innerText = parseFloat(document.getElementById('lineSpacingSlider').value).toFixed(2) + 'x';
       }
       rebuildCurrent3DObject();
       renderLogoMask();
@@ -3640,13 +3730,23 @@
 
     function renderLogoMask() {
       const textVal = getFormattedText();
+      const lines = textVal.split('\n');
       const w = 1200, h = 500;
       maskCanvas.width = w; maskCanvas.height = h; maskRatio = w / h;
       maskCtx.fillStyle = '#ffffff'; maskCtx.fillRect(0, 0, w, h);
-      maskCtx.font = '900 180px "Syne", "Orbitron", sans-serif';
-      maskCtx.textAlign = 'center'; maskCtx.textBaseline = 'middle';
+
+      const numLines = Math.max(1, lines.length);
+      const fontSize = numLines > 2 ? 80 : (numLines === 2 ? 120 : 180);
+      const lineHeight = fontSize * 1.18;
+      maskCtx.font = `900 ${fontSize}px "Syne", "Orbitron", sans-serif`;
+      maskCtx.textAlign = 'center'; 
+      maskCtx.textBaseline = 'middle';
       maskCtx.fillStyle = '#000000';
-      maskCtx.fillText(textVal, w / 2, h / 2);
+
+      const startY = (h / 2) - ((numLines - 1) * lineHeight) / 2;
+      lines.forEach((line, idx) => {
+        maskCtx.fillText(line, w / 2, startY + idx * lineHeight);
+      });
 
       gl.bindTexture(gl.TEXTURE_2D, logoTex);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, maskCanvas);
@@ -6317,6 +6417,7 @@
     window.addEventListener('resize', resizeAll);
     window.addEventListener('DOMContentLoaded', () => {
       initThree3D();
+      setMode('3d');
       initPresets();
       updateLightingBoost();
       resizeAll();
