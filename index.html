@@ -1095,6 +1095,22 @@
                 </div>
               </div>
 
+              <!-- 0b. Wobble Duration before Chain Flight (Day 308 / Stream Goal) -->
+              <div id="introWobbleDurationGroup" style="margin-bottom: 8px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
+                  <span style="font-size: 11px; color: #f59e0b; font-weight: 700;">⏱️ Пауза воббла до влёта цепи:</span>
+                  <span style="font-size: 11px; color: #f59e0b; font-family: monospace; font-weight: 700;" id="valIntroWobbleDuration">4.5с</span>
+                </div>
+                <div class="slider-row" style="margin: 2px 0;">
+                  <input type="range" id="introWobbleDuration" min="1.0" max="15.0" step="0.5" value="4.5" oninput="updateIntroTimingReadouts()">
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 9px; color: #94a3b8;">
+                  <span>⚡ 1.0с</span>
+                  <span style="color: #fde68a; font-weight: 700;">4.5с (Оптимально)</span>
+                  <span>⏳ 15.0с</span>
+                </div>
+              </div>
+
               <!-- 1. Rotation Speed -->
               <div style="margin-bottom: 8px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
@@ -2464,6 +2480,10 @@
     }
 
     function updateIntroTimingReadouts() {
+      const wobbleDur = parseFloat(document.getElementById('introWobbleDuration')?.value || 4.5);
+      const valWobble = document.getElementById('valIntroWobbleDuration');
+      if (valWobble) valWobble.innerText = `${wobbleDur.toFixed(1)}с`;
+
       const spinSpeed = parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0);
       const chainSpeed = parseFloat(document.getElementById('introChainSpeed')?.value || 1.0);
       const holeTiming = parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0);
@@ -4275,14 +4295,15 @@
 
       if (!spinEnabled) {
         // Stream Goal Day 308 Choreography: Living Wobble -> Chain Swoop -> Tension Lock -> Lift UP
-        const tWobbleBeforeChain = 1.3 / Math.max(0.2, holeTimingMult);
-        const dFlightToHole = 1.2 / Math.max(0.2, chainSpeedMult);
+        const wobbleDur = parseFloat(document.getElementById('introWobbleDuration')?.value || 4.5);
+        const tWobbleBeforeChain = wobbleDur / Math.max(0.2, holeTimingMult);
+        const dFlightToHole = 1.25 / Math.max(0.2, chainSpeedMult);
         const tChainLaunch = tWobbleBeforeChain;
         const tAnchorEnd = tChainLaunch + dFlightToHole;
-        const tLiftStart = tAnchorEnd + 0.35;
-        const dLift = 1.2;
+        const tLiftStart = tAnchorEnd + 0.4; // 0.4s clean tension lock
+        const dLift = 1.3;
         const tLiftEnd = tLiftStart + dLift;
-        const loopDuration = tLiftEnd + 0.5;
+        const loopDuration = tLiftEnd + 0.6;
 
         return {
           spinEnabled: false,
@@ -5070,6 +5091,7 @@
           chainHeight: 450,
           chainSag: 1.0,
           introSpinEnabled: false,
+          introWobbleDuration: 4.5,
           camDistance: 320,
           camOffsetY: -10,
           camOffsetX: 0,
@@ -6020,6 +6042,7 @@
         // 5. Cinematic Animations / Transitions
         transitionMode: transitionMode,
         introSpinEnabled: document.getElementById('introSpinToggle') ? document.getElementById('introSpinToggle').checked : true,
+        introWobbleDuration: parseFloat(document.getElementById('introWobbleDuration')?.value || 4.5),
         introSpinSpeed: parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0),
         introChainSpeed: parseFloat(document.getElementById('introChainSpeed')?.value || 1.0),
         introChainHoleTiming: parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0),
@@ -6290,6 +6313,11 @@
 
       if (d.introSpinEnabled !== undefined && document.getElementById('introSpinToggle')) {
         document.getElementById('introSpinToggle').checked = d.introSpinEnabled;
+      }
+      if (d.introWobbleDuration !== undefined && document.getElementById('introWobbleDuration')) {
+        document.getElementById('introWobbleDuration').value = d.introWobbleDuration;
+        const valWobble = document.getElementById('valIntroWobbleDuration');
+        if (valWobble) valWobble.innerText = `${d.introWobbleDuration.toFixed(1)}с`;
       }
       if (d.introSpinSpeed !== undefined && document.getElementById('introSpinSpeed')) {
         document.getElementById('introSpinSpeed').value = d.introSpinSpeed;
