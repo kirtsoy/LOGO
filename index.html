@@ -1084,6 +1084,17 @@
                 </div>
               </div>
 
+              <!-- 0. Spin 360 Toggle -->
+              <div style="margin-bottom: 8px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff; font-size: 11px;">
+                  <input type="checkbox" id="introSpinToggle" checked onchange="updateIntroTimingReadouts()">
+                  <span style="font-weight: 700;">🌀 Вращение 360° в Апофеозе</span>
+                </label>
+                <div style="font-size: 9px; color: #94a3b8; margin-top: 2px;">
+                  Выключено для Day 308 (только воббл + влёт цепи в "a" и подъём вверх)
+                </div>
+              </div>
+
               <!-- 1. Rotation Speed -->
               <div style="margin-bottom: 8px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2px;">
@@ -2044,6 +2055,15 @@
     }
 
     function onChainAnchorChange() {
+      const anchorVal = document.getElementById('chainAnchorSelect')?.value || 'auto';
+      const spinToggle = document.getElementById('introSpinToggle');
+      if (spinToggle) {
+        if (anchorVal === 'letter_a') {
+          spinToggle.checked = false;
+        } else if (anchorVal === 'letter_t') {
+          spinToggle.checked = true;
+        }
+      }
       rebuildCurrent3DObject();
       rebuildThreadedChain();
     }
@@ -4237,6 +4257,11 @@
     let studioRenderCancelled = false;
 
     function getIntroTimingInfo() {
+      const coords = getPendantHole3DCoords();
+      const isAnchorA = (coords.anchorChar === 'a');
+      const introSpinToggle = document.getElementById('introSpinToggle');
+      const spinEnabled = introSpinToggle !== null ? introSpinToggle.checked : !isAnchorA;
+
       const alignToggle = document.getElementById('introAlignToggle');
       const alignEnabled = alignToggle ? alignToggle.checked : true;
       const alignDuration = alignEnabled ? parseFloat(document.getElementById('introAlignDuration')?.value || 1.2) : 0.0;
@@ -4247,6 +4272,43 @@
       const chainSpeedMult = parseFloat(document.getElementById('introChainSpeed')?.value || 1.0);
       const holeTimingMult = parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0);
       const preSpins = Math.max(0, parseInt(document.getElementById('introPreSpins')?.value ?? 1));
+
+      if (!spinEnabled) {
+        // Stream Goal Day 308 Choreography: Living Wobble -> Chain Swoop -> Tension Lock -> Lift UP
+        const tWobbleBeforeChain = 1.3 / Math.max(0.2, holeTimingMult);
+        const dFlightToHole = 1.2 / Math.max(0.2, chainSpeedMult);
+        const tChainLaunch = tWobbleBeforeChain;
+        const tAnchorEnd = tChainLaunch + dFlightToHole;
+        const tLiftStart = tAnchorEnd + 0.35;
+        const dLift = 1.2;
+        const tLiftEnd = tLiftStart + dLift;
+        const loopDuration = tLiftEnd + 0.5;
+
+        return {
+          spinEnabled: false,
+          alignEnabled,
+          alignDuration: 0.0,
+          tPrePause: 0.0,
+          spinSpeedMult,
+          spinDuration: 0.0,
+          chainSpeedMult,
+          holeTimingMult,
+          preSpins: 0,
+          tStartSpin: 0.0,
+          preSpinDuration: 0.0,
+          tMainSpinStart: 0.0,
+          tSpinEnd: 0.0,
+          tHoleTarget: tAnchorEnd,
+          dFlightToHole,
+          tChainLaunch,
+          dToAnchor: 0.0,
+          tAnchorEnd,
+          tLiftStart,
+          tLiftEnd,
+          tDropEnd: tLiftStart,
+          loopDuration
+        };
+      }
 
       const tStartSpin = alignDuration + tPrePause + 0.2;
       const preSpinDuration = preSpins * spinDuration;
@@ -4269,6 +4331,7 @@
       const loopDuration = tLiftEnd + 0.4; // 0.4s clean off-screen pause
 
       return {
+        spinEnabled: true,
         alignEnabled,
         alignDuration,
         tPrePause,
@@ -4360,6 +4423,85 @@
             threeControls.target.set(offX, offY, 0);
           }
         }
+      }
+
+      // --- DEDICATED STREAM GOAL (DAY 308) INTRO CHOREOGRAPHY ---
+      // ZERO ROTATION: PURE LIVING WOBBLE -> CHAIN FLIES IN -> TENSION LOCK -> LIFTS UPWARD
+      if (!t.spinEnabled) {
+        const wobble = getHarmonicWobble(loopTime, rSpeed, ripple);
+
+        let chainP = 0.0;
+        if (loopTime < t.tChainLaunch) {
+          chainP = 0.0;
+          if (threeChainMesh) threeChainMesh.visible = false;
+        } else if (loopTime < t.tAnchorEnd) {
+          if (threeChainMesh) threeChainMesh.visible = chainEnabled;
+          const s = (loopTime - t.tChainLaunch) / Math.max(0.001, t.tAnchorEnd - t.tChainLaunch);
+          chainP = Math.pow(Math.min(1.0, Math.max(0.0, s)), 1.15);
+        } else {
+          chainP = 1.0;
+          if (threeChainMesh) threeChainMesh.visible = chainEnabled;
+        }
+
+        updateChainThreading(chainP);
+
+        if (loopTime < t.tAnchorEnd) {
+          // Phase 1: Pure living wobble in place (NO 360° SPIN) while chain flies down
+          const bobY = wobble.y;
+          const tiltZ = wobble.rotZ;
+          const tiltX = wobble.rotX;
+
+          if (threeCurrentMesh) {
+            let tactileX = 0;
+            if (chainP > 0.7 && chainP < 0.95) {
+              tactileX = (Math.random() - 0.5) * 0.2; // subtle contact tick
+            }
+            threeCurrentMesh.position.set(tactileX, bobY, 0);
+            threeCurrentMesh.rotation.set(tiltX, 0, tiltZ);
+          }
+          if (threeChainMesh) {
+            threeChainMesh.position.set(0, bobY, 0);
+            threeChainMesh.rotation.set(tiltX, 0, tiltZ);
+          }
+        } else if (loopTime < t.tLiftStart) {
+          // Phase 2: Tension lock / brief pull taut (0.35s)
+          const tautProg = (loopTime - t.tAnchorEnd) / Math.max(0.001, t.tLiftStart - t.tAnchorEnd);
+          const tautY = Math.sin(tautProg * Math.PI) * 2.2;
+          const tautTiltX = -tautProg * 0.08;
+
+          if (threeCurrentMesh) {
+            threeCurrentMesh.position.set(0, wobble.y + tautY, 0);
+            threeCurrentMesh.rotation.set(wobble.rotX + tautTiltX, 0, wobble.rotZ);
+          }
+          if (threeChainMesh) {
+            threeChainMesh.position.set(0, wobble.y + tautY, 0);
+            threeChainMesh.rotation.set(wobble.rotX + tautTiltX, 0, wobble.rotZ);
+          }
+        } else if (loopTime < t.tLiftEnd) {
+          // Phase 3: POWERFUL CINEMATIC LIFT UPWARD INTO CEILING (УНОС ВВЕРХ)
+          const liftT = (loopTime - t.tLiftStart) / Math.max(0.001, t.tLiftEnd - t.tLiftStart);
+          const liftProgress = liftT * liftT * (1.15 + 0.85 * liftT); // Rocket acceleration curve
+          const liftY = liftProgress * 920;
+          const liftTiltX = -Math.min(liftT * 0.38, 0.38);
+
+          if (threeCurrentMesh) {
+            threeCurrentMesh.position.set(0, liftY, 0);
+            threeCurrentMesh.rotation.set(liftTiltX, 0, 0);
+          }
+          if (threeChainMesh) {
+            threeChainMesh.position.set(0, liftY, 0);
+            threeChainMesh.rotation.set(liftTiltX * 0.8, 0, Math.sin(liftT * 4) * 0.06);
+          }
+        } else {
+          // Phase 4: Clean off-screen pause before loop
+          updateChainThreading(0.0);
+          if (threeCurrentMesh) threeCurrentMesh.position.set(0, 9999, 0);
+          if (threeChainMesh) {
+            threeChainMesh.position.set(0, 9999, 0);
+            threeChainMesh.visible = false;
+          }
+        }
+        return;
       }
 
       // Calculate current chain progress p:
@@ -4927,6 +5069,7 @@
           chainReach: 'stream_ultra',
           chainHeight: 450,
           chainSag: 1.0,
+          introSpinEnabled: false,
           camDistance: 320,
           camOffsetY: -10,
           camOffsetX: 0,
@@ -5876,6 +6019,7 @@
 
         // 5. Cinematic Animations / Transitions
         transitionMode: transitionMode,
+        introSpinEnabled: document.getElementById('introSpinToggle') ? document.getElementById('introSpinToggle').checked : true,
         introSpinSpeed: parseFloat(document.getElementById('introSpinSpeed')?.value || 1.0),
         introChainSpeed: parseFloat(document.getElementById('introChainSpeed')?.value || 1.0),
         introChainHoleTiming: parseFloat(document.getElementById('introChainHoleTiming')?.value || 1.0),
@@ -6144,6 +6288,9 @@
         if (threeControls) threeControls.autoRotate = d.autoRotate;
       }
 
+      if (d.introSpinEnabled !== undefined && document.getElementById('introSpinToggle')) {
+        document.getElementById('introSpinToggle').checked = d.introSpinEnabled;
+      }
       if (d.introSpinSpeed !== undefined && document.getElementById('introSpinSpeed')) {
         document.getElementById('introSpinSpeed').value = d.introSpinSpeed;
       }
