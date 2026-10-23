@@ -948,6 +948,19 @@
       </div>
 
       <div class="form-group">
+        <label>Точка подвеса / продевания цепи</label>
+        <select id="chainAnchorSelect" onchange="onChainAnchorChange()">
+          <option value="auto" selected>🎯 Авто-определение ("a" для Day 308, "t" для kirtsoy)</option>
+          <option value="letter_a">🅰️ Буква "a" (Day 308 / Vlog / Стрим-цель)</option>
+          <option value="letter_t">✝️ Буква "t" (kirtsoy logo / Классика)</option>
+          <option value="center">👑 Верх по центру кулона</option>
+        </select>
+        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+          Продевание сквозь букву "a" для Day 308 или сквозь "t" для kirtsoy logo
+        </div>
+      </div>
+
+      <div class="form-group">
         <label>Длина и вылет цепи (Формат проекта)</label>
         <select id="chainReachSelect" onchange="onChainReachChange()">
           <option value="classic" selected>💎 Классическое колье (YouTube / Короткий подвес)</option>
@@ -2030,6 +2043,11 @@
       return Math.min(800, neededH);
     }
 
+    function onChainAnchorChange() {
+      rebuildCurrent3DObject();
+      rebuildThreadedChain();
+    }
+
     function onChainReachChange() {
       const reach = document.getElementById('chainReachSelect')?.value || 'classic';
       const hSlider = document.getElementById('chainHeightSlider');
@@ -2176,28 +2194,55 @@
         holePt = p4;
       } else {
         // STREAM OVERLAY EXTENDED REACH (GOES BEYOND TOP OF SCREEN / INTO CEILING)
+        const isAnchorA = (coords.anchorChar === 'a');
+        
         let topX = 140;
-        if (reachMode === 'stream_v') topX = 210;
-        if (reachMode === 'stream_ultra') topX = 180;
-        if (reachMode === 'stream_vertical') topX = 45;
-        if (reachMode !== 'stream_vertical') {
-          topX += Math.max(0, (heightVal - 210) * 0.25);
+        if (isAnchorA) {
+          // Sleek vertical U/V curve threading cleanly into letter 'a' (matching stream red mockup)
+          topX = (reachMode === 'stream_v') ? 38 : ((reachMode === 'stream_vertical') ? 22 : 28);
+          topX += Math.max(0, (heightVal - 210) * 0.03);
+        } else {
+          if (reachMode === 'stream_v') topX = 210;
+          if (reachMode === 'stream_ultra') topX = 180;
+          if (reachMode === 'stream_vertical') topX = 45;
+          if (reachMode !== 'stream_vertical') {
+            topX += Math.max(0, (heightVal - 210) * 0.25);
+          }
         }
 
         const topY = coords.yBail + heightVal * sag;
-        const p_far_start = new THREE.Vector3(coords.xCenter - topX * 1.5, topY + 120, -70);
-        const p_top_left = new THREE.Vector3(coords.xCenter - topX, topY, -26);
-        const p0 = new THREE.Vector3(coords.xCenter - (topX * 0.5), coords.yBail + (heightVal * 0.32) * sag, -20);
-        const p1 = new THREE.Vector3(coords.xCenter - 38, coords.yBail + 22 * sag, -12);
-        const p2 = new THREE.Vector3(coords.xLeft - 10, coords.yBail + 2.5 * sag, -2);
-        const p3 = new THREE.Vector3(coords.xLeft, coords.yBail, 0);
-        const p4 = new THREE.Vector3(coords.xCenter, coords.yBail, 0);
-        const p5 = new THREE.Vector3(coords.xRight, coords.yBail, 0);
-        const p6 = new THREE.Vector3(coords.xRight + 10, coords.yBail + 2.5 * sag, -2);
-        const p7 = new THREE.Vector3(coords.xCenter + 38, coords.yBail + 22 * sag, -12);
-        const p8 = new THREE.Vector3(coords.xCenter + (topX * 0.5), coords.yBail + (heightVal * 0.32) * sag, -20);
-        const p_top_right = new THREE.Vector3(coords.xCenter + topX, topY, -26);
-        const p_far_end = new THREE.Vector3(coords.xCenter + topX * 1.5, topY + 120, -70);
+        let p_far_start, p_top_left, p0, p1, p2, p3, p4, p5, p6, p7, p8, p_top_right, p_far_end;
+
+        if (isAnchorA) {
+          p_far_start = new THREE.Vector3(coords.xCenter - topX * 1.3, topY + 120, -60);
+          p_top_left = new THREE.Vector3(coords.xCenter - topX, topY, -24);
+          p0 = new THREE.Vector3(coords.xCenter - topX * 0.68, coords.yBail + (heightVal * 0.40) * sag, -18);
+          p1 = new THREE.Vector3(coords.xCenter - 13, coords.yBail + 36 * sag, -10);
+          p2 = new THREE.Vector3(coords.xCenter - 6.0, coords.yBail + 10 * sag, -3);
+          p3 = new THREE.Vector3(coords.xCenter - 2.8, coords.yBail + 1.8 * sag, 0);
+          p4 = new THREE.Vector3(coords.xCenter, coords.yBail, 0);
+          p5 = new THREE.Vector3(coords.xCenter + 2.8, coords.yBail + 1.8 * sag, 0);
+          p6 = new THREE.Vector3(coords.xCenter + 6.0, coords.yBail + 10 * sag, -3);
+          p7 = new THREE.Vector3(coords.xCenter + 13, coords.yBail + 36 * sag, -10);
+          p8 = new THREE.Vector3(coords.xCenter + topX * 0.68, coords.yBail + (heightVal * 0.40) * sag, -18);
+          p_top_right = new THREE.Vector3(coords.xCenter + topX, topY, -24);
+          p_far_end = new THREE.Vector3(coords.xCenter + topX * 1.3, topY + 120, -60);
+        } else {
+          p_far_start = new THREE.Vector3(coords.xCenter - topX * 1.5, topY + 120, -70);
+          p_top_left = new THREE.Vector3(coords.xCenter - topX, topY, -26);
+          const midX = topX * 0.5;
+          p0 = new THREE.Vector3(coords.xCenter - midX, coords.yBail + (heightVal * 0.32) * sag, -20);
+          p1 = new THREE.Vector3(coords.xCenter - 38, coords.yBail + 22 * sag, -12);
+          p2 = new THREE.Vector3(coords.xLeft - 10, coords.yBail + 2.5 * sag, -2);
+          p3 = new THREE.Vector3(coords.xLeft, coords.yBail, 0);
+          p4 = new THREE.Vector3(coords.xCenter, coords.yBail, 0);
+          p5 = new THREE.Vector3(coords.xRight, coords.yBail, 0);
+          p6 = new THREE.Vector3(coords.xRight + 10, coords.yBail + 2.5 * sag, -2);
+          p7 = new THREE.Vector3(coords.xCenter + 38, coords.yBail + 22 * sag, -12);
+          p8 = new THREE.Vector3(coords.xCenter + midX, coords.yBail + (heightVal * 0.32) * sag, -20);
+          p_top_right = new THREE.Vector3(coords.xCenter + topX, topY, -26);
+          p_far_end = new THREE.Vector3(coords.xCenter + topX * 1.5, topY + 120, -70);
+        }
 
         curve = new THREE.CatmullRomCurve3([
           p_far_start, p_top_left, p0, p1, p2, p3, p4, p5, p6, p7, p8, p_top_right, p_far_end
@@ -2937,6 +2982,7 @@
       const scale = size / font.data.resolution;
       const geometries = [];
       let tLetterBounds = null;
+      let aLetterBounds = null;
 
       const extrudeSettings = {
         steps: 1,
@@ -3031,6 +3077,17 @@
               };
             }
 
+            // Capture letter 'a' (prioritizing line 0 e.g. in "Day")
+            if (char.toLowerCase() === 'a' && (!aLetterBounds || lineIndex === 0)) {
+              const b = charGeo.boundingBox;
+              aLetterBounds = {
+                minX: b.min.x,
+                maxX: b.max.x,
+                xCenter: (b.min.x + b.max.x) / 2,
+                yBail: b.min.y + (b.max.y - b.min.y) * 0.80
+              };
+            }
+
             geometries.push(charGeo);
           }
 
@@ -3099,22 +3156,48 @@
       merged.center();
       merged.computeVertexNormals();
 
-      if (tLetterBounds) {
+      const anchorMode = document.getElementById('chainAnchorSelect')?.value || 'auto';
+      let chosenAnchor = null;
+      let anchorType = 'center';
+
+      if (anchorMode === 'letter_a' && aLetterBounds) {
+        chosenAnchor = aLetterBounds;
+        anchorType = 'a';
+      } else if (anchorMode === 'letter_t' && tLetterBounds) {
+        chosenAnchor = tLetterBounds;
+        anchorType = 't';
+      } else if (anchorMode === 'auto') {
+        const firstLineLower = (lines[0] || '').toLowerCase();
+        if (firstLineLower.includes('day') && aLetterBounds) {
+          chosenAnchor = aLetterBounds;
+          anchorType = 'a';
+        } else if (tLetterBounds) {
+          chosenAnchor = tLetterBounds;
+          anchorType = 't';
+        } else if (aLetterBounds) {
+          chosenAnchor = aLetterBounds;
+          anchorType = 'a';
+        }
+      }
+
+      if (chosenAnchor) {
         window.dynamicHoleCoords = {
-          xCenter: tLetterBounds.xCenter - meshCenter.x,
-          xLeft: tLetterBounds.minX - meshCenter.x,
-          xRight: tLetterBounds.maxX - meshCenter.x,
-          yBail: tLetterBounds.yBail - meshCenter.y,
-          z: 0
+          xCenter: chosenAnchor.xCenter - meshCenter.x,
+          xLeft: chosenAnchor.minX - meshCenter.x,
+          xRight: chosenAnchor.maxX - meshCenter.x,
+          yBail: chosenAnchor.yBail - meshCenter.y,
+          z: 0,
+          anchorChar: anchorType
         };
       } else {
-        // Fallback for custom words without letter 't': anchor chain at top-center of pendant
+        // Fallback for custom words without letter 't' or 'a': anchor chain at top-center of pendant
         window.dynamicHoleCoords = {
           xCenter: 0,
           xLeft: -6,
           xRight: 6,
           yBail: (merged.boundingBox ? merged.boundingBox.max.y : 20) * 0.88,
-          z: 0
+          z: 0,
+          anchorChar: 'center'
         };
       }
 
@@ -3127,6 +3210,13 @@
       if (threeCurrentMesh) {
         threeScene.remove(threeCurrentMesh);
         threeCurrentMesh = null;
+      }
+      // Clean any ghost meshes/groups except lights and chain
+      for (let i = threeScene.children.length - 1; i >= 0; i--) {
+        const child = threeScene.children[i];
+        if (child !== threeChainMesh && child !== threeBailMesh && !child.isLight && child.type !== 'AmbientLight' && child.type !== 'DirectionalLight') {
+          threeScene.remove(child);
+        }
       }
 
       if (activeSource === 'text') {
@@ -3228,6 +3318,9 @@
     function loadOBJModel(url, scale = 1.0, callback = null) {
       const objLoader = new THREE.OBJLoader();
       objLoader.load(url, (obj) => {
+        if (activeSource !== 'pendant_real_hole' && activeSource !== 'custom_model' && activeSource !== 'sample_emblem') {
+          return; // Switched to text while OBJ was loading
+        }
         const box = new THREE.Box3().setFromObject(obj);
         const center = box.getCenter(new THREE.Vector3());
         obj.position.sub(center);
@@ -4794,6 +4887,33 @@
     // =========================================================================
     const FACTORY_PRESETS = [
       {
+        id: 'stream_goal_day308',
+        name: '📡 Day 308: Стрим-цель (Подвес в "a")',
+        category: 'stream',
+        data: {
+          source: 'text',
+          text: 'Day\n308',
+          textCase: 'as_is',
+          font: 'UnifrakturCook_PrintedK',
+          fontSize: 38,
+          lineSpacing: 1.15,
+          letterOverlap: 15,
+          depth: 18,
+          bevel: 3.2,
+          bevelSegments: 8,
+          chainEnabled: true,
+          chainAnchor: 'letter_a',
+          chainReach: 'stream_ultra',
+          chainHeight: 450,
+          chainSag: 1.0,
+          camDistance: 320,
+          camOffsetY: -10,
+          camOffsetX: 0,
+          activeBgPreset: 'studio_dark',
+          bgMode: 'liquid'
+        }
+      },
+      {
         id: 'factory_obs_stream_goal',
         name: '📡 OBS Stream Overlay (Цепь в потолок / Сбор цели)',
         isFactory: true,
@@ -5726,6 +5846,7 @@
         chainMaterial: document.getElementById('chainMaterialSelect')?.value || 'same',
         chainScale: parseFloat(document.getElementById('chainScaleSlider')?.value || 1.0),
         chainSag: parseFloat(document.getElementById('chainSagSlider')?.value || 1.0),
+        chainAnchor: document.getElementById('chainAnchorSelect')?.value || 'auto',
         chainReach: document.getElementById('chainReachSelect')?.value || 'classic',
         chainHeight: parseFloat(document.getElementById('chainHeightSlider')?.value || 55),
         bezelRimEnabled: document.getElementById('bezelRimToggle')?.checked || false,
@@ -5956,6 +6077,9 @@
         if (vEl) vEl.innerText = d.chainSag + 'x';
       }
 
+      if (d.chainAnchor && document.getElementById('chainAnchorSelect')) {
+        document.getElementById('chainAnchorSelect').value = d.chainAnchor;
+      }
       const cReach = document.getElementById('chainReachSelect');
       if (cReach) {
         cReach.value = d.chainReach || 'classic';
