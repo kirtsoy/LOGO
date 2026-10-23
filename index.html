@@ -569,6 +569,44 @@
       letter-spacing: 0.5px;
     }
 
+    /* 9:16 Vertical Video / Shorts / Reels / TikTok / Mobile Stream Safe Area */
+    .frame-guide-916 {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 6;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      transition: opacity 0.25s ease;
+    }
+    .frame-box-916 {
+      position: relative;
+      aspect-ratio: 9 / 16;
+      height: 94%;
+      width: min(94%, calc(94vh * (9 / 16)));
+      box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.72);
+      border: 1px dashed rgba(168, 85, 247, 0.65);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .frame-badge-916 {
+      position: absolute;
+      bottom: 8px;
+      left: 12px;
+      background: rgba(10, 12, 19, 0.85);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      padding: 3px 8px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: #c084fc;
+      letter-spacing: 0.5px;
+    }
+
     /* YouTube Channel Art Banner Guide (2560x1440 TV, 2560x423 Desktop, 1546x423 Mobile Safe Area) */
     .frame-guide-yt {
       position: absolute;
@@ -1198,6 +1236,16 @@
       </div>
 
       <div class="form-group">
+        <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #c084fc;">
+          <input type="checkbox" id="frame916Toggle" onchange="toggle916FrameGuide(this.checked)">
+          <span style="font-weight: 700;">📱 Вертикальная рамка 9:16 (Shorts / Reels / TikTok)</span>
+        </label>
+        <div style="font-size: 10px; color: #94a3b8; margin-top: 2px;">
+          Точная разметка для мобильного стриминга и вертикальных видео (1080×1920)
+        </div>
+      </div>
+
+      <div class="form-group" style="padding-top: 6px; border-top: 1px dashed rgba(255,255,255,0.08);">
         <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: #fff;">
           <input type="checkbox" id="frame169Toggle" checked onchange="toggle169FrameGuide(this.checked)">
           <span style="font-weight: 700;">🎬 Рамка кадра 16:9 (1920×1080 / 4K Safe Frame)</span>
@@ -1524,12 +1572,23 @@
       </div>
 
       <div style="display: flex; flex-direction: column; gap: 8px;">
+        <!-- Aspect Ratio Selection for Export -->
+        <div class="form-group" style="margin-bottom: 6px;">
+          <label style="font-size: 11px; color: #cbd5e1; font-weight: 700; margin-bottom: 4px; display: block;">📐 Формат кадра и соотношение сторон:</label>
+          <select id="exportAspectSelect" class="form-control" style="font-size: 11px; font-weight: 700; background: rgba(15, 23, 42, 0.9); border-color: #c084fc; color: #f8fafc; padding: 6px 8px;" onchange="handleExportAspectChange(this.value)">
+            <option value="9:16">📱 9:16 Вертикальный (1080×1920 — Shorts, Reels, TikTok, Стрим)</option>
+            <option value="16:9" selected>🎬 16:9 Горизонтальный (1920×1080 — YouTube, Full HD)</option>
+            <option value="16:9_4k">✨ 16:9 Ultra HD 4K (3840×2160 — Кинокачество)</option>
+            <option value="1:1">🟦 1:1 Квадрат (1080×1080 — Аватарки / Посты)</option>
+          </select>
+        </div>
+
         <!-- Animation Selection for Export -->
         <div class="form-group" style="margin-bottom: 8px;">
           <label style="font-size: 11px; color: #cbd5e1; font-weight: 700; margin-bottom: 4px; display: block;">🎯 Выбор анимации для экспорта:</label>
           <select id="exportAnimationSelect" class="form-control" style="font-size: 11px; font-weight: 700; background: rgba(15, 23, 42, 0.9); border-color: #6366f1; color: #f8fafc; padding: 6px 8px;">
-            <option value="swoop_lift" selected>🚀 1. Апофеоз цели (Доворот -> 360° -> Цепь -> Унос ВВЕРХ)</option>
-            <option value="slam_return">⚡ 2. Возврат цели (Слэм с неба -> Джиггл -> Выскальзывание цепи сквозь "t" -> Ракурс)</option>
+            <option value="swoop_lift" selected>🚀 1. Апофеоз цели (Wobble -> Цепь -> Унос ВВЕРХ)</option>
+            <option value="slam_return">⚡ 2. Возврат цели (Слэм с неба -> Джиггл -> Выскальзывание цепи -> Ракурс)</option>
             <option value="idle_wobble_loop">🌊 3. Пассивный бесшовный луп (4.0s, ракурс YouTube Banner)</option>
           </select>
         </div>
@@ -1544,14 +1603,14 @@
             Покадровый рендер без сжатия видео. 32-битная прозрачная PNG-секвенция (60 FPS) в ZIP архиве для Premiere, AE, DaVinci.
           </div>
           <div style="display: flex; gap: 6px;">
-            <button class="btn btn-primary" style="flex: 1.2; background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); border-color: #38bdf8; font-weight: 800; font-size: 11px; padding: 9px 6px;" onclick="startStudioOfflineRender(1920, 1080, 'download_zip')" title="Скачать секвенцию кадров PNG в архиве ZIP">
-              📦 1080p PNG (ZIP)
+            <button class="btn btn-primary" style="flex: 1.2; background: linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%); border-color: #38bdf8; font-weight: 800; font-size: 11px; padding: 9px 6px;" onclick="triggerStudioRenderByAspect('download_zip')" title="Скачать секвенцию кадров PNG в архиве ZIP с выбранным разрешением">
+              📦 Скачать PNG (ZIP)
             </button>
-            <button class="btn btn-secondary" style="flex: 0.9; border-color: #c084fc; color: #e9d5ff; font-weight: 700; font-size: 11px; padding: 9px 6px;" onclick="startStudioOfflineRender(3840, 2160, 'download_zip')" title="Скачать 4K секвенцию кадров PNG в архиве ZIP">
-              ✨ 4K PNG (ZIP)
+            <button class="btn btn-secondary" style="flex: 0.9; border-color: #c084fc; color: #e9d5ff; font-weight: 700; font-size: 11px; padding: 9px 6px;" onclick="startStudioOfflineRender(1080, 1920, 'download_zip')" title="Скачать вертикальную 9:16 (1080×1920) секвенцию кадров PNG в архиве ZIP">
+              📱 9:16 ZIP
             </button>
           </div>
-          <button class="btn btn-primary" style="margin-top: 8px; width: 100%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%); border-color: #f59e0b; font-weight: 800; font-size: 11px; padding: 10px 8px; color: #fff; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35); display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="startStudioOfflineRender(1920, 1080, 'compile_video')" title="Автоматически отрендерить и собрать в Apple ProRes 4444 .MOV с 100% прозрачностью">
+          <button class="btn btn-primary" style="margin-top: 8px; width: 100%; background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%); border-color: #f59e0b; font-weight: 800; font-size: 11px; padding: 10px 8px; color: #fff; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.35); display: flex; align-items: center; justify-content: center; gap: 6px;" onclick="triggerStudioRenderByAspect('compile_video')" title="Автоматически отрендерить и собрать в Apple ProRes 4444 .MOV с 100% прозрачностью">
             <span>🚀 1-Клик: Собрать Видео ProRes 4444 (.MOV)</span>
           </button>
         </div>
@@ -1562,7 +1621,7 @@
         <button class="btn btn-secondary" style="border-color: #38bdf8; color: #bae6fd;" onclick="recordIntroAnimation('black')">
           ⬛ Видео WebM с чёрным фоном (60 FPS)
         </button>
-        <button class="btn btn-secondary" onclick="exportCurrentPNG()">
+        <button class="btn btn-secondary" onclick="exportCurrentPNGByAspect()">
           📸 Скачать 1 Кадр PNG (Прозрачный High-Res)
         </button>
 
@@ -1639,6 +1698,18 @@
       </div>
     </div>
 
+    <!-- 9:16 Vertical Viewport Mask & Frame Guide Overlay -->
+    <div id="frameGuide916" class="frame-guide-916" style="display: none;">
+      <div class="frame-box-916">
+        <div class="frame-corner top-left" style="border-color: #c084fc;"></div>
+        <div class="frame-corner top-right" style="border-color: #c084fc;"></div>
+        <div class="frame-corner bottom-left" style="border-color: #c084fc;"></div>
+        <div class="frame-corner bottom-right" style="border-color: #c084fc;"></div>
+        <div class="frame-center-cross" style="color: rgba(192, 132, 252, 0.35);">+</div>
+        <div class="frame-badge-916">📱 9:16 VERTICAL (1080×1920 / SHORTS / REELS / TIKTOK)</div>
+      </div>
+    </div>
+
     <!-- YouTube Banner Frame Guide Overlay (2560×1440 Canvas, 2560×423 Desktop, 1546×423 Mobile Safe Area) -->
     <div id="frameGuideYT" class="frame-guide-yt" style="display: none;">
       <div class="yt-banner-canvas">
@@ -1671,6 +1742,9 @@
 
     <!-- HUD Overlay -->
     <div class="viewport-hud">
+      <button type="button" class="hud-badge" id="hudFrame916Btn" style="color: #c084fc; border-color: rgba(192,132,252,0.4); display: flex; align-items: center; gap: 4px;" onclick="toggle916FrameGuide()" title="Включить / Выключить вертикальный формат 9:16 (Shorts / Reels / TikTok / Mobile Stream)">
+        📱 9:16 Вертикалка
+      </button>
       <button type="button" class="hud-badge active" id="hudFrame169Btn" style="color: #38bdf8; border-color: rgba(56,189,248,0.4); background: rgba(56,189,248,0.12); display: flex; align-items: center; gap: 4px;" onclick="toggle169FrameGuide()" title="Включить / Выключить кино-рамку 16:9">
         🎬 16:9 Рамка
       </button>
@@ -2638,6 +2712,32 @@
       }
     }
 
+    function toggle916FrameGuide(forcedState = null) {
+      const chk = document.getElementById('frame916Toggle');
+      const guide = document.getElementById('frameGuide916');
+      const hudBtn = document.getElementById('hudFrame916Btn');
+      if (guide) {
+        const isShown = guide.style.display !== 'none';
+        const nextState = (forcedState !== null) ? Boolean(forcedState) : !isShown;
+        guide.style.display = nextState ? 'flex' : 'none';
+        if (chk) chk.checked = nextState;
+        if (hudBtn) {
+          hudBtn.style.color = nextState ? '#c084fc' : '#94a3b8';
+          hudBtn.style.borderColor = nextState ? 'rgba(192,132,252,0.6)' : 'rgba(255,255,255,0.15)';
+          hudBtn.style.background = nextState ? 'rgba(192,132,252,0.16)' : 'rgba(14, 16, 25, 0.85)';
+        }
+        if (nextState) {
+          // Sync export aspect dropdown to 9:16
+          const expSel = document.getElementById('exportAspectSelect');
+          if (expSel) expSel.value = '9:16';
+          // Deactivate 16:9 and YT guides to avoid visual clutter
+          toggle169FrameGuide(false);
+          toggleYTFrameGuide(false);
+          showToast('📱 Формат 9:16 (1080×1920) активирован: Shorts, Reels, TikTok & Mobile Stream');
+        }
+      }
+    }
+
     function toggle169FrameGuide(forcedState = null) {
       const chk = document.getElementById('frame169Toggle');
       const guide = document.getElementById('frameGuide169');
@@ -2651,6 +2751,15 @@
           hudBtn.style.color = nextState ? '#38bdf8' : '#94a3b8';
           hudBtn.style.borderColor = nextState ? 'rgba(56,189,248,0.4)' : 'rgba(255,255,255,0.15)';
           hudBtn.style.background = nextState ? 'rgba(56,189,248,0.12)' : 'rgba(14, 16, 25, 0.85)';
+        }
+        if (nextState) {
+          // Deactivate 9:16 guide
+          const guide916 = document.getElementById('frameGuide916');
+          if (guide916 && guide916.style.display !== 'none') {
+            toggle916FrameGuide(false);
+          }
+          const expSel = document.getElementById('exportAspectSelect');
+          if (expSel && expSel.value === '9:16') expSel.value = '16:9';
         }
       }
     }
@@ -5095,6 +5204,9 @@
           camDistance: 320,
           camOffsetY: -10,
           camOffsetX: 0,
+          frame916Enabled: true,
+          frame169Enabled: false,
+          exportAspect: '9:16',
           activeBgPreset: 'studio_dark',
           bgMode: 'liquid'
         }
@@ -6431,11 +6543,17 @@
         document.getElementById('camOffsetXSlider').value = d.camOffsetX;
         document.getElementById('valCamOffsetX').innerText = d.camOffsetX;
       }
+      if (d.frame916Enabled !== undefined && document.getElementById('frame916Toggle')) {
+        toggle916FrameGuide(d.frame916Enabled);
+      }
       if (d.frame169Enabled !== undefined && document.getElementById('frame169Toggle')) {
         toggle169FrameGuide(d.frame169Enabled);
       }
       if (d.frameYTEnabled !== undefined && document.getElementById('frameYTToggle')) {
         toggleYTFrameGuide(d.frameYTEnabled);
+      }
+      if (d.exportAspect && document.getElementById('exportAspectSelect')) {
+        document.getElementById('exportAspectSelect').value = d.exportAspect;
       }
 
       // 10.5 Background Parameters Restore (Strict Protection: never overwrite if preset has no bg or toggle is disabled)
@@ -6637,6 +6755,36 @@
       }
     }
 
+    function handleExportAspectChange(val) {
+      if (val === '9:16') {
+        toggle916FrameGuide(true);
+      } else if (val === '16:9' || val === '16:9_4k') {
+        toggle169FrameGuide(true);
+      }
+    }
+
+    function getExportDimensions(aspectValue = null) {
+      const val = aspectValue || document.getElementById('exportAspectSelect')?.value || '16:9';
+      if (val === '9:16') {
+        return { w: 1080, h: 1920, label: '9:16 (1080×1920)' };
+      } else if (val === '16:9_4k') {
+        return { w: 3840, h: 2160, label: '16:9 4K (3840×2160)' };
+      } else if (val === '1:1') {
+        return { w: 1080, h: 1080, label: '1:1 (1080×1080)' };
+      }
+      return { w: 1920, h: 1080, label: '16:9 (1920×1080)' };
+    }
+
+    function triggerStudioRenderByAspect(action = 'download_zip') {
+      const dim = getExportDimensions();
+      startStudioOfflineRender(dim.w, dim.h, action);
+    }
+
+    function exportCurrentPNGByAspect() {
+      const dim = getExportDimensions();
+      exportCurrentPNG(dim.w, dim.h);
+    }
+
     let introMediaRecorder = null;
     let introRecordedChunks = [];
     let isIntroRecording = false;
@@ -6664,10 +6812,31 @@
       // Hide frame guides during video recording so guide lines are not captured
       const guide169 = document.getElementById('frameGuide169');
       const guideYT = document.getElementById('frameGuideYT');
+      const guide916 = document.getElementById('frameGuide916');
       const prev169Op = guide169 ? guide169.style.opacity : '1';
       const prevYTOp = guideYT ? guideYT.style.opacity : '1';
+      const prev916Op = guide916 ? guide916.style.opacity : '1';
       if (guide169) guide169.style.opacity = '0';
       if (guideYT) guideYT.style.opacity = '0';
+      if (guide916) guide916.style.opacity = '0';
+
+      // Save original renderer & camera size
+      const area = document.getElementById('viewportArea');
+      const origWidth = area ? area.clientWidth : window.innerWidth;
+      const origHeight = area ? area.clientHeight : window.innerHeight;
+      const origPixelRatio = threeRenderer.getPixelRatio();
+      const origAspect = threeCamera.aspect;
+
+      // Check aspect selection (e.g. 9:16 vertical 1080x1920)
+      const dim = getExportDimensions();
+      const isCustomAspect = (dim.w !== origWidth || dim.h !== origHeight);
+      if (isCustomAspect) {
+        threeRenderer.setPixelRatio(1);
+        threeRenderer.setSize(dim.w, dim.h, false);
+        threeCamera.aspect = dim.w / dim.h;
+        threeCamera.updateProjectionMatrix();
+        resetCameraFront();
+      }
 
       // Detect target animation to record
       const animType = document.getElementById('exportAnimationSelect')?.value || 'swoop_lift';
@@ -6719,8 +6888,19 @@
       introMediaRecorder.onstop = function() {
         isIntroRecording = false;
         threeScene.background = null; // Always restore transparent background
+
+        // Restore original viewport dimensions and camera aspect
+        if (isCustomAspect) {
+          threeRenderer.setPixelRatio(origPixelRatio);
+          threeRenderer.setSize(origWidth, origHeight);
+          threeCamera.aspect = origAspect;
+          threeCamera.updateProjectionMatrix();
+          resetCameraFront();
+        }
+
         if (guide169) guide169.style.opacity = prev169Op;
         if (guideYT) guideYT.style.opacity = prevYTOp;
+        if (guide916) guide916.style.opacity = prev916Op;
 
         const blob = new Blob(introRecordedChunks, { type: mimeType });
         const url = URL.createObjectURL(blob);
@@ -6728,18 +6908,19 @@
         a.style.display = 'none';
         a.href = url;
         const bgSuffix = (bgMode === 'transparent') ? 'alpha_transparent' : 'black_bg';
-        a.download = `kirtsoy_${animPrefix}_${bgSuffix}_${Date.now()}.webm`;
+        const aspectSuffix = (dim.w === 1080 && dim.h === 1920) ? '9x16_vertical' : `${dim.w}x${dim.h}`;
+        a.download = `kirtsoy_${animPrefix}_${aspectSuffix}_${bgSuffix}_${Date.now()}.webm`;
         document.body.appendChild(a);
         a.click();
         setTimeout(() => {
           URL.revokeObjectURL(url);
           a.remove();
         }, 1000);
-        showToast('🎉 Видео интро успешно записано и скачано (' + ((bgMode === 'transparent') ? 'Прозрачный фон Alpha' : 'Чёрный фон') + ')!');
+        showToast('🎉 Видео ' + dim.label + ' успешно записано (' + ((bgMode === 'transparent') ? 'Alpha Прозрачность' : 'Чёрный фон') + ')!');
       };
 
       introMediaRecorder.start(100);
-      showToast('🔴 Идёт запись интро (60 FPS, ' + ((bgMode === 'transparent') ? 'Прозрачный Alpha-фон' : 'Чёрный фон') + ')...');
+      showToast('🔴 Идёт запись интро ' + dim.label + ' (60 FPS, ' + ((bgMode === 'transparent') ? 'Alpha-фон' : 'Чёрный') + ')...');
 
       // Auto-stop exactly when the selected animation finishes
       setTimeout(() => {
@@ -6787,10 +6968,13 @@
       // 2. Hide overlay guides during render so guide graphics are not captured
       const guide169 = document.getElementById('frameGuide169');
       const guideYT = document.getElementById('frameGuideYT');
+      const guide916 = document.getElementById('frameGuide916');
       const prevGuide169Op = guide169 ? guide169.style.opacity : '1';
       const prevGuideYTOp = guideYT ? guideYT.style.opacity : '1';
+      const prevGuide916Op = guide916 ? guide916.style.opacity : '1';
       if (guide169) guide169.style.opacity = '0';
       if (guideYT) guideYT.style.opacity = '0';
+      if (guide916) guide916.style.opacity = '0';
 
       // 3. Save original renderer state
       const area = document.getElementById('viewportArea');
@@ -6999,6 +7183,7 @@
 
         if (guide169) guide169.style.opacity = prevGuide169Op;
         if (guideYT) guideYT.style.opacity = prevGuideYTOp;
+        if (guide916) guide916.style.opacity = prevGuide916Op;
         if (modal) modal.style.display = 'none';
 
         isStudioRendering = false;
@@ -7022,10 +7207,13 @@
         // Hide frame guides while capturing snapshot
         const guide169 = document.getElementById('frameGuide169');
         const guideYT = document.getElementById('frameGuideYT');
+        const guide916 = document.getElementById('frameGuide916');
         const prev169 = guide169 ? guide169.style.opacity : '1';
         const prevYT = guideYT ? guideYT.style.opacity : '1';
+        const prev916 = guide916 ? guide916.style.opacity : '1';
         if (guide169) guide169.style.opacity = '0';
         if (guideYT) guideYT.style.opacity = '0';
+        if (guide916) guide916.style.opacity = '0';
 
         const area = document.getElementById('viewportArea');
         const origWidth = area ? area.clientWidth : window.innerWidth;
@@ -7067,6 +7255,7 @@
 
           if (guide169) guide169.style.opacity = prev169;
           if (guideYT) guideYT.style.opacity = prevYT;
+          if (guide916) guide916.style.opacity = prev916;
         }
       } else {
         const activeCanvas = (activeMode === '3d') ? (threeRenderer ? threeRenderer.domElement : null) : glCanvas;
